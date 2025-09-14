@@ -1,0 +1,38 @@
+# Mac
+.DS_Store
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+/bin
+/obj
+
+# Rider
+.idea/
+
+# User-specific files
+*.rsuser
+*.DotSettings.user
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+Build/
+build-results/
+
+# Secrets
+secrets.json
+appsettings.Development.json
+
+# Tooling
+*.exe
+*.dll
+*.pdb
+
+# Other
+*.nupkg
+*.zip
