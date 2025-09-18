@@ -1,0 +1,6 @@
+@LoftComputacion.WebAPI_HostAddress = http://localhost:5239
+
+GET {{LoftComputacion.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
