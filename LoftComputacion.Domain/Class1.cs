@@ -1,4 +1,4 @@
-﻿namespace LoftComputacion.Application
+﻿namespace LoftComputacion.Domain
 {
     public class Class1
     {
