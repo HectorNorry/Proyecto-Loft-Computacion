@@ -24,5 +24,20 @@ namespace LoftComputacion.Infrastructure
         public DbSet<Equipo> Equipos { get; set; }
         public DbSet<Foto> Fotos { get; set; }
         public DbSet<HistorialOrden> HistorialOrdenes { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configuramos la precisión para las propiedades de tipo decimal en OrdenDeServicio
+            modelBuilder.Entity<OrdenDeServicio>(entity =>
+            {
+                entity.Property(e => e.PrecioFinal).HasPrecision(18, 2);
+                entity.Property(e => e.PrecioPresupuestado).HasPrecision(18, 2);
+            });
+        }
     }
+
+
 }
