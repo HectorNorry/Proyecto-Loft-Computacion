@@ -11,6 +11,6 @@ namespace LoftComputacion.Domain
         public int Id { get; set; }
         public string NombreCompleto { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
-        public string? Email { get; set; } // El email sigue siendo opcional
+        public string? Email { get; set; } 
     }
 }

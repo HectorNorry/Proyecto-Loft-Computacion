@@ -1,6 +1,5 @@
 ﻿using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,20 +11,48 @@ namespace LoftComputacion.WebAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // El constructor recibe el DbContext para poder hablar con la base de datos.
         public ClientesController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // Este método responderá a las peticiones GET a la URL: api/clientes
+        // GET: api/clientes
         [HttpGet]
         public async Task<IActionResult> GetClientes()
         {
-            // Busca en la tabla Clientes, los convierte a una lista y los devuelve.
             var clientes = await _context.Clientes.ToListAsync();
             return Ok(clientes);
         }
+
+        
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetCliente(int id)
+        {
+            var cliente = await _context.Clientes.FindAsync(id);
+
+            if (cliente == null)
+            {
+                return NotFound(); // Devuelve 404 si no lo encuentra
+            }
+
+            return Ok(cliente);
+        }
+
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
+        {
+            if (id != cliente.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(cliente).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Devuelve 204 sin contenido, indicando éxito
+        }
+
 
         // POST: api/clientes
         [HttpPost]
@@ -39,8 +66,23 @@ namespace LoftComputacion.WebAPI.Controllers
             await _context.Clientes.AddAsync(cliente);
             await _context.SaveChangesAsync();
 
-            // Devolvemos una respuesta 201 Created con la ubicación del nuevo recurso
-            return CreatedAtAction(nameof(GetClientes), new { id = cliente.Id }, cliente);
+            return CreatedAtAction(nameof(GetCliente), new { id = cliente.Id }, cliente);
+        }
+
+        
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCliente(int id)
+        {
+            var cliente = await _context.Clientes.FindAsync(id);
+            if (cliente == null)
+            {
+                return NotFound();
+            }
+
+            _context.Clientes.Remove(cliente);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
