@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace LoftComputacion.Domain
 {
-    internal class MetodoDePago
+    public class MetodoDePago
     {
+        public int Id { get; set; }
+        public string Nombre { get; set; }
     }
 }
