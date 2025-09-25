@@ -11,7 +11,10 @@ builder.Services.AddSwaggerGen();
 // 2. Aquí registramos nuestra conexión a la base de datos.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(); 
+    }));
 
 // 3. Construimos la aplicación.
 var app = builder.Build();
