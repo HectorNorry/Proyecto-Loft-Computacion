@@ -10,25 +10,30 @@ namespace LoftComputacion.Domain
     {
         public int Id { get; set; }
         public DateTime FechaIngreso { get; set; }
-        public string DescripcionProblema { get; set; }
-        public string? RutaFoto { get; set; } // La foto es opcional
+        public string FallaDeclaradaPorCliente { get; set; } // Descripción breve del cliente
+        public DateTime? FechaNotificacionRetiro { get; set; } // Para la regla de los 3 meses
 
-        // Campos de pago (pueden ser nulos hasta que se entrega)
-        public decimal? Precio { get; set; }
+        // --- Campos de Precios ---
+        public decimal? PrecioPresupuestado { get; set; }
+        public decimal? PrecioFinal { get; set; }
+
         public DateTime? FechaPago { get; set; }
 
         // --- Relaciones con otras tablas ---
-
-        // Relación con Cliente
         public int ClienteId { get; set; }
-        public Cliente Cliente { get; set; } // Propiedad de navegación
+        public Cliente Cliente { get; set; }
 
-        // Relación con Estado
         public int EstadoId { get; set; }
-        public Estado Estado { get; set; } // Propiedad de navegación
+        public Estado Estado { get; set; }
 
-        // Relación con MetodoDePago (es opcional hasta el pago)
         public int? MetodoDePagoId { get; set; }
-        public MetodoDePago? MetodoDePago { get; set; } // Propiedad de navegación
+        public MetodoDePago? MetodoDePago { get; set; }
+
+        public int EquipoId { get; set; } // Nueva relación con el equipo
+        public Equipo Equipo { get; set; }
+
+        // Colecciones de entidades relacionadas
+        public ICollection<Foto> Fotos { get; set; } // Una orden puede tener muchas fotos
+        public ICollection<HistorialOrden> Historial { get; set; } // Una orden tiene un historial de cambios
     }
 }
