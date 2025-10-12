@@ -42,22 +42,33 @@ namespace LoftComputacion.Application
             return nuevaOrden;
         }
 
-        public async Task<bool> UpdateOrdenAsync(int id, OrdenDeServicio ordenActualizada)
+        public async Task<bool> UpdateOrdenAsync(int id, OrdenDeServicio ordenActualizada, int usuarioId)
         {
             var ordenExistente = await _context.OrdenesDeServicio.FindAsync(id);
             if (ordenExistente == null)
             {
-                return false; // Indica que no se encontró la orden
+                return false;
             }
 
-            // Actualizamos solo los campos que nos interesan
+            // Creamos el registro de historial ANTES de hacer el cambio
+            var historial = new HistorialOrden
+            {
+                OrdenDeServicioId = id,
+                UsuarioId = usuarioId, // El ID del usuario que hace el cambio
+                FechaHora = DateTime.UtcNow,
+                DescripcionDelCambio = $"El estado cambió de '{ordenExistente.EstadoId}' a '{ordenActualizada.EstadoId}'."
+                // En el futuro podemos hacer esto más amigable buscando el nombre del estado
+            };
+
+            await _context.HistorialOrdenes.AddAsync(historial);
+
+            // Ahora, actualizamos los campos de la orden
             ordenExistente.EstadoId = ordenActualizada.EstadoId;
             ordenExistente.PrecioPresupuestado = ordenActualizada.PrecioPresupuestado;
             ordenExistente.PrecioFinal = ordenActualizada.PrecioFinal;
-            // TODO: Agregar lógica para el historial de auditoría aquí
 
-            await _context.SaveChangesAsync();
-            return true; // Indica que la actualización fue exitosa
+            await _context.SaveChangesAsync(); // Guardamos ambos cambios (la orden y el historial) en una sola transacción
+            return true;
         }
 
         public async Task<bool> DeleteOrdenAsync(int id)
