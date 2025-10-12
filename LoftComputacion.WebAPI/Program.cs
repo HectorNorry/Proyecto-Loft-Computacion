@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
+
 
 // --- 2. Nuestros servicios de la capa de Aplicación ---
 builder.Services.AddScoped<OrdenDeServicioService>();
