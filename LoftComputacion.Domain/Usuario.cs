@@ -9,8 +9,8 @@ namespace LoftComputacion.Domain
     public class Usuario
     {
         public int Id { get; set; }
-        public string NombreCompleto { get; set; }
-        public string PasswordHash { get; set; } // Guardaremos la contraseña encriptada, no el texto plano
-        public string Rol { get; set; } // Ej: "Administrador", "Técnico"
+        public string NombreCompleto { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty; // Guardaremos la contraseña encriptada, no el texto plano
+        public string Rol { get; set; } = string.Empty; // Ej: "Administrador", "Técnico"
     }
 }
