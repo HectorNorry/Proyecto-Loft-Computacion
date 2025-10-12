@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoftComputacion.WebAPI", "L
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoftComputacion.Application", "LoftComputacion.Application\LoftComputacion.Application.csproj", "{C8ACE0BA-EDF8-4C7A-BFB7-ED3AF681AA73}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoftComputacion.WinForms", "LoftComputacion.WinForms\LoftComputacion.WinForms.csproj", "{D686FBC6-A140-4F95-A30F-A83996FED291}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{C8ACE0BA-EDF8-4C7A-BFB7-ED3AF681AA73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8ACE0BA-EDF8-4C7A-BFB7-ED3AF681AA73}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8ACE0BA-EDF8-4C7A-BFB7-ED3AF681AA73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D686FBC6-A140-4F95-A30F-A83996FED291}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D686FBC6-A140-4F95-A30F-A83996FED291}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D686FBC6-A140-4F95-A30F-A83996FED291}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D686FBC6-A140-4F95-A30F-A83996FED291}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
