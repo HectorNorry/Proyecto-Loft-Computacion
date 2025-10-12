@@ -13,6 +13,7 @@ builder.Services.AddHttpClient();
 
 // --- 2. Nuestros servicios de la capa de Aplicación ---
 builder.Services.AddScoped<OrdenDeServicioService>();
+builder.Services.AddScoped<AIService>();
 
 // --- 3. Conexión a la base de datos (DbContext) ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

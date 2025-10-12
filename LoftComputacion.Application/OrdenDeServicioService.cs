@@ -7,10 +7,12 @@ namespace LoftComputacion.Application
     public class OrdenDeServicioService
     {
         private readonly ApplicationDbContext _context;
+        private readonly AIService _aiService;
 
-        public OrdenDeServicioService(ApplicationDbContext context)
+        public OrdenDeServicioService(ApplicationDbContext context, AIService aiService)
         {
             _context = context;
+            _aiService = aiService;
         }
 
         public async Task<IEnumerable<OrdenDeServicio>> GetAllOrdenesAsync()
@@ -33,7 +35,6 @@ namespace LoftComputacion.Application
 
         public async Task<OrdenDeServicio> CreateOrdenAsync(OrdenDeServicio nuevaOrden)
         {
-            // Asignamos el estado inicial. En el futuro, lo buscaremos en la BD.
             nuevaOrden.EstadoId = 1; // "Recibido"
             nuevaOrden.FechaIngreso = DateTime.UtcNow;
 
@@ -50,14 +51,17 @@ namespace LoftComputacion.Application
                 return false;
             }
 
-            // --- LÓGICA DE AUDITORÍA MEJORADA ---
-
-            // 1. Buscamos los nombres de los estados en la base de datos
             var estadoAnterior = await _context.Estados.FindAsync(ordenExistente.EstadoId);
             var estadoNuevo = await _context.Estados.FindAsync(ordenActualizada.EstadoId);
 
-            // 2. Creamos una descripción más amigable
             var descripcionCambio = $"El estado cambió de '{estadoAnterior?.Nombre ?? "Desconocido"}' a '{estadoNuevo?.Nombre ?? "Desconocido"}'.";
+
+            if (estadoNuevo?.Nombre == "Finalizado, a espera de pago")
+            {
+                var trabajoRealizado = "Se reemplazó el disco duro por un SSD y se reinstaló el sistema operativo.";
+                var resumenParaCliente = await _aiService.GenerarResumenAsync(trabajoRealizado);
+                descripcionCambio += $" Resumen para cliente: {resumenParaCliente}";
+            }
 
             var historial = new HistorialOrden
             {
@@ -68,9 +72,6 @@ namespace LoftComputacion.Application
             };
             await _context.HistorialOrdenes.AddAsync(historial);
 
-            // --- FIN DE LA LÓGICA DE AUDITORÍA ---
-
-            // Ahora, actualizamos los campos de la orden
             ordenExistente.EstadoId = ordenActualizada.EstadoId;
             ordenExistente.PrecioPresupuestado = ordenActualizada.PrecioPresupuestado;
             ordenExistente.PrecioFinal = ordenActualizada.PrecioFinal;
@@ -89,7 +90,6 @@ namespace LoftComputacion.Application
 
             _context.OrdenesDeServicio.Remove(ordenExistente);
             await _context.SaveChangesAsync();
-
             return true;
         }
     }
