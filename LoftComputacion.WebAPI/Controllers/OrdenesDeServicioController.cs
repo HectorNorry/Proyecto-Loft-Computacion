@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
+using LoftComputacion.WebAPI.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace LoftComputacion.WebAPI.Controllers
@@ -45,6 +47,28 @@ namespace LoftComputacion.WebAPI.Controllers
             }
 
             return Ok(ordenDeServicio);
+        }
+        // POST: api/ordenesdeservicio
+        [HttpPost]
+        public async Task<IActionResult> CreateOrdenDeServicio([FromBody] CreateOrdenDto ordenDto)
+        {
+            // Aquí iría la lógica para encontrar el estado inicial "Recibido", pero por ahora lo simulamos.
+            // TODO: Obtener el primer estado de la base de datos.
+            const int estadoInicialId = 1;
+
+            var nuevaOrden = new OrdenDeServicio
+            {
+                ClienteId = ordenDto.ClienteId,
+                EquipoId = ordenDto.EquipoId,
+                FallaDeclaradaPorCliente = ordenDto.FallaDeclaradaPorCliente,
+                FechaIngreso = DateTime.UtcNow,
+                EstadoId = estadoInicialId // Asignamos el estado inicial
+            };
+
+            await _context.OrdenesDeServicio.AddAsync(nuevaOrden);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetOrdenDeServicio), new { id = nuevaOrden.Id }, nuevaOrden);
         }
     }
 }
