@@ -94,5 +94,23 @@ namespace LoftComputacion.WebAPI.Controllers
 
             return NoContent(); // Código 204: Éxito, sin contenido que devolver.
         }
+        // DELETE: api/ordenesdeservicio/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteOrdenDeServicio(int id)
+        {
+            // Buscamos la orden de servicio por su ID
+            var ordenExistente = await _context.OrdenesDeServicio.FindAsync(id);
+
+            if (ordenExistente == null)
+            {
+                return NotFound("No se encontró la orden de servicio para eliminar.");
+            }
+
+            // Le decimos a Entity Framework que elimine esta entidad
+            _context.OrdenesDeServicio.Remove(ordenExistente);
+            await _context.SaveChangesAsync(); // Aplicamos los cambios en la base de datos
+
+            return NoContent(); // Código 204: Éxito, sin contenido que devolver.
+        }
     }
 }
