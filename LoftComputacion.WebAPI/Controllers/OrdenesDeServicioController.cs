@@ -70,5 +70,29 @@ namespace LoftComputacion.WebAPI.Controllers
 
             return CreatedAtAction(nameof(GetOrdenDeServicio), new { id = nuevaOrden.Id }, nuevaOrden);
         }
+        // PUT: api/ordenesdeservicio/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateOrdenDeServicio(int id, [FromBody] UpdateOrdenDto ordenDto)
+        {
+            // Primero, buscamos la orden de servicio existente en la base de datos
+            var ordenExistente = await _context.OrdenesDeServicio.FindAsync(id);
+
+            if (ordenExistente == null)
+            {
+                return NotFound("No se encontró la orden de servicio.");
+            }
+
+            // Actualizamos los campos de la orden existente con los datos del DTO
+            ordenExistente.EstadoId = ordenDto.EstadoId;
+            ordenExistente.PrecioPresupuestado = ordenDto.PrecioPresupuestado;
+            ordenExistente.PrecioFinal = ordenDto.PrecioFinal;
+
+            // Aquí irá la lógica de auditoría para guardar en la tabla HistorialOrdenes
+            // TODO: Registrar el cambio de estado en el historial con el usuario correspondiente.
+
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Código 204: Éxito, sin contenido que devolver.
+        }
     }
 }
