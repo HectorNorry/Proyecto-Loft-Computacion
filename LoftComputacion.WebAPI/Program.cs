@@ -1,25 +1,28 @@
-﻿using LoftComputacion.Infrastructure;
+﻿using LoftComputacion.Application;
+using LoftComputacion.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Agrega servicios al contenedor.
+// --- 1. Servicios básicos de la API ---
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. Aquí registramos nuestra conexión a la base de datos.
+// --- 2. Nuestros servicios de la capa de Aplicación ---
+builder.Services.AddScoped<OrdenDeServicioService>();
+
+// --- 3. Conexión a la base de datos (DbContext) ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
     {
-        sqlOptions.EnableRetryOnFailure(); 
+        sqlOptions.EnableRetryOnFailure();
     }));
 
-// 3. Construimos la aplicación.
+// --- Construimos la aplicación ---
 var app = builder.Build();
 
-// 4. Configuramos el pipeline de solicitudes HTTP.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -27,10 +30,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
-// 5. Ejecutamos la aplicación.
 app.Run();

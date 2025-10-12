@@ -1574,7 +1574,8 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
-          "LoftComputacion.Domain": "1.0.0"
+          "LoftComputacion.Domain": "1.0.0",
+          "LoftComputacion.Infrastructure": "1.0.0"
         },
         "compile": {
           "bin/placeholder/LoftComputacion.Application.dll": {}
