@@ -58,7 +58,8 @@ namespace LoftComputacion.WebAPI.Controllers
                 PrecioFinal = ordenDto.PrecioFinal
             };
 
-            var resultado = await _ordenDeServicioService.UpdateOrdenAsync(id, ordenActualizada);
+            // Pasamos el UsuarioId al servicio
+            var resultado = await _ordenDeServicioService.UpdateOrdenAsync(id, ordenActualizada, ordenDto.UsuarioId);
             if (!resultado)
             {
                 return NotFound();
