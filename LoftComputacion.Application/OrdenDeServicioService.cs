@@ -50,24 +50,32 @@ namespace LoftComputacion.Application
                 return false;
             }
 
-            // Creamos el registro de historial ANTES de hacer el cambio
+            // --- LÓGICA DE AUDITORÍA MEJORADA ---
+
+            // 1. Buscamos los nombres de los estados en la base de datos
+            var estadoAnterior = await _context.Estados.FindAsync(ordenExistente.EstadoId);
+            var estadoNuevo = await _context.Estados.FindAsync(ordenActualizada.EstadoId);
+
+            // 2. Creamos una descripción más amigable
+            var descripcionCambio = $"El estado cambió de '{estadoAnterior?.Nombre ?? "Desconocido"}' a '{estadoNuevo?.Nombre ?? "Desconocido"}'.";
+
             var historial = new HistorialOrden
             {
                 OrdenDeServicioId = id,
-                UsuarioId = usuarioId, // El ID del usuario que hace el cambio
+                UsuarioId = usuarioId,
                 FechaHora = DateTime.UtcNow,
-                DescripcionDelCambio = $"El estado cambió de '{ordenExistente.EstadoId}' a '{ordenActualizada.EstadoId}'."
-                // En el futuro podemos hacer esto más amigable buscando el nombre del estado
+                DescripcionDelCambio = descripcionCambio
             };
-
             await _context.HistorialOrdenes.AddAsync(historial);
+
+            // --- FIN DE LA LÓGICA DE AUDITORÍA ---
 
             // Ahora, actualizamos los campos de la orden
             ordenExistente.EstadoId = ordenActualizada.EstadoId;
             ordenExistente.PrecioPresupuestado = ordenActualizada.PrecioPresupuestado;
             ordenExistente.PrecioFinal = ordenActualizada.PrecioFinal;
 
-            await _context.SaveChangesAsync(); // Guardamos ambos cambios (la orden y el historial) en una sola transacción
+            await _context.SaveChangesAsync();
             return true;
         }
 
