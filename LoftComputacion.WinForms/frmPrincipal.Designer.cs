@@ -78,6 +78,7 @@
             nuevaOrdenToolStripMenuItem.Name = "nuevaOrdenToolStripMenuItem";
             nuevaOrdenToolStripMenuItem.Size = new Size(217, 30);
             nuevaOrdenToolStripMenuItem.Text = "Nueva Orden";
+            nuevaOrdenToolStripMenuItem.Click += nuevaOrdenToolStripMenuItem_Click;
             // 
             // dgvOrdenes
             // 

@@ -63,5 +63,19 @@ namespace LoftComputacion.WinForms
                 MessageBox.Show($"Error al cargar las órdenes de servicio: {ex.Message}", "Error de Conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private async void nuevaOrdenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // 1. Creamos una nueva 'instancia' o 'copia' del formulario de gestión.
+            frmGestionOrden formNuevaOrden = new frmGestionOrden();
+
+            // 2. Lo mostramos como un diálogo. Esto significa que la ventana principal
+            //    quedará bloqueada hasta que cerremos la ventana de "Nueva Orden".
+            formNuevaOrden.ShowDialog();
+
+            // 3. Cuando la ventana de nueva orden se cierre, este código se ejecutará.
+            //    Recargamos la grilla para que, si creamos una nueva orden, aparezca al instante.
+            await CargarOrdenesDeServicio();
+        }
     }
 }
