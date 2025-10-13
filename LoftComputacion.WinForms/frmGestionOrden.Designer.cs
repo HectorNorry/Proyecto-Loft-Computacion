@@ -46,7 +46,7 @@
             label6 = new Label();
             label5 = new Label();
             txtComponentes = new TextBox();
-            textBox3 = new TextBox();
+            txtModelo = new TextBox();
             label8 = new Label();
             label7 = new Label();
             groupBox3 = new GroupBox();
@@ -178,7 +178,7 @@
             tableLayoutPanel1.Controls.Add(label6, 0, 2);
             tableLayoutPanel1.Controls.Add(label5, 0, 1);
             tableLayoutPanel1.Controls.Add(txtComponentes, 3, 0);
-            tableLayoutPanel1.Controls.Add(textBox3, 1, 3);
+            tableLayoutPanel1.Controls.Add(txtModelo, 1, 3);
             tableLayoutPanel1.Controls.Add(label8, 0, 3);
             tableLayoutPanel1.Controls.Add(label7, 2, 2);
             tableLayoutPanel1.Dock = DockStyle.Fill;
@@ -257,13 +257,13 @@
             txtComponentes.Size = new Size(280, 227);
             txtComponentes.TabIndex = 7;
             // 
-            // textBox3
+            // txtModelo
             // 
-            textBox3.Dock = DockStyle.Fill;
-            textBox3.Location = new Point(192, 120);
-            textBox3.Name = "textBox3";
-            textBox3.Size = new Size(278, 33);
-            textBox3.TabIndex = 8;
+            txtModelo.Dock = DockStyle.Fill;
+            txtModelo.Location = new Point(192, 120);
+            txtModelo.Name = "txtModelo";
+            txtModelo.Size = new Size(278, 33);
+            txtModelo.TabIndex = 8;
             // 
             // label8
             // 
@@ -382,7 +382,7 @@
         private Label label6;
         private Label label7;
         private TextBox txtComponentes;
-        private TextBox textBox3;
+        private TextBox txtModelo;
         private Label label8;
     }
 }
