@@ -36,3 +36,7 @@ appsettings.Development.json
 # Other
 *.nupkg
 *.zip
+
+# Archivos de compilacion de .NET
+[Oo]bj/
+[Bb]in/
