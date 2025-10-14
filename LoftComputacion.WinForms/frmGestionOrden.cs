@@ -40,6 +40,25 @@ namespace LoftComputacion.WinForms
             this.Close(); // Cierra el formulario actual
         }
 
+        private TipoDeEquipo ObtenerTipoDeEquipoSeleccionado()
+        {
+            // Tomamos el texto seleccionado en el ComboBox (ej: "PC de Escritorio")
+            string seleccion = cmbTipoEquipo.SelectedItem.ToString();
+
+            // Usamos un switch para devolver el valor enum correcto
+            switch (seleccion)
+            {
+                case "Notebook":
+                    return TipoDeEquipo.Notebook;
+                case "PC de Escritorio":
+                    return TipoDeEquipo.PC_Escritorio;
+                case "Impresora":
+                    return TipoDeEquipo.Impresora;
+                default:
+                    // Si por alguna razón hay un valor inesperado, lanzamos un error
+                    throw new InvalidOperationException("Tipo de equipo no válido seleccionado.");
+            }
+        }
         private async void btnGuardar_Click(object sender, EventArgs e)
         {
             try
@@ -56,8 +75,7 @@ namespace LoftComputacion.WinForms
                 // 2. Crear el nuevo Equipo
                 var nuevoEquipo = new Equipo
                 {
-                    // Convertimos el texto del ComboBox al tipo de dato correcto (enum)
-                    Tipo = (TipoDeEquipo)cmbTipoEquipo.SelectedIndex,
+                    Tipo = ObtenerTipoDeEquipoSeleccionado(),
                     Marca = txtMarca.Text,
                     Modelo = txtModelo.Text,
                     NumeroDeSerie = txtNumeroSerie.Text,
@@ -65,7 +83,7 @@ namespace LoftComputacion.WinForms
                 };
                 var equipoCreado = await _apiClient.CreateEquipoAsync(nuevoEquipo);
 
-                // 3. Crear la nueva Orden de Servicio usando los IDs de los objetos recién creados
+                // 3. Crear la nueva Orden de Servicio
                 var nuevaOrden = new OrdenDeServicio
                 {
                     ClienteId = clienteCreado.Id,
@@ -74,13 +92,11 @@ namespace LoftComputacion.WinForms
                 };
                 await _apiClient.CreateOrdenDeServicioAsync(nuevaOrden);
 
-                // 4. Si todo salió bien, mostramos un mensaje de éxito y cerramos el formulario
                 MessageBox.Show("¡Orden de servicio creada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 this.Close();
             }
             catch (Exception ex)
             {
-                // Si algo falla, mostramos el error
                 MessageBox.Show($"Ocurrió un error al guardar la orden: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
