@@ -41,6 +41,42 @@ namespace LoftComputacion.WinForms
             return new List<OrdenDeServicio>();
         }
 
-        // Aquí iremos agregando más métodos: GetOrdenesAsync, CreateClienteAsync, etc.
+        public async Task<Cliente> CreateClienteAsync(Cliente nuevoCliente)
+        {
+            var json = JsonConvert.SerializeObject(nuevoCliente);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"{_apiUrl}/clientes", content);
+            response.EnsureSuccessStatusCode();
+
+            var json_response = await response.Content.ReadAsStringAsync();
+            return  JsonConvert.DeserializeObject<Cliente>(json_response);
+        }
+
+        public async Task<Equipo> CreateEquipoAsync(Equipo nuevoEquipo)
+        {
+            var json = JsonConvert.SerializeObject(nuevoEquipo);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"{_apiUrl}/equipos", content);
+            response.EnsureSuccessStatusCode();
+
+            var json_response = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<Equipo>(json_response);
+        }
+
+        public async Task<OrdenDeServicio> CreateOrdenDeServicioAsync(OrdenDeServicio nuevaOrden)
+        {
+            // La API espera un DTO, así que creamos un objeto anónimo con la estructura correcta
+            var createDto = new { nuevaOrden.ClienteId, nuevaOrden.EquipoId, nuevaOrden.FallaDeclaradaPorCliente };
+            var dto_json = JsonConvert.SerializeObject(createDto);
+            var dto_content = new StringContent(dto_json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"{_apiUrl}/ordenesdeservicio", dto_content);
+            response.EnsureSuccessStatusCode();
+
+            var json_response = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<OrdenDeServicio>(json_response);
+        }
     }
 }
