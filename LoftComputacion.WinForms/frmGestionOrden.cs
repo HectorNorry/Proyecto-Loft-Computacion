@@ -68,7 +68,8 @@ namespace LoftComputacion.WinForms
                 {
                     NombreCompleto = txtNombreCliente.Text,
                     Telefono = txtTelefonoCliente.Text,
-                    Email = txtEmailCliente.Text
+                    Email = txtEmailCliente.Text,
+                    DNI = txtDniCliente.Text  
                 };
                 var clienteCreado = await _apiClient.CreateClienteAsync(nuevoCliente);
 
