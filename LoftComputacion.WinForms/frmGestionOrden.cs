@@ -69,7 +69,7 @@ namespace LoftComputacion.WinForms
                     NombreCompleto = txtNombreCliente.Text,
                     Telefono = txtTelefonoCliente.Text,
                     Email = txtEmailCliente.Text,
-                    DNI = txtDniCliente.Text  
+                    DNI = txtDniCliente.Text
                 };
                 var clienteCreado = await _apiClient.CreateClienteAsync(nuevoCliente);
 
@@ -99,6 +99,29 @@ namespace LoftComputacion.WinForms
             catch (Exception ex)
             {
                 MessageBox.Show($"Ocurrió un error al guardar la orden: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnBuscarCliente_Click(object sender, EventArgs e)
+        {
+            using (var formBusqueda = new frmBuscarCliente())
+            {
+                if (formBusqueda.ShowDialog() == DialogResult.OK)
+                {
+                    var cliente = formBusqueda.ClienteSeleccionado;
+
+                    // Rellenamos los TextBox y guardamos el cliente seleccionado
+                    txtNombreCliente.Text = cliente.NombreCompleto;
+                    txtTelefonoCliente.Text = cliente.Telefono;
+                    txtEmailCliente.Text = cliente.Email;
+                    txtDniCliente.Text = cliente.DNI;
+
+                    // Bloqueamos los campos para evitar edición
+                    txtNombreCliente.ReadOnly = true;
+                    txtTelefonoCliente.ReadOnly = true;
+                    txtEmailCliente.ReadOnly = true;
+                    txtDniCliente.ReadOnly = true;
+                }
             }
         }
     }
