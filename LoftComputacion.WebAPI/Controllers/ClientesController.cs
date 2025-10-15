@@ -1,5 +1,6 @@
 ﻿using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
+using LoftComputacion.WebAPI.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -56,20 +57,23 @@ namespace LoftComputacion.WebAPI.Controllers
 
         // POST: api/clientes
         [HttpPost]
-        public async Task<IActionResult> CreateCliente([FromBody] Cliente cliente)
+        public async Task<IActionResult> CreateCliente([FromBody] CreateClienteDto clienteDto)
         {
-            if (cliente == null)
+            var nuevoCliente = new Cliente
             {
-                return BadRequest("El cliente no puede ser nulo.");
-            }
+                NombreCompleto = clienteDto.NombreCompleto,
+                Telefono = clienteDto.Telefono,
+                Email = clienteDto.Email,
+                DNI = clienteDto.DNI
+            };
 
-            await _context.Clientes.AddAsync(cliente);
+            await _context.Clientes.AddAsync(nuevoCliente);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCliente), new { id = cliente.Id }, cliente);
+            return CreatedAtAction(nameof(GetCliente), new { id = nuevoCliente.Id }, nuevoCliente);
         }
 
-        
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCliente(int id)
         {

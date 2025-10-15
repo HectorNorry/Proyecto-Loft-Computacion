@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             groupBox1 = new GroupBox();
+            txtDniCliente = new TextBox();
+            label9 = new Label();
             button1 = new Button();
             txtEmailCliente = new TextBox();
             txtTelefonoCliente = new TextBox();
@@ -64,6 +66,8 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(txtDniCliente);
+            groupBox1.Controls.Add(label9);
             groupBox1.Controls.Add(button1);
             groupBox1.Controls.Add(txtEmailCliente);
             groupBox1.Controls.Add(txtTelefonoCliente);
@@ -74,10 +78,27 @@
             groupBox1.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBox1.Location = new Point(3, 3);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(954, 181);
+            groupBox1.Size = new Size(954, 213);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Datos del Cliente";
+            // 
+            // txtDniCliente
+            // 
+            txtDniCliente.Location = new Point(193, 174);
+            txtDniCliente.Name = "txtDniCliente";
+            txtDniCliente.Size = new Size(384, 33);
+            txtDniCliente.TabIndex = 8;
+            // 
+            // label9
+            // 
+            label9.AutoSize = true;
+            label9.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label9.Location = new Point(125, 174);
+            label9.Name = "label9";
+            label9.Size = new Size(53, 25);
+            label9.TabIndex = 7;
+            label9.Text = "DNI :";
             // 
             // button1
             // 
@@ -91,21 +112,21 @@
             // 
             // txtEmailCliente
             // 
-            txtEmailCliente.Location = new Point(193, 134);
+            txtEmailCliente.Location = new Point(195, 126);
             txtEmailCliente.Name = "txtEmailCliente";
             txtEmailCliente.Size = new Size(384, 33);
             txtEmailCliente.TabIndex = 5;
             // 
             // txtTelefonoCliente
             // 
-            txtTelefonoCliente.Location = new Point(193, 85);
+            txtTelefonoCliente.Location = new Point(193, 78);
             txtTelefonoCliente.Name = "txtTelefonoCliente";
             txtTelefonoCliente.Size = new Size(384, 33);
             txtTelefonoCliente.TabIndex = 4;
             // 
             // txtNombreCliente
             // 
-            txtNombreCliente.Location = new Point(193, 35);
+            txtNombreCliente.Location = new Point(195, 25);
             txtNombreCliente.Name = "txtNombreCliente";
             txtNombreCliente.Size = new Size(384, 33);
             txtNombreCliente.TabIndex = 3;
@@ -114,7 +135,7 @@
             // 
             label3.AutoSize = true;
             label3.Font = new Font("Segoe UI", 14.25F);
-            label3.Location = new Point(6, 134);
+            label3.Location = new Point(108, 134);
             label3.Name = "label3";
             label3.Size = new Size(72, 25);
             label3.TabIndex = 2;
@@ -124,7 +145,7 @@
             // 
             label2.AutoSize = true;
             label2.Font = new Font("Segoe UI", 14.25F);
-            label2.Location = new Point(6, 80);
+            label2.Location = new Point(89, 86);
             label2.Name = "label2";
             label2.Size = new Size(98, 25);
             label2.TabIndex = 1;
@@ -136,9 +157,9 @@
             label1.Font = new Font("Segoe UI", 14.25F);
             label1.Location = new Point(6, 33);
             label1.Name = "label1";
-            label1.Size = new Size(182, 25);
+            label1.Size = new Size(174, 25);
             label1.TabIndex = 0;
-            label1.Text = "Nombre Completo : ";
+            label1.Text = "Nombre y Apellido:";
             // 
             // flowLayoutPanel1
             // 
@@ -150,14 +171,14 @@
             flowLayoutPanel1.FlowDirection = FlowDirection.TopDown;
             flowLayoutPanel1.Location = new Point(0, 0);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
-            flowLayoutPanel1.Size = new Size(1073, 657);
+            flowLayoutPanel1.Size = new Size(1199, 749);
             flowLayoutPanel1.TabIndex = 1;
             // 
             // groupBox2
             // 
             groupBox2.Controls.Add(tableLayoutPanel1);
             groupBox2.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            groupBox2.Location = new Point(3, 190);
+            groupBox2.Location = new Point(3, 222);
             groupBox2.Name = "groupBox2";
             groupBox2.Size = new Size(954, 265);
             groupBox2.TabIndex = 1;
@@ -289,7 +310,7 @@
             // 
             groupBox3.Controls.Add(txtFallaDeclarada);
             groupBox3.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            groupBox3.Location = new Point(3, 461);
+            groupBox3.Location = new Point(3, 493);
             groupBox3.Name = "groupBox3";
             groupBox3.Size = new Size(954, 124);
             groupBox3.TabIndex = 2;
@@ -308,7 +329,7 @@
             panel1.Controls.Add(btnGuardar);
             panel1.Controls.Add(btnCancelar);
             panel1.Dock = DockStyle.Bottom;
-            panel1.Location = new Point(3, 591);
+            panel1.Location = new Point(3, 623);
             panel1.Name = "panel1";
             panel1.Size = new Size(954, 58);
             panel1.TabIndex = 5;
@@ -339,7 +360,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1073, 657);
+            ClientSize = new Size(1199, 749);
             Controls.Add(flowLayoutPanel1);
             Name = "frmGestionOrden";
             Text = "frmGestionOrden";
@@ -384,5 +405,7 @@
         private TextBox txtComponentes;
         private TextBox txtModelo;
         private Label label8;
+        private TextBox txtDniCliente;
+        private Label label9;
     }
 }

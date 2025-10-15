@@ -30,12 +30,20 @@ namespace LoftComputacion.Infrastructure
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuramos la precisión para las propiedades de tipo decimal en OrdenDeServicio
+            // Configuramos la precisión para las propiedades de tipo decimal
             modelBuilder.Entity<OrdenDeServicio>(entity =>
             {
                 entity.Property(e => e.PrecioFinal).HasPrecision(18, 2);
                 entity.Property(e => e.PrecioPresupuestado).HasPrecision(18, 2);
             });
+
+            
+            // Configuramos la entidad Cliente para que el DNI sea único
+            modelBuilder.Entity<Cliente>(entity =>
+            {
+                entity.HasIndex(e => e.DNI).IsUnique();
+            });
+            
         }
     }
 
