@@ -15,6 +15,8 @@ namespace LoftComputacion.WinForms
     {
         private readonly ApiClient _apiClient;
 
+        private Cliente? _clienteSeleccionado = null;
+
         public frmGestionOrden()
         {
             InitializeComponent();
@@ -63,17 +65,31 @@ namespace LoftComputacion.WinForms
         {
             try
             {
-                // 1. Crear el nuevo Cliente
-                var nuevoCliente = new Cliente
-                {
-                    NombreCompleto = txtNombreCliente.Text,
-                    Telefono = txtTelefonoCliente.Text,
-                    Email = txtEmailCliente.Text,
-                    DNI = txtDniCliente.Text
-                };
-                var clienteCreado = await _apiClient.CreateClienteAsync(nuevoCliente);
+                Cliente clienteParaGuardar; // Variable para guardar el cliente (nuevo o existente)
 
-                // 2. Crear el nuevo Equipo
+                // --- LÓGICA Cliente Nuevo vs. Existente (CORREGIDA) ---
+                if (_clienteSeleccionado != null)
+                {
+                    // Si _clienteSeleccionado tiene valor, usamos ese cliente directamente.
+                    clienteParaGuardar = _clienteSeleccionado;
+                }
+                else
+                {
+                    // Si _clienteSeleccionado es null, AHÍ SÍ creamos uno nuevo.
+                    var nuevoCliente = new Cliente
+                    {
+                        NombreCompleto = txtNombreCliente.Text,
+                        Telefono = txtTelefonoCliente.Text,
+                        Email = txtEmailCliente.Text,
+                        DNI = txtDniCliente.Text
+                    };
+                    // Llamamos a la API SOLO si es un cliente nuevo.
+                    clienteParaGuardar = await _apiClient.CreateClienteAsync(nuevoCliente);
+                }
+                // --- FIN LÓGICA Cliente ---
+
+
+                // Crear el nuevo Equipo (esta parte sigue igual)
                 var nuevoEquipo = new Equipo
                 {
                     Tipo = ObtenerTipoDeEquipoSeleccionado(),
@@ -84,10 +100,10 @@ namespace LoftComputacion.WinForms
                 };
                 var equipoCreado = await _apiClient.CreateEquipoAsync(nuevoEquipo);
 
-                // 3. Crear la nueva Orden de Servicio
+                // Crear la nueva Orden de Servicio (esta parte sigue igual)
                 var nuevaOrden = new OrdenDeServicio
                 {
-                    ClienteId = clienteCreado.Id,
+                    ClienteId = clienteParaGuardar.Id,
                     EquipoId = equipoCreado.Id,
                     FallaDeclaradaPorCliente = txtFallaDeclarada.Text
                 };
@@ -108,13 +124,15 @@ namespace LoftComputacion.WinForms
             {
                 if (formBusqueda.ShowDialog() == DialogResult.OK)
                 {
-                    var cliente = formBusqueda.ClienteSeleccionado;
+                    // --- ¡ESTA ES LA LÍNEA QUE FALTABA! ---
+                    _clienteSeleccionado = formBusqueda.ClienteSeleccionado; // Guardamos el cliente seleccionado
+                                                                             // --- FIN DE LA LÍNEA QUE FALTABA ---
 
-                    // Rellenamos los TextBox y guardamos el cliente seleccionado
-                    txtNombreCliente.Text = cliente.NombreCompleto;
-                    txtTelefonoCliente.Text = cliente.Telefono;
-                    txtEmailCliente.Text = cliente.Email;
-                    txtDniCliente.Text = cliente.DNI;
+                    // Rellenamos los TextBox con sus datos
+                    txtNombreCliente.Text = _clienteSeleccionado.NombreCompleto;
+                    txtTelefonoCliente.Text = _clienteSeleccionado.Telefono;
+                    txtEmailCliente.Text = _clienteSeleccionado.Email;
+                    txtDniCliente.Text = _clienteSeleccionado.DNI;
 
                     // Bloqueamos los campos para evitar edición
                     txtNombreCliente.ReadOnly = true;
