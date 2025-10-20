@@ -1,120 +1,223 @@
 ﻿using LoftComputacion.Domain;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading.Tasks; // Asegúrate de tener este
 using System.Windows.Forms;
 
 namespace LoftComputacion.WinForms
 {
+    // Solo UNA definición de la clase aquí
     public partial class frmGestionOrden : Form
     {
         private readonly ApiClient _apiClient;
-
         private Cliente? _clienteSeleccionado = null;
+        private OrdenDeServicio? _ordenParaEditar = null; // Variable para guardar la orden en modo edición
 
+        // Constructor para CREAR una nueva orden
         public frmGestionOrden()
         {
             InitializeComponent();
             _apiClient = new ApiClient();
         }
 
-        private void frmGestionOrden_Load(object sender, EventArgs e)
+        // Constructor para EDITAR una orden existente
+        public frmGestionOrden(OrdenDeServicio orden) : this() // Llama al constructor de arriba
         {
-            // Limpiamos el ComboBox por si acaso
-            cmbTipoEquipo.Items.Clear();
+            _ordenParaEditar = orden; // Guardamos la orden que recibimos
+        }
 
-            // Agregamos los tipos de equipo que definimos en nuestra lógica
+        // --- EVENTOS ---
+
+        private async void frmGestionOrden_Load(object sender, EventArgs e)
+        {
+            // Llenar ComboBox Tipo Equipo (siempre)
+            cmbTipoEquipo.Items.Clear();
             cmbTipoEquipo.Items.Add("Notebook");
             cmbTipoEquipo.Items.Add("PC de Escritorio");
             cmbTipoEquipo.Items.Add("Impresora");
 
-            // Opcional: Hacemos que la primera opción aparezca seleccionada por defecto
-            cmbTipoEquipo.SelectedIndex = 0;
+            // --- NUEVO: Cargar ComboBox de Estados ---
+            try
+            {
+                var estados = await _apiClient.GetEstadosAsync();
+                // Configuramos el ComboBox para que muestre el Nombre pero guarde el Id
+                cmbEstado.DataSource = estados;
+                cmbEstado.DisplayMember = "Nombre"; // Propiedad a mostrar
+                cmbEstado.ValueMember = "Id";       // Propiedad a usar como valor interno
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar los estados: {ex.Message}", "Error de Conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // Podríamos deshabilitar el ComboBox o cerrar el form si falla
+            }
+            // --- FIN NUEVO ---
+
+
+            if (_ordenParaEditar != null) // MODO EDICIÓN
+            {
+                this.Text = $"Editando Orden N° {_ordenParaEditar.Id}";
+
+                // --- RESTAURAR ESTE BLOQUE: Cargar Cliente y Equipo ---
+                if (_ordenParaEditar.Cliente != null)
+                {
+                    _clienteSeleccionado = _ordenParaEditar.Cliente;
+                    txtNombreCliente.Text = _ordenParaEditar.Cliente.NombreCompleto;
+                    txtTelefonoCliente.Text = _ordenParaEditar.Cliente.Telefono;
+                    txtEmailCliente.Text = _ordenParaEditar.Cliente.Email;
+                    txtDniCliente.Text = _ordenParaEditar.Cliente.DNI;
+
+                    txtNombreCliente.ReadOnly = true;
+                    txtTelefonoCliente.ReadOnly = true;
+                    txtEmailCliente.ReadOnly = true;
+                    txtDniCliente.ReadOnly = true;
+                    btnBuscarCliente.Enabled = false;
+                }
+
+                if (_ordenParaEditar.Equipo != null)
+                {
+                    // Asegurarse que cmbTipoEquipo tenga items antes de seleccionar
+                    if (cmbTipoEquipo.Items.Count > (int)_ordenParaEditar.Equipo.Tipo)
+                    {
+                        cmbTipoEquipo.SelectedIndex = (int)_ordenParaEditar.Equipo.Tipo;
+                    }
+                    txtMarca.Text = _ordenParaEditar.Equipo.Marca;
+                    txtModelo.Text = _ordenParaEditar.Equipo.Modelo;
+                    txtNumeroSerie.Text = _ordenParaEditar.Equipo.NumeroDeSerie;
+                    txtComponentes.Text = _ordenParaEditar.Equipo.Componentes;
+
+                    cmbTipoEquipo.Enabled = false;
+                    txtMarca.ReadOnly = true;
+                    txtModelo.ReadOnly = true;
+                    txtNumeroSerie.ReadOnly = true;
+                    txtComponentes.ReadOnly = true;
+                }
+                // --- FIN DEL BLOQUE RESTAURADO ---
+
+
+                // --- Cargar Estado y Precios (Esto ya estaba bien) ---
+                cmbEstado.SelectedValue = _ordenParaEditar.EstadoId;
+                txtPrecioPresupuesto.Text = _ordenParaEditar.PrecioPresupuestado?.ToString("F2");
+                txtPrecioFinal.Text = _ordenParaEditar.PrecioFinal?.ToString("F2");
+
+                cmbEstado.Enabled = true;
+                txtPrecioPresupuesto.ReadOnly = false;
+                txtPrecioFinal.ReadOnly = false;
+                // --- FIN CARGA ESTADO Y PRECIOS ---
+
+                // Bloqueamos Falla inicial (Esto ya estaba bien)
+                txtFallaDeclarada.Text = _ordenParaEditar.FallaDeclaradaPorCliente;
+                txtFallaDeclarada.ReadOnly = true;
+
+                btnGuardar.Text = "Actualizar";
+            }
+            else // MODO CREACIÓN (Esto ya estaba bien)
+            {
+                // ... (el código del else sigue igual) ...
+            }
         }
 
         private void btnCancelar_Click(object sender, EventArgs e)
         {
-            this.Close(); // Cierra el formulario actual
+            this.Close();
         }
 
-        private TipoDeEquipo ObtenerTipoDeEquipoSeleccionado()
-        {
-            // Tomamos el texto seleccionado en el ComboBox (ej: "PC de Escritorio")
-            string seleccion = cmbTipoEquipo.SelectedItem.ToString();
-
-            // Usamos un switch para devolver el valor enum correcto
-            switch (seleccion)
-            {
-                case "Notebook":
-                    return TipoDeEquipo.Notebook;
-                case "PC de Escritorio":
-                    return TipoDeEquipo.PC_Escritorio;
-                case "Impresora":
-                    return TipoDeEquipo.Impresora;
-                default:
-                    // Si por alguna razón hay un valor inesperado, lanzamos un error
-                    throw new InvalidOperationException("Tipo de equipo no válido seleccionado.");
-            }
-        }
         private async void btnGuardar_Click(object sender, EventArgs e)
         {
-            try
+            if (_ordenParaEditar != null) // Estamos en modo EDICIÓN
             {
-                Cliente clienteParaGuardar; // Variable para guardar el cliente (nuevo o existente)
+                try
+                {
+                    // --- LÓGICA PARA ACTUALIZAR (LEYENDO CONTROLES) ---
 
-                // --- LÓGICA Cliente Nuevo vs. Existente (CORREGIDA) ---
-                if (_clienteSeleccionado != null)
-                {
-                    // Si _clienteSeleccionado tiene valor, usamos ese cliente directamente.
-                    clienteParaGuardar = _clienteSeleccionado;
-                }
-                else
-                {
-                    // Si _clienteSeleccionado es null, AHÍ SÍ creamos uno nuevo.
-                    var nuevoCliente = new Cliente
+                    // 1. Leemos el nuevo estado seleccionado en el ComboBox
+                    if (cmbEstado.SelectedValue != null) // Nos aseguramos de que haya algo seleccionado
                     {
-                        NombreCompleto = txtNombreCliente.Text,
-                        Telefono = txtTelefonoCliente.Text,
-                        Email = txtEmailCliente.Text,
-                        DNI = txtDniCliente.Text
-                    };
-                    // Llamamos a la API SOLO si es un cliente nuevo.
-                    clienteParaGuardar = await _apiClient.CreateClienteAsync(nuevoCliente);
+                        _ordenParaEditar.EstadoId = (int)cmbEstado.SelectedValue;
+                    }
+
+                    // 2. Leemos los precios de los TextBox, convirtiéndolos a decimal
+                    //    Usamos decimal.TryParse para manejar el caso de que el usuario deje el campo vacío o escriba texto inválido.
+                    if (decimal.TryParse(txtPrecioPresupuesto.Text, out decimal presupuesto))
+                    {
+                        _ordenParaEditar.PrecioPresupuestado = presupuesto;
+                    }
+                    else
+                    {
+                        _ordenParaEditar.PrecioPresupuestado = null; // Si no es válido, guardamos null
+                    }
+
+                    if (decimal.TryParse(txtPrecioFinal.Text, out decimal precioFinal))
+                    {
+                        _ordenParaEditar.PrecioFinal = precioFinal;
+                    }
+                    else
+                    {
+                        _ordenParaEditar.PrecioFinal = null;
+                    }
+
+                    // 3. Llamamos al método del ApiClient para actualizar
+                    //    (Recordá que UpdateOrdenDeServicioAsync necesita el UsuarioId, por ahora usamos 1)
+                    await _apiClient.UpdateOrdenDeServicioAsync(_ordenParaEditar.Id, _ordenParaEditar);
+
+                    MessageBox.Show("¡Orden de servicio actualizada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    this.Close();
                 }
-                // --- FIN LÓGICA Cliente ---
-
-
-                // Crear el nuevo Equipo (esta parte sigue igual)
-                var nuevoEquipo = new Equipo
+                catch (FormatException) // Capturamos error si el formato del precio es incorrecto
                 {
-                    Tipo = ObtenerTipoDeEquipoSeleccionado(),
-                    Marca = txtMarca.Text,
-                    Modelo = txtModelo.Text,
-                    NumeroDeSerie = txtNumeroSerie.Text,
-                    Componentes = txtComponentes.Text
-                };
-                var equipoCreado = await _apiClient.CreateEquipoAsync(nuevoEquipo);
-
-                // Crear la nueva Orden de Servicio (esta parte sigue igual)
-                var nuevaOrden = new OrdenDeServicio
+                    MessageBox.Show("Por favor, ingrese un valor numérico válido para los precios.", "Error de Formato", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                catch (Exception ex)
                 {
-                    ClienteId = clienteParaGuardar.Id,
-                    EquipoId = equipoCreado.Id,
-                    FallaDeclaradaPorCliente = txtFallaDeclarada.Text
-                };
-                await _apiClient.CreateOrdenDeServicioAsync(nuevaOrden);
-
-                MessageBox.Show("¡Orden de servicio creada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                this.Close();
+                    MessageBox.Show($"Ocurrió un error al actualizar la orden: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-            catch (Exception ex)
+            else // Estamos en modo CREACIÓN
             {
-                MessageBox.Show($"Ocurrió un error al guardar la orden: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                try
+                {
+                    Cliente clienteParaGuardar;
+                    if (_clienteSeleccionado != null)
+                    {
+                        clienteParaGuardar = _clienteSeleccionado;
+                    }
+                    else
+                    {
+                        var nuevoCliente = new Cliente
+                        {
+                            NombreCompleto = txtNombreCliente.Text,
+                            Telefono = txtTelefonoCliente.Text,
+                            Email = txtEmailCliente.Text,
+                            DNI = txtDniCliente.Text
+                        };
+                        clienteParaGuardar = await _apiClient.CreateClienteAsync(nuevoCliente);
+                    }
+
+                    var nuevoEquipo = new Equipo
+                    {
+                        Tipo = ObtenerTipoDeEquipoSeleccionado(),
+                        Marca = txtMarca.Text,
+                        Modelo = txtModelo.Text,
+                        NumeroDeSerie = txtNumeroSerie.Text,
+                        Componentes = txtComponentes.Text
+                    };
+                    var equipoCreado = await _apiClient.CreateEquipoAsync(nuevoEquipo);
+
+                    // --- AQUÍ SE DECLARA nuevaOrden ---
+                    var nuevaOrden = new OrdenDeServicio
+                    {
+                        ClienteId = clienteParaGuardar.Id,
+                        EquipoId = equipoCreado.Id,
+                        FallaDeclaradaPorCliente = txtFallaDeclarada.Text
+                    };
+                    // --- Y AQUÍ SE USA ---
+                    await _apiClient.CreateOrdenDeServicioAsync(nuevaOrden);
+
+                    MessageBox.Show("¡Orden de servicio creada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    this.Close();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ocurrió un error al guardar la orden: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -124,22 +227,31 @@ namespace LoftComputacion.WinForms
             {
                 if (formBusqueda.ShowDialog() == DialogResult.OK)
                 {
-                    // --- ¡ESTA ES LA LÍNEA QUE FALTABA! ---
-                    _clienteSeleccionado = formBusqueda.ClienteSeleccionado; // Guardamos el cliente seleccionado
-                                                                             // --- FIN DE LA LÍNEA QUE FALTABA ---
-
-                    // Rellenamos los TextBox con sus datos
+                    _clienteSeleccionado = formBusqueda.ClienteSeleccionado;
                     txtNombreCliente.Text = _clienteSeleccionado.NombreCompleto;
                     txtTelefonoCliente.Text = _clienteSeleccionado.Telefono;
                     txtEmailCliente.Text = _clienteSeleccionado.Email;
                     txtDniCliente.Text = _clienteSeleccionado.DNI;
 
-                    // Bloqueamos los campos para evitar edición
                     txtNombreCliente.ReadOnly = true;
                     txtTelefonoCliente.ReadOnly = true;
                     txtEmailCliente.ReadOnly = true;
                     txtDniCliente.ReadOnly = true;
+                    btnBuscarCliente.Enabled = false; // Deshabilitamos buscar una vez seleccionado
                 }
+            }
+        }
+
+        // --- MÉTODOS AYUDANTE ---
+        private TipoDeEquipo ObtenerTipoDeEquipoSeleccionado()
+        {
+            string seleccion = cmbTipoEquipo.SelectedItem?.ToString() ?? string.Empty; // Más seguro
+            switch (seleccion)
+            {
+                case "Notebook": return TipoDeEquipo.Notebook;
+                case "PC de Escritorio": return TipoDeEquipo.PC_Escritorio;
+                case "Impresora": return TipoDeEquipo.Impresora;
+                default: throw new InvalidOperationException("Tipo de equipo no válido.");
             }
         }
     }
