@@ -56,6 +56,7 @@
             txtBusquedaCliente.Name = "txtBusquedaCliente";
             txtBusquedaCliente.Size = new Size(305, 23);
             txtBusquedaCliente.TabIndex = 1;
+            txtBusquedaCliente.TextChanged += txtBusquedaCliente_TextChanged;
             // 
             // dgvClientes
             // 
@@ -97,27 +98,24 @@
             btnSeleccionar.TabIndex = 0;
             btnSeleccionar.Text = "Seleccionar";
             btnSeleccionar.UseVisualStyleBackColor = true;
+            btnSeleccionar.Click += btnSeleccionar_Click;
             // 
             // frmBuscarCliente
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.dgvClientes);
-            this.Controls.Add(this.pnlAcciones);
-            this.Controls.Add(this.pnlBusqueda);
-            this.Name = "frmBuscarCliente";
-            this.Text = "Buscar Cliente";
-
-            // --- ¡AGREGÁ ESTA LÍNEA AQUÍ! ---
-            this.Load += new System.EventHandler(this.frmBuscarCliente_Load);
-            // --- FIN DE LA LÍNEA A AGREGAR ---
-
-            this.pnlBusqueda.ResumeLayout(false);
-            this.pnlBusqueda.PerformLayout();
-            this.pnlAcciones.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvClientes)).EndInit();
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(800, 450);
+            Controls.Add(dgvClientes);
+            Controls.Add(pnlAcciones);
+            Controls.Add(pnlBusqueda);
+            Name = "frmBuscarCliente";
+            Text = "Buscar Cliente";
+            Load += frmBuscarCliente_Load;
+            ((System.ComponentModel.ISupportInitialize)dgvClientes).EndInit();
+            pnlBusqueda.ResumeLayout(false);
+            pnlBusqueda.PerformLayout();
+            pnlAcciones.ResumeLayout(false);
+            ResumeLayout(false);
         }
 
         #endregion

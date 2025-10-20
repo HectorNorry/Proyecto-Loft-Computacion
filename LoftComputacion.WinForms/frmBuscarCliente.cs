@@ -50,11 +50,34 @@ namespace LoftComputacion.WinForms
 
         private void txtBusquedaCliente_TextChanged(object sender, EventArgs e)
         {
-            var filtro = txtBusquedaCliente.Text.ToLower();
-            var clientesFiltrados = _listaCompletaClientes.Where(c =>
-                c.NombreCompleto.ToLower().Contains(filtro) ||
-                (c.DNI != null && c.DNI.Contains(filtro))
-            ).ToList();
+            // 1. Obtenemos el texto del TextBox, lo limpiamos y lo pasamos a minúsculas
+            //    usando InvariantCulture para una comparación segura.
+            var filtro = txtBusquedaCliente.Text.Trim().ToLowerInvariant();
+
+            List<Cliente> clientesFiltrados;
+
+            // 2. Si el filtro está vacío, mostramos todos los clientes
+            if (string.IsNullOrEmpty(filtro))
+            {
+                clientesFiltrados = _listaCompletaClientes;
+            }
+            else
+            {
+                // 3. Si hay filtro, buscamos en Nombre, DNI y Teléfono
+                clientesFiltrados = _listaCompletaClientes.Where(c =>
+                    // Busca en Nombre Completo (ignorando mayús/minús)
+                    c.NombreCompleto.ToLowerInvariant().Contains(filtro) ||
+
+                    // Busca en DNI (si no es nulo)
+                    (c.DNI != null && c.DNI.Contains(filtro)) ||
+
+                    // Busca en Teléfono
+                    c.Telefono.Contains(filtro)
+                ).ToList();
+            }
+
+            // 4. Actualizamos la grilla con los resultados filtrados (o la lista completa si no hay filtro)
+            dgvClientes.DataSource = null;
             dgvClientes.DataSource = clientesFiltrados;
         }
 
@@ -80,5 +103,7 @@ namespace LoftComputacion.WinForms
                 SeleccionarClienteYSalir();
             }
         }
+
+        
     }
 }

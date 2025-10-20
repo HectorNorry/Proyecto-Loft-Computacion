@@ -29,32 +29,32 @@
         private void InitializeComponent()
         {
             panel1 = new Panel();
-            btnCancelar = new Button();
             btnGuardar = new Button();
+            btnCancelar = new Button();
             groupBox3 = new GroupBox();
             txtFallaDeclarada = new TextBox();
             groupBox2 = new GroupBox();
             tableLayoutPanel1 = new TableLayoutPanel();
-            label7 = new Label();
-            label8 = new Label();
-            txtModelo = new TextBox();
-            txtComponentes = new TextBox();
-            label5 = new Label();
-            label6 = new Label();
-            txtNumeroSerie = new TextBox();
-            txtMarca = new TextBox();
-            cmbTipoEquipo = new ComboBox();
             label4 = new Label();
+            cmbTipoEquipo = new ComboBox();
+            txtMarca = new TextBox();
+            txtNumeroSerie = new TextBox();
+            label6 = new Label();
+            label5 = new Label();
+            txtComponentes = new TextBox();
+            txtModelo = new TextBox();
+            label8 = new Label();
+            label7 = new Label();
             groupBox1 = new GroupBox();
-            label1 = new Label();
-            label2 = new Label();
-            label3 = new Label();
-            txtNombreCliente = new TextBox();
-            txtTelefonoCliente = new TextBox();
-            txtEmailCliente = new TextBox();
-            btnBuscarCliente = new Button();
-            label9 = new Label();
             txtDniCliente = new TextBox();
+            label9 = new Label();
+            btnBuscarCliente = new Button();
+            txtEmailCliente = new TextBox();
+            txtTelefonoCliente = new TextBox();
+            txtNombreCliente = new TextBox();
+            label3 = new Label();
+            label2 = new Label();
+            label1 = new Label();
             flowLayoutPanel1 = new FlowLayoutPanel();
             panel1.SuspendLayout();
             groupBox3.SuspendLayout();
@@ -74,17 +74,6 @@
             panel1.Size = new Size(951, 58);
             panel1.TabIndex = 5;
             // 
-            // btnCancelar
-            // 
-            btnCancelar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnCancelar.Location = new Point(837, 3);
-            btnCancelar.Name = "btnCancelar";
-            btnCancelar.Size = new Size(111, 55);
-            btnCancelar.TabIndex = 4;
-            btnCancelar.Text = "Cancelar";
-            btnCancelar.UseVisualStyleBackColor = true;
-            btnCancelar.Click += btnCancelar_Click;
-            // 
             // btnGuardar
             // 
             btnGuardar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
@@ -95,6 +84,17 @@
             btnGuardar.Text = "Guardar";
             btnGuardar.UseVisualStyleBackColor = true;
             btnGuardar.Click += btnGuardar_Click;
+            // 
+            // btnCancelar
+            // 
+            btnCancelar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnCancelar.Location = new Point(837, 3);
+            btnCancelar.Name = "btnCancelar";
+            btnCancelar.Size = new Size(111, 55);
+            btnCancelar.TabIndex = 4;
+            btnCancelar.Text = "Cancelar";
+            btnCancelar.UseVisualStyleBackColor = true;
+            btnCancelar.Click += btnCancelar_Click;
             // 
             // groupBox3
             // 
@@ -155,53 +155,40 @@
             tableLayoutPanel1.Size = new Size(945, 233);
             tableLayoutPanel1.TabIndex = 0;
             // 
-            // label7
+            // label4
             // 
-            label7.AutoSize = true;
-            label7.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label7.Location = new Point(475, 78);
-            label7.Name = "label7";
-            label7.Size = new Size(143, 25);
-            label7.TabIndex = 6;
-            label7.Text = "Componentes : ";
+            label4.AutoSize = true;
+            label4.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label4.Location = new Point(3, 0);
+            label4.Name = "label4";
+            label4.Size = new Size(153, 25);
+            label4.TabIndex = 0;
+            label4.Text = "Tipo de Equipo : ";
             // 
-            // label8
+            // cmbTipoEquipo
             // 
-            label8.AutoSize = true;
-            label8.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label8.Location = new Point(3, 117);
-            label8.Name = "label8";
-            label8.Size = new Size(86, 25);
-            label8.TabIndex = 9;
-            label8.Text = "Modelo :";
+            cmbTipoEquipo.Dock = DockStyle.Fill;
+            cmbTipoEquipo.FormattingEnabled = true;
+            cmbTipoEquipo.Location = new Point(192, 3);
+            cmbTipoEquipo.Name = "cmbTipoEquipo";
+            cmbTipoEquipo.Size = new Size(277, 33);
+            cmbTipoEquipo.TabIndex = 1;
             // 
-            // txtModelo
+            // txtMarca
             // 
-            txtModelo.Dock = DockStyle.Fill;
-            txtModelo.Location = new Point(192, 120);
-            txtModelo.Name = "txtModelo";
-            txtModelo.Size = new Size(277, 33);
-            txtModelo.TabIndex = 8;
+            txtMarca.Dock = DockStyle.Fill;
+            txtMarca.Location = new Point(192, 42);
+            txtMarca.Name = "txtMarca";
+            txtMarca.Size = new Size(277, 33);
+            txtMarca.TabIndex = 3;
             // 
-            // txtComponentes
+            // txtNumeroSerie
             // 
-            txtComponentes.Dock = DockStyle.Fill;
-            txtComponentes.Location = new Point(664, 3);
-            txtComponentes.Multiline = true;
-            txtComponentes.Name = "txtComponentes";
-            tableLayoutPanel1.SetRowSpan(txtComponentes, 4);
-            txtComponentes.Size = new Size(278, 227);
-            txtComponentes.TabIndex = 7;
-            // 
-            // label5
-            // 
-            label5.AutoSize = true;
-            label5.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label5.Location = new Point(3, 39);
-            label5.Name = "label5";
-            label5.Size = new Size(79, 25);
-            label5.TabIndex = 2;
-            label5.Text = "Marca : ";
+            txtNumeroSerie.Dock = DockStyle.Fill;
+            txtNumeroSerie.Location = new Point(192, 81);
+            txtNumeroSerie.Name = "txtNumeroSerie";
+            txtNumeroSerie.Size = new Size(277, 33);
+            txtNumeroSerie.TabIndex = 4;
             // 
             // label6
             // 
@@ -213,40 +200,53 @@
             label6.TabIndex = 5;
             label6.Text = "Nro de Serie :";
             // 
-            // txtNumeroSerie
+            // label5
             // 
-            txtNumeroSerie.Dock = DockStyle.Fill;
-            txtNumeroSerie.Location = new Point(192, 81);
-            txtNumeroSerie.Name = "txtNumeroSerie";
-            txtNumeroSerie.Size = new Size(277, 33);
-            txtNumeroSerie.TabIndex = 4;
+            label5.AutoSize = true;
+            label5.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label5.Location = new Point(3, 39);
+            label5.Name = "label5";
+            label5.Size = new Size(79, 25);
+            label5.TabIndex = 2;
+            label5.Text = "Marca : ";
             // 
-            // txtMarca
+            // txtComponentes
             // 
-            txtMarca.Dock = DockStyle.Fill;
-            txtMarca.Location = new Point(192, 42);
-            txtMarca.Name = "txtMarca";
-            txtMarca.Size = new Size(277, 33);
-            txtMarca.TabIndex = 3;
+            txtComponentes.Dock = DockStyle.Fill;
+            txtComponentes.Location = new Point(664, 3);
+            txtComponentes.Multiline = true;
+            txtComponentes.Name = "txtComponentes";
+            tableLayoutPanel1.SetRowSpan(txtComponentes, 4);
+            txtComponentes.Size = new Size(278, 227);
+            txtComponentes.TabIndex = 7;
             // 
-            // cmbTipoEquipo
+            // txtModelo
             // 
-            cmbTipoEquipo.Dock = DockStyle.Fill;
-            cmbTipoEquipo.FormattingEnabled = true;
-            cmbTipoEquipo.Location = new Point(192, 3);
-            cmbTipoEquipo.Name = "cmbTipoEquipo";
-            cmbTipoEquipo.Size = new Size(277, 33);
-            cmbTipoEquipo.TabIndex = 1;
+            txtModelo.Dock = DockStyle.Fill;
+            txtModelo.Location = new Point(192, 120);
+            txtModelo.Name = "txtModelo";
+            txtModelo.Size = new Size(277, 33);
+            txtModelo.TabIndex = 8;
             // 
-            // label4
+            // label8
             // 
-            label4.AutoSize = true;
-            label4.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label4.Location = new Point(3, 0);
-            label4.Name = "label4";
-            label4.Size = new Size(153, 25);
-            label4.TabIndex = 0;
-            label4.Text = "Tipo de Equipo : ";
+            label8.AutoSize = true;
+            label8.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label8.Location = new Point(3, 117);
+            label8.Name = "label8";
+            label8.Size = new Size(86, 25);
+            label8.TabIndex = 9;
+            label8.Text = "Modelo :";
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label7.Location = new Point(475, 78);
+            label7.Name = "label7";
+            label7.Size = new Size(143, 25);
+            label7.TabIndex = 6;
+            label7.Text = "Componentes : ";
             // 
             // groupBox1
             // 
@@ -268,56 +268,22 @@
             groupBox1.TabStop = false;
             groupBox1.Text = "Datos del Cliente";
             // 
-            // label1
+            // txtDniCliente
             // 
-            label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 14.25F);
-            label1.Location = new Point(6, 33);
-            label1.Name = "label1";
-            label1.Size = new Size(174, 25);
-            label1.TabIndex = 0;
-            label1.Text = "Nombre y Apellido:";
+            txtDniCliente.Location = new Point(193, 174);
+            txtDniCliente.Name = "txtDniCliente";
+            txtDniCliente.Size = new Size(384, 33);
+            txtDniCliente.TabIndex = 8;
             // 
-            // label2
+            // label9
             // 
-            label2.AutoSize = true;
-            label2.Font = new Font("Segoe UI", 14.25F);
-            label2.Location = new Point(89, 86);
-            label2.Name = "label2";
-            label2.Size = new Size(98, 25);
-            label2.TabIndex = 1;
-            label2.Text = "Telefono : ";
-            // 
-            // label3
-            // 
-            label3.AutoSize = true;
-            label3.Font = new Font("Segoe UI", 14.25F);
-            label3.Location = new Point(108, 134);
-            label3.Name = "label3";
-            label3.Size = new Size(72, 25);
-            label3.TabIndex = 2;
-            label3.Text = "Email : ";
-            // 
-            // txtNombreCliente
-            // 
-            txtNombreCliente.Location = new Point(195, 25);
-            txtNombreCliente.Name = "txtNombreCliente";
-            txtNombreCliente.Size = new Size(384, 33);
-            txtNombreCliente.TabIndex = 3;
-            // 
-            // txtTelefonoCliente
-            // 
-            txtTelefonoCliente.Location = new Point(193, 78);
-            txtTelefonoCliente.Name = "txtTelefonoCliente";
-            txtTelefonoCliente.Size = new Size(384, 33);
-            txtTelefonoCliente.TabIndex = 4;
-            // 
-            // txtEmailCliente
-            // 
-            txtEmailCliente.Location = new Point(195, 126);
-            txtEmailCliente.Name = "txtEmailCliente";
-            txtEmailCliente.Size = new Size(384, 33);
-            txtEmailCliente.TabIndex = 5;
+            label9.AutoSize = true;
+            label9.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label9.Location = new Point(125, 174);
+            label9.Name = "label9";
+            label9.Size = new Size(53, 25);
+            label9.TabIndex = 7;
+            label9.Text = "DNI :";
             // 
             // btnBuscarCliente
             // 
@@ -330,22 +296,56 @@
             btnBuscarCliente.UseVisualStyleBackColor = true;
             btnBuscarCliente.Click += btnBuscarCliente_Click;
             // 
-            // label9
+            // txtEmailCliente
             // 
-            label9.AutoSize = true;
-            label9.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label9.Location = new Point(125, 174);
-            label9.Name = "label9";
-            label9.Size = new Size(53, 25);
-            label9.TabIndex = 7;
-            label9.Text = "DNI :";
+            txtEmailCliente.Location = new Point(195, 126);
+            txtEmailCliente.Name = "txtEmailCliente";
+            txtEmailCliente.Size = new Size(384, 33);
+            txtEmailCliente.TabIndex = 5;
             // 
-            // txtDniCliente
+            // txtTelefonoCliente
             // 
-            txtDniCliente.Location = new Point(193, 174);
-            txtDniCliente.Name = "txtDniCliente";
-            txtDniCliente.Size = new Size(384, 33);
-            txtDniCliente.TabIndex = 8;
+            txtTelefonoCliente.Location = new Point(193, 78);
+            txtTelefonoCliente.Name = "txtTelefonoCliente";
+            txtTelefonoCliente.Size = new Size(384, 33);
+            txtTelefonoCliente.TabIndex = 4;
+            // 
+            // txtNombreCliente
+            // 
+            txtNombreCliente.Location = new Point(195, 25);
+            txtNombreCliente.Name = "txtNombreCliente";
+            txtNombreCliente.Size = new Size(384, 33);
+            txtNombreCliente.TabIndex = 3;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Font = new Font("Segoe UI", 14.25F);
+            label3.Location = new Point(108, 134);
+            label3.Name = "label3";
+            label3.Size = new Size(72, 25);
+            label3.TabIndex = 2;
+            label3.Text = "Email : ";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Font = new Font("Segoe UI", 14.25F);
+            label2.Location = new Point(89, 86);
+            label2.Name = "label2";
+            label2.Size = new Size(98, 25);
+            label2.TabIndex = 1;
+            label2.Text = "Telefono : ";
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Font = new Font("Segoe UI", 14.25F);
+            label1.Location = new Point(6, 33);
+            label1.Name = "label1";
+            label1.Size = new Size(174, 25);
+            label1.TabIndex = 0;
+            label1.Text = "Nombre y Apellido:";
             // 
             // flowLayoutPanel1
             // 
