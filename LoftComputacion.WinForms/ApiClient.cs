@@ -78,5 +78,35 @@ namespace LoftComputacion.WinForms
             var json_response = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<OrdenDeServicio>(json_response);
         }
+
+        public async Task UpdateOrdenDeServicioAsync(int id, OrdenDeServicio ordenActualizada)
+        {
+            // La API espera un DTO específico para actualizar
+            var updateDto = new
+            {
+                ordenActualizada.EstadoId,
+                ordenActualizada.PrecioPresupuestado,
+                ordenActualizada.PrecioFinal,
+                // TODO: Obtener el ID del usuario logueado o seleccionado
+                UsuarioId = 1 // Por ahora, usamos el ID 1 como ejemplo
+            };
+            var dto_json = JsonConvert.SerializeObject(updateDto);
+            var dto_content = new StringContent(dto_json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PutAsync($"{_apiUrl}/ordenesdeservicio/{id}", dto_content);
+            response.EnsureSuccessStatusCode(); // Lanza excepción si la API devuelve error
+        }
+
+        public async Task<List<Estado>> GetEstadosAsync()
+        {
+            var response = await _httpClient.GetAsync($"{_apiUrl}/estados");
+            if (response.IsSuccessStatusCode)
+            {
+                var json_response = await response.Content.ReadAsStringAsync();
+                var estados = JsonConvert.DeserializeObject<List<Estado>>(json_response);
+                return estados ?? new List<Estado>();
+            }
+            return new List<Estado>();
+        }
     }
 }

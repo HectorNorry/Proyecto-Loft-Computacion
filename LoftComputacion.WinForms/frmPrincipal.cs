@@ -44,7 +44,7 @@ namespace LoftComputacion.WinForms
 
                     // Ocultamos los objetos complejos
                     dgvOrdenes.Columns["Cliente"].Visible = false;
-                    dgvOrdenes.Columns["Estado"].Visible = false;
+                    //dgvOrdenes.Columns["Estado"].Visible = false;
                     dgvOrdenes.Columns["Equipo"].Visible = false;
                     dgvOrdenes.Columns["MetodoDePago"].Visible = false;
                     dgvOrdenes.Columns["Fotos"].Visible = false;
@@ -56,6 +56,10 @@ namespace LoftComputacion.WinForms
                     dgvOrdenes.Columns["FallaDeclaradaPorCliente"].HeaderText = "Falla Declarada";
                     dgvOrdenes.Columns["PrecioPresupuestado"].HeaderText = "Presupuesto";
                     dgvOrdenes.Columns["PrecioFinal"].HeaderText = "Precio Final";
+
+                    // Le decimos a la columna "Estado" que muestre la propiedad "Nombre" del objeto Estado
+                    dgvOrdenes.Columns["Estado"].DataPropertyName = "Nombre";
+                    dgvOrdenes.Columns["Estado"].HeaderText = "Estado Actual"; // Renombramos la cabecera
                 }
             }
             catch (Exception ex)
@@ -76,6 +80,30 @@ namespace LoftComputacion.WinForms
             // 3. Cuando la ventana de nueva orden se cierre, este código se ejecutará.
             //    Recargamos la grilla para que, si creamos una nueva orden, aparezca al instante.
             await CargarOrdenesDeServicio();
+        }
+
+        private async void dgvOrdenes_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // 1. Nos aseguramos de que el doble clic fue sobre una fila válida (no la cabecera)
+            if (e.RowIndex >= 0)
+            {
+                // 2. Obtenemos el objeto OrdenDeServicio completo de la fila seleccionada.
+                //    DataGridView guarda el objeto original en DataBoundItem.
+                if (dgvOrdenes.Rows[e.RowIndex].DataBoundItem is OrdenDeServicio ordenSeleccionada)
+                {
+                    // 3. Creamos el formulario de gestión, pasándole la orden seleccionada
+                    //    al NUEVO constructor que creamos.
+                    using (var formGestion = new frmGestionOrden(ordenSeleccionada))
+                    {
+                        // 4. Lo mostramos como diálogo
+                        formGestion.ShowDialog();
+
+                        // 5. Cuando se cierre el formulario de edición, recargamos la grilla
+                        //    por si se hicieron cambios (ej: cambio de estado).
+                        await CargarOrdenesDeServicio();
+                    }
+                }
+            }
         }
     }
 }

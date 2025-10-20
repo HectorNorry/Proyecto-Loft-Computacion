@@ -89,6 +89,7 @@
             dgvOrdenes.Name = "dgvOrdenes";
             dgvOrdenes.Size = new Size(800, 365);
             dgvOrdenes.TabIndex = 1;
+            dgvOrdenes.CellDoubleClick += dgvOrdenes_CellDoubleClick;
             // 
             // lblbuscar
             // 

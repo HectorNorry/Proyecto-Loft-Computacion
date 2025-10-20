@@ -29,6 +29,12 @@
         private void InitializeComponent()
         {
             panel1 = new Panel();
+            label12 = new Label();
+            label11 = new Label();
+            txtPrecioFinal = new TextBox();
+            txtPrecioPresupuesto = new TextBox();
+            label10 = new Label();
+            cmbEstado = new ComboBox();
             btnGuardar = new Button();
             btnCancelar = new Button();
             groupBox3 = new GroupBox();
@@ -67,17 +73,78 @@
             // panel1
             // 
             panel1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            panel1.Controls.Add(label12);
+            panel1.Controls.Add(label11);
+            panel1.Controls.Add(txtPrecioFinal);
+            panel1.Controls.Add(txtPrecioPresupuesto);
+            panel1.Controls.Add(label10);
+            panel1.Controls.Add(cmbEstado);
             panel1.Controls.Add(btnGuardar);
             panel1.Controls.Add(btnCancelar);
-            panel1.Location = new Point(3, 623);
+            panel1.Location = new Point(3, 547);
             panel1.Name = "panel1";
-            panel1.Size = new Size(951, 58);
+            panel1.Size = new Size(951, 170);
             panel1.TabIndex = 5;
+            // 
+            // label12
+            // 
+            label12.AutoSize = true;
+            label12.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label12.Location = new Point(118, 128);
+            label12.Name = "label12";
+            label12.Size = new Size(128, 25);
+            label12.TabIndex = 10;
+            label12.Text = "Precio FINAL: ";
+            // 
+            // label11
+            // 
+            label11.AutoSize = true;
+            label11.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label11.Location = new Point(121, 78);
+            label11.Name = "label11";
+            label11.Size = new Size(125, 25);
+            label11.TabIndex = 9;
+            label11.Text = "Presupuesto :";
+            // 
+            // txtPrecioFinal
+            // 
+            txtPrecioFinal.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
+            txtPrecioFinal.Location = new Point(258, 130);
+            txtPrecioFinal.Name = "txtPrecioFinal";
+            txtPrecioFinal.Size = new Size(216, 33);
+            txtPrecioFinal.TabIndex = 8;
+            // 
+            // txtPrecioPresupuesto
+            // 
+            txtPrecioPresupuesto.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
+            txtPrecioPresupuesto.Location = new Point(258, 78);
+            txtPrecioPresupuesto.Name = "txtPrecioPresupuesto";
+            txtPrecioPresupuesto.Size = new Size(216, 33);
+            txtPrecioPresupuesto.TabIndex = 7;
+            // 
+            // label10
+            // 
+            label10.AutoSize = true;
+            label10.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label10.Location = new Point(70, 25);
+            label10.Name = "label10";
+            label10.Size = new Size(173, 25);
+            label10.TabIndex = 6;
+            label10.Text = "Estado del trabajo :";
+            // 
+            // cmbEstado
+            // 
+            cmbEstado.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            cmbEstado.FormattingEnabled = true;
+            cmbEstado.Location = new Point(256, 25);
+            cmbEstado.Name = "cmbEstado";
+            cmbEstado.Size = new Size(216, 33);
+            cmbEstado.TabIndex = 5;
             // 
             // btnGuardar
             // 
             btnGuardar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnGuardar.Location = new Point(683, 3);
+            btnGuardar.Location = new Point(683, 115);
             btnGuardar.Name = "btnGuardar";
             btnGuardar.Size = new Size(112, 55);
             btnGuardar.TabIndex = 3;
@@ -88,7 +155,7 @@
             // btnCancelar
             // 
             btnCancelar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnCancelar.Location = new Point(837, 3);
+            btnCancelar.Location = new Point(837, 115);
             btnCancelar.Name = "btnCancelar";
             btnCancelar.Size = new Size(111, 55);
             btnCancelar.TabIndex = 4;
@@ -100,9 +167,9 @@
             // 
             groupBox3.Controls.Add(txtFallaDeclarada);
             groupBox3.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            groupBox3.Location = new Point(3, 493);
+            groupBox3.Location = new Point(3, 437);
             groupBox3.Name = "groupBox3";
-            groupBox3.Size = new Size(951, 124);
+            groupBox3.Size = new Size(951, 104);
             groupBox3.TabIndex = 2;
             groupBox3.TabStop = false;
             groupBox3.Text = "Falla Declarada";
@@ -122,7 +189,7 @@
             groupBox2.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBox2.Location = new Point(3, 222);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(951, 265);
+            groupBox2.Size = new Size(951, 209);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
             groupBox2.Text = "Datos del Equipo";
@@ -131,7 +198,7 @@
             // 
             tableLayoutPanel1.ColumnCount = 4;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 29.94709F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
             tableLayoutPanel1.Controls.Add(label4, 0, 0);
@@ -152,7 +219,7 @@
             tableLayoutPanel1.RowStyles.Add(new RowStyle());
             tableLayoutPanel1.RowStyles.Add(new RowStyle());
             tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.Size = new Size(945, 233);
+            tableLayoutPanel1.Size = new Size(945, 177);
             tableLayoutPanel1.TabIndex = 0;
             // 
             // label4
@@ -217,7 +284,7 @@
             txtComponentes.Multiline = true;
             txtComponentes.Name = "txtComponentes";
             tableLayoutPanel1.SetRowSpan(txtComponentes, 4);
-            txtComponentes.Size = new Size(278, 227);
+            txtComponentes.Size = new Size(278, 171);
             txtComponentes.TabIndex = 7;
             // 
             // txtModelo
@@ -370,6 +437,7 @@
             Text = "frmGestionOrden";
             Load += frmGestionOrden_Load;
             panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             groupBox3.ResumeLayout(false);
             groupBox3.PerformLayout();
             groupBox2.ResumeLayout(false);
@@ -411,5 +479,11 @@
         private Label label2;
         private Label label1;
         private FlowLayoutPanel flowLayoutPanel1;
+        private Label label10;
+        private ComboBox cmbEstado;
+        private Label label12;
+        private Label label11;
+        private TextBox txtPrecioFinal;
+        private TextBox txtPrecioPresupuesto;
     }
 }
