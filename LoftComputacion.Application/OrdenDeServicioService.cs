@@ -15,13 +15,28 @@ namespace LoftComputacion.Application
             _aiService = aiService;
         }
 
-        public async Task<IEnumerable<OrdenDeServicio>> GetAllOrdenesAsync()
+        public async Task<IEnumerable<OrdenDeServicio>> GetAllOrdenesAsync(string? filtro = null) // Agregamos el parámetro
         {
-            return await _context.OrdenesDeServicio
+            // Empezamos con la consulta base, incluyendo los datos relacionados
+            var query = _context.OrdenesDeServicio
                 .Include(o => o.Cliente)
                 .Include(o => o.Equipo)
                 .Include(o => o.Estado)
-                .ToListAsync();
+                .AsQueryable(); // Importante: AsQueryable() permite añadir filtros después
+
+            if (!string.IsNullOrEmpty(filtro))
+            {
+                var filtroLower = filtro.ToLowerInvariant();
+                query = query.Where(o =>
+                    o.Id.ToString() == filtroLower || // Busca por ID de orden (si es número exacto)
+                    (o.Cliente != null && o.Cliente.NombreCompleto.ToLowerInvariant().Contains(filtroLower)) || // Busca en nombre cliente
+                    (o.Cliente != null && o.Cliente.DNI != null && o.Cliente.DNI.Contains(filtroLower)) || // Busca en DNI cliente
+                    (o.Equipo != null && o.Equipo.NumeroDeSerie != null && o.Equipo.NumeroDeSerie.ToLowerInvariant().Contains(filtroLower)) // Busca en Nro Serie Equipo
+                );
+            }
+
+            // Solo al final ejecutamos la consulta con ToListAsync()
+            return await query.ToListAsync();
         }
 
         public async Task<OrdenDeServicio?> GetOrdenByIdAsync(int id)

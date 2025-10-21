@@ -17,9 +17,10 @@ namespace LoftComputacion.WebAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetOrdenesDeServicio()
+        // Indicamos que 'filtro' viene de la URL (query string) y es opcional
+        public async Task<IActionResult> GetOrdenesDeServicio([FromQuery] string? filtro = null)
         {
-            var ordenes = await _ordenDeServicioService.GetAllOrdenesAsync();
+            var ordenes = await _ordenDeServicioService.GetAllOrdenesAsync(filtro); // Pasamos el filtro al servicio
             return Ok(ordenes);
         }
 
