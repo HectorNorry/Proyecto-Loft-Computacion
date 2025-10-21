@@ -22,6 +22,8 @@ namespace LoftComputacion.Application
                 .Include(o => o.Cliente)
                 .Include(o => o.Equipo)
                 .Include(o => o.Estado)
+                .Include(o => o.Historial)
+                .ThenInclude(h => h.Usuario)
                 .AsQueryable(); // Importante: AsQueryable() permite añadir filtros después
 
             if (!string.IsNullOrEmpty(filtro))
@@ -45,7 +47,10 @@ namespace LoftComputacion.Application
                 .Include(o => o.Cliente)
                 .Include(o => o.Equipo)
                 .Include(o => o.Estado)
+                .Include(o => o.Historial)
+                .ThenInclude(h => h.Usuario)
                 .FirstOrDefaultAsync(o => o.Id == id);
+
         }
 
         public async Task<OrdenDeServicio> CreateOrdenAsync(OrdenDeServicio nuevaOrden)
