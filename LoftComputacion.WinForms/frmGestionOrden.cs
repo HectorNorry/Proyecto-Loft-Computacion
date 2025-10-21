@@ -124,25 +124,42 @@ namespace LoftComputacion.WinForms
         {
             if (_ordenParaEditar != null) // Estamos en modo EDICIÓN
             {
+                // --- MOSTRAR VENTANA DE CONFIRMACIÓN ---
+                int usuarioIdConfirmado = 0; // Variable para guardar el ID del usuario validado
+                using (var formConfirmacion = new frmConfirmarCambio())
+                {
+                    // Mostramos el formulario de confirmación
+                    if (formConfirmacion.ShowDialog() == DialogResult.OK)
+                    {
+                        // Si el usuario confirmó correctamente, guardamos su ID
+                        usuarioIdConfirmado = formConfirmacion.UsuarioSeleccionado.Id;
+                    }
+                    else
+                    {
+                        // Si el usuario canceló, no hacemos nada más.
+                        MessageBox.Show("Actualización cancelada.", "Cancelado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return; // Salimos del método
+                    }
+                }
+                // --- FIN VENTANA DE CONFIRMACIÓN ---
+
+                // Si llegamos aquí, la confirmación fue exitosa. Procedemos a actualizar.
                 try
                 {
-                    // --- LÓGICA PARA ACTUALIZAR (LEYENDO CONTROLES) ---
-
-                    // 1. Leemos el nuevo estado seleccionado en el ComboBox
-                    if (cmbEstado.SelectedValue != null) // Nos aseguramos de que haya algo seleccionado
+                    // Leemos el nuevo estado seleccionado
+                    if (cmbEstado.SelectedValue != null)
                     {
                         _ordenParaEditar.EstadoId = (int)cmbEstado.SelectedValue;
                     }
 
-                    // 2. Leemos los precios de los TextBox, convirtiéndolos a decimal
-                    //    Usamos decimal.TryParse para manejar el caso de que el usuario deje el campo vacío o escriba texto inválido.
+                    // Leemos los precios
                     if (decimal.TryParse(txtPrecioPresupuesto.Text, out decimal presupuesto))
                     {
                         _ordenParaEditar.PrecioPresupuestado = presupuesto;
                     }
                     else
                     {
-                        _ordenParaEditar.PrecioPresupuestado = null; // Si no es válido, guardamos null
+                        _ordenParaEditar.PrecioPresupuestado = null;
                     }
 
                     if (decimal.TryParse(txtPrecioFinal.Text, out decimal precioFinal))
@@ -154,14 +171,13 @@ namespace LoftComputacion.WinForms
                         _ordenParaEditar.PrecioFinal = null;
                     }
 
-                    // 3. Llamamos al método del ApiClient para actualizar
-                    //    (Recordá que UpdateOrdenDeServicioAsync necesita el UsuarioId, por ahora usamos 1)
-                    await _apiClient.UpdateOrdenDeServicioAsync(_ordenParaEditar.Id, _ordenParaEditar);
+                    // Llamamos al ApiClient PASANDO EL ID DEL USUARIO CONFIRMADO
+                    await _apiClient.UpdateOrdenDeServicioAsync(_ordenParaEditar.Id, _ordenParaEditar, usuarioIdConfirmado);
 
                     MessageBox.Show("¡Orden de servicio actualizada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     this.Close();
                 }
-                catch (FormatException) // Capturamos error si el formato del precio es incorrecto
+                catch (FormatException)
                 {
                     MessageBox.Show("Por favor, ingrese un valor numérico válido para los precios.", "Error de Formato", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }

@@ -82,6 +82,7 @@
             // 
             // dgvOrdenes
             // 
+            dgvOrdenes.AllowUserToAddRows = false;
             dgvOrdenes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvOrdenes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvOrdenes.Dock = DockStyle.Fill;
@@ -90,6 +91,7 @@
             dgvOrdenes.Size = new Size(800, 365);
             dgvOrdenes.TabIndex = 1;
             dgvOrdenes.CellDoubleClick += dgvOrdenes_CellDoubleClick;
+            dgvOrdenes.CellFormatting += dgvOrdenes_CellFormatting;
             // 
             // lblbuscar
             // 
@@ -108,6 +110,7 @@
             txtBuscar.Name = "txtBuscar";
             txtBuscar.Size = new Size(637, 23);
             txtBuscar.TabIndex = 3;
+            txtBuscar.KeyDown += txtBuscar_KeyDown;
             // 
             // btnBuscar
             // 
@@ -118,6 +121,7 @@
             btnBuscar.TabIndex = 4;
             btnBuscar.Text = "Buscar";
             btnBuscar.UseVisualStyleBackColor = true;
+            btnBuscar.Click += btnBuscar_Click;
             // 
             // panel1
             // 

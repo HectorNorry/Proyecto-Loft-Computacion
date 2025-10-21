@@ -29,9 +29,17 @@ namespace LoftComputacion.WinForms
             return new List<Cliente>();
         }
 
-        public async Task<List<OrdenDeServicio>> GetOrdenesDeServicioAsync()
+        // Reemplaza el método existente por este
+        public async Task<List<OrdenDeServicio>> GetOrdenesDeServicioAsync(string? filtro = null) // Agregamos el parámetro opcional
         {
-            var response = await _httpClient.GetAsync($"{_apiUrl}/ordenesdeservicio");
+            string url = $"{_apiUrl}/ordenesdeservicio";
+            if (!string.IsNullOrEmpty(filtro))
+            {
+                // Si hay un filtro, lo agregamos a la URL como un 'query parameter'
+                url += $"?filtro={Uri.EscapeDataString(filtro)}";
+            }
+
+            var response = await _httpClient.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 var json_response = await response.Content.ReadAsStringAsync();
@@ -79,22 +87,21 @@ namespace LoftComputacion.WinForms
             return JsonConvert.DeserializeObject<OrdenDeServicio>(json_response);
         }
 
-        public async Task UpdateOrdenDeServicioAsync(int id, OrdenDeServicio ordenActualizada)
+        // Asegúrate de que el método reciba el usuarioId
+        public async Task UpdateOrdenDeServicioAsync(int id, OrdenDeServicio ordenActualizada, int usuarioId)
         {
-            // La API espera un DTO específico para actualizar
             var updateDto = new
             {
                 ordenActualizada.EstadoId,
                 ordenActualizada.PrecioPresupuestado,
                 ordenActualizada.PrecioFinal,
-                // TODO: Obtener el ID del usuario logueado o seleccionado
-                UsuarioId = 1 // Por ahora, usamos el ID 1 como ejemplo
+                UsuarioId = usuarioId // Usamos el ID recibido
             };
             var dto_json = JsonConvert.SerializeObject(updateDto);
             var dto_content = new StringContent(dto_json, System.Text.Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PutAsync($"{_apiUrl}/ordenesdeservicio/{id}", dto_content);
-            response.EnsureSuccessStatusCode(); // Lanza excepción si la API devuelve error
+            response.EnsureSuccessStatusCode();
         }
 
         public async Task<List<Estado>> GetEstadosAsync()
@@ -107,6 +114,15 @@ namespace LoftComputacion.WinForms
                 return estados ?? new List<Estado>();
             }
             return new List<Estado>();
+        }
+
+        public async Task<List<Usuario>> GetUsuariosAsync()
+        {
+            var response = await _httpClient.GetAsync($"{_apiUrl}/usuarios");
+            response.EnsureSuccessStatusCode();
+            var json_response = await response.Content.ReadAsStringAsync();
+            var usuarios = JsonConvert.DeserializeObject<List<Usuario>>(json_response);
+            return usuarios ?? new List<Usuario>();
         }
     }
 }
