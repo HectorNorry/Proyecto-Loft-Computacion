@@ -23,7 +23,33 @@ namespace LoftComputacion.WinForms
         // 4. Este es el evento que se dispara cuando el formulario termina de cargar.
         private async void frmPrincipal_Load(object sender, EventArgs e)
         {
-            await CargarOrdenesDeServicio(); // Sin filtro al inicio
+            await CargarOrdenesDeServicio(); // Carga la grilla principal
+
+            // --- RESTAURAR ESTE BLOQUE ---
+            dgvHistorial.AutoGenerateColumns = false; // Desactivamos autogeneración
+            dgvHistorial.Columns.Clear();
+
+            dgvHistorial.Columns.Add(new DataGridViewTextBoxColumn()
+            {
+                Name = "colHistFecha",
+                HeaderText = "Fecha y Hora",
+                DataPropertyName = nameof(HistorialOrden.FechaHora),
+                DefaultCellStyle = new DataGridViewCellStyle { Format = "dd/MM/yy HH:mm" }
+            });
+            dgvHistorial.Columns.Add(new DataGridViewTextBoxColumn()
+            {
+                Name = "colHistDesc",
+                HeaderText = "Descripción",
+                DataPropertyName = nameof(HistorialOrden.DescripcionDelCambio),
+                // ¡Configuramos el estilo aquí, una sola vez!
+                DefaultCellStyle = new DataGridViewCellStyle { WrapMode = DataGridViewTriState.True }
+            });
+            // Si agregas la columna Usuario, definila aquí también.
+
+            dgvHistorial.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            // ¡Configuramos el ajuste de altura aquí, una sola vez!
+            dgvHistorial.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            // --- FIN BLOQUE RESTAURADO ---
         }
 
         // 5. Este es nuestro método para ir a buscar los datos a la API.
@@ -115,6 +141,62 @@ namespace LoftComputacion.WinForms
                 // ...ejecutamos la búsqueda.
                 await CargarOrdenesDeServicio(txtBuscar.Text);
                 e.SuppressKeyPress = true; // Evita el "ding" de Windows al presionar Enter
+            }
+        }
+
+        private void dgvHistorial_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            // Verificación robusta para evitar errores durante la carga/recarga
+            // (Podemos mantener esta verificación por seguridad)
+            if (e.RowIndex < 0 || e.RowIndex >= dgvHistorial.RowCount ||
+                e.ColumnIndex < 0 || e.ColumnIndex >= dgvHistorial.ColumnCount)
+            {
+                return;
+            }
+
+            // Ya no necesitamos ocultar columnas ni formatear fecha/wrap aquí,
+            // porque lo hicimos al definir las columnas en el Load.
+
+            // Si en el futuro agregamos la columna Usuario, aquí iría la lógica:
+            // if (dgvHistorial.Columns[e.ColumnIndex].Name == "colHistUsuario" && 
+            //     dgvHistorial.Rows[e.RowIndex].DataBoundItem is HistorialOrden historial && 
+            //     historial.Usuario != null)
+            // {
+            //     e.Value = historial.Usuario.NombreCompleto;
+            //     e.FormattingApplied = true;
+            // }
+        }
+
+
+
+        private void dgvOrdenes_SelectionChanged(object sender, EventArgs e)
+        {
+            // 1. Verificamos si hay una fila seleccionada
+            if (dgvOrdenes.CurrentRow != null && dgvOrdenes.CurrentRow.DataBoundItem is OrdenDeServicio ordenSeleccionada)
+            {
+                // --- Llenar los TextBox (esto sigue igual) ---
+                txtDetalleClienteNombre.Text = ordenSeleccionada.Cliente?.NombreCompleto ?? "N/A";
+                txtDetalleClienteNombre.Text = ordenSeleccionada.Cliente?.NombreCompleto ?? "N/A";
+                txtDetalleEquipoDesc.Text = ordenSeleccionada.Equipo?.DescripcionCompleta ?? "N/A"; // <-- Para Equipo
+                txtDetalleEstadoActual.Text = ordenSeleccionada.Estado?.Nombre ?? "N/A";          // <-- Para Estado
+                txtDetalleFalla.Text = ordenSeleccionada.FallaDeclaradaPorCliente;
+
+
+                dgvHistorial.DataSource = null;
+                if (ordenSeleccionada.Historial != null)
+                {
+                    var historialOrdenado = ordenSeleccionada.Historial.OrderByDescending(h => h.FechaHora).ToList();
+                    dgvHistorial.DataSource = historialOrdenado;
+                }
+            }
+            else
+            {
+                // Si no hay fila seleccionada (o los datos son inválidos), limpiamos el panel
+                txtDetalleClienteNombre.Text = string.Empty;
+                txtDetalleEquipoDesc.Text = string.Empty;
+                txtDetalleEstadoActual.Text = string.Empty;
+                txtDetalleFalla.Text = string.Empty;
+                dgvHistorial.DataSource = null;
             }
         }
 
