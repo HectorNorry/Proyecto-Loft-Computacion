@@ -32,9 +32,12 @@
             menuStrip1 = new MenuStrip();
             toolStripMenuItem1 = new ToolStripMenuItem();
             salirToolStripMenuItem = new ToolStripMenuItem();
+            tsmiAdministracion = new ToolStripMenuItem();
             órdenesToolStripMenuItem = new ToolStripMenuItem();
             nuevaOrdenToolStripMenuItem = new ToolStripMenuItem();
             dgvOrdenes = new DataGridView();
+            cmsOrdenes = new ContextMenuStrip(components);
+            tsmiCambiarEstado = new ToolStripMenuItem();
             lblbuscar = new Label();
             txtBuscar = new TextBox();
             btnBuscar = new Button();
@@ -51,15 +54,13 @@
             txtDetalleEstadoActual = new TextBox();
             txtDetalleFalla = new TextBox();
             lblDetalleFalla = new Label();
-            cmsOrdenes = new ContextMenuStrip(components);
-            tsmiCambiarEstado = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvOrdenes).BeginInit();
+            cmsOrdenes.SuspendLayout();
             panel1.SuspendLayout();
             pnlDetalles.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvHistorial).BeginInit();
             tableLayoutPanel1.SuspendLayout();
-            cmsOrdenes.SuspendLayout();
             SuspendLayout();
             // 
             // menuStrip1
@@ -74,7 +75,7 @@
             // 
             // toolStripMenuItem1
             // 
-            toolStripMenuItem1.DropDownItems.AddRange(new ToolStripItem[] { salirToolStripMenuItem });
+            toolStripMenuItem1.DropDownItems.AddRange(new ToolStripItem[] { salirToolStripMenuItem, tsmiAdministracion });
             toolStripMenuItem1.Name = "toolStripMenuItem1";
             toolStripMenuItem1.Size = new Size(100, 29);
             toolStripMenuItem1.Text = "Archivo";
@@ -82,8 +83,15 @@
             // salirToolStripMenuItem
             // 
             salirToolStripMenuItem.Name = "salirToolStripMenuItem";
-            salirToolStripMenuItem.Size = new Size(131, 30);
+            salirToolStripMenuItem.Size = new Size(234, 30);
             salirToolStripMenuItem.Text = "Salir";
+            // 
+            // tsmiAdministracion
+            // 
+            tsmiAdministracion.Name = "tsmiAdministracion";
+            tsmiAdministracion.Size = new Size(234, 30);
+            tsmiAdministracion.Text = "Administracion";
+            tsmiAdministracion.Click += tsmiAdministracion_Click;
             // 
             // órdenesToolStripMenuItem
             // 
@@ -112,7 +120,21 @@
             dgvOrdenes.TabIndex = 1;
             dgvOrdenes.CellDoubleClick += dgvOrdenes_CellDoubleClick;
             dgvOrdenes.CellFormatting += dgvOrdenes_CellFormatting;
+            dgvOrdenes.ColumnHeaderMouseClick += dgvOrdenes_ColumnHeaderMouseClick;
             dgvOrdenes.SelectionChanged += dgvOrdenes_SelectionChanged;
+            // 
+            // cmsOrdenes
+            // 
+            cmsOrdenes.Items.AddRange(new ToolStripItem[] { tsmiCambiarEstado });
+            cmsOrdenes.Name = "cmsOrdenes";
+            cmsOrdenes.Size = new Size(158, 26);
+            // 
+            // tsmiCambiarEstado
+            // 
+            tsmiCambiarEstado.Name = "tsmiCambiarEstado";
+            tsmiCambiarEstado.Size = new Size(157, 22);
+            tsmiCambiarEstado.Text = "Cambiar Estado";
+            tsmiCambiarEstado.Click += tsmiCambiarEstado_Click;
             // 
             // lblbuscar
             // 
@@ -309,19 +331,6 @@
             lblDetalleFalla.TabIndex = 2;
             lblDetalleFalla.Text = "Falla :";
             // 
-            // cmsOrdenes
-            // 
-            cmsOrdenes.Items.AddRange(new ToolStripItem[] { tsmiCambiarEstado });
-            cmsOrdenes.Name = "cmsOrdenes";
-            cmsOrdenes.Size = new Size(181, 48);
-            // 
-            // tsmiCambiarEstado
-            // 
-            tsmiCambiarEstado.Name = "tsmiCambiarEstado";
-            tsmiCambiarEstado.Size = new Size(180, 22);
-            tsmiCambiarEstado.Text = "Cambiar Estado";
-            tsmiCambiarEstado.Click += tsmiCambiarEstado_Click;
-            // 
             // frmPrincipal
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -338,13 +347,13 @@
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dgvOrdenes).EndInit();
+            cmsOrdenes.ResumeLayout(false);
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             pnlDetalles.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvHistorial).EndInit();
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
-            cmsOrdenes.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -375,5 +384,6 @@
         private DataGridView dgvHistorial;
         private ContextMenuStrip cmsOrdenes;
         private ToolStripMenuItem tsmiCambiarEstado;
+        private ToolStripMenuItem tsmiAdministracion;
     }
 }

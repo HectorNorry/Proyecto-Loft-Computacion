@@ -15,6 +15,9 @@ namespace LoftComputacion.WinForms
         // Instancia del cliente API para comunicarse con el backend.
         private readonly ApiClient _apiClient;
 
+        private string _columnaOrdenActual = string.Empty;
+        private ListSortDirection _direccionOrdenActual = ListSortDirection.Ascending;
+
         /// <summary>
         /// Constructor del formulario principal.
         /// </summary>
@@ -184,6 +187,12 @@ namespace LoftComputacion.WinForms
                     // Obtenemos el nombre interno de la columna actual.
                     string colName = dgvOrdenes.Columns[e.ColumnIndex].Name;
 
+                    if (colName == "colFechaIngreso" && e.Value is DateTime fechaUtc)
+                    {
+                        // Convertimos la fecha UTC a la hora local de la PC
+                        e.Value = fechaUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"); // Formato deseado
+                        e.FormattingApplied = true;
+                    }
                     // Llenamos el valor según la columna.
                     if (colName == "colClienteNombre" && orden.Cliente != null)
                     {
@@ -192,7 +201,8 @@ namespace LoftComputacion.WinForms
                     }
                     else if (colName == "colEquipoDesc" && orden.Equipo != null)
                     {
-                        e.Value = orden.Equipo.DescripcionCompleta;
+                        // Mostramos solo el tipo, reemplazando el guion bajo
+                        e.Value = orden.Equipo.Tipo.ToString().Replace("_", " ");
                         e.FormattingApplied = true;
                     }
                     else if (colName == "colEstado" && orden.Estado != null)
@@ -247,6 +257,16 @@ namespace LoftComputacion.WinForms
                 e.ColumnIndex < 0 || e.ColumnIndex >= dgvHistorial.ColumnCount)
             {
                 return; // Salir si el índice está fuera de rango
+            }
+
+            if (dgvHistorial.Columns[e.ColumnIndex].DataPropertyName == nameof(HistorialOrden.FechaHora))
+            {
+                if (e.Value is DateTime fechaUtc) // El valor original es UTC
+                {
+                    // Convertimos a local y aplicamos formato
+                    e.Value = fechaUtc.ToLocalTime().ToString("dd/MM/yy HH:mm");
+                    e.FormattingApplied = true;
+                }
             }
 
             // Solo formateamos si es una fila de datos válida y tiene un objeto asociado
@@ -336,6 +356,102 @@ namespace LoftComputacion.WinForms
                 MessageBox.Show("Por favor, seleccione una orden de la lista.", "Selección Requerida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
-    }
 
+        private void tsmiAdministracion_Click(object sender, EventArgs e)
+        {
+            // 1. Pedimos la contraseña
+            using (var formPassword = new frmPasswordPrompt())
+            {
+                // Si la contraseña es correcta (DialogResult.OK)...
+                if (formPassword.ShowDialog() == DialogResult.OK)
+                {
+                    // ...abrimos el formulario de ganancias
+                    using (var formGanancias = new frmGanancias())
+                    {
+                        formGanancias.ShowDialog();
+                    }
+                }
+                // Si cancela o la contraseña es incorrecta, no hacemos nada.
+            }
+        }
+
+        private void dgvOrdenes_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            // Obtenemos la columna en la que se hizo clic
+            var columnaClickeada = dgvOrdenes.Columns[e.ColumnIndex];
+            // Obtenemos el nombre de la propiedad a la que está enlazada (o el Name si es manual)
+            string nombrePropiedad = columnaClickeada.DataPropertyName ?? columnaClickeada.Name;
+
+            // Si no tiene nombre de propiedad (raro) o es una columna que no queremos ordenar, salimos
+            if (string.IsNullOrEmpty(nombrePropiedad)) return;
+
+            // Obtenemos la lista actual de órdenes desde el DataSource
+            if (dgvOrdenes.DataSource is BindingList<OrdenDeServicio> listaOrdenes)
+            {
+                // Determinamos la nueva dirección de ordenamiento
+                ListSortDirection nuevaDireccion;
+                if (_columnaOrdenActual == nombrePropiedad)
+                {
+                    // Si se hace clic en la misma columna, invertimos la dirección
+                    nuevaDireccion = (_direccionOrdenActual == ListSortDirection.Ascending) ? ListSortDirection.Descending : ListSortDirection.Ascending;
+                }
+                else
+                {
+                    // Si es una columna nueva, empezamos ascendente
+                    nuevaDireccion = ListSortDirection.Ascending;
+                }
+
+                // --- LÓGICA DE ORDENAMIENTO CORREGIDA ---
+                IEnumerable<OrdenDeServicio> ordenesOrdenadas;
+
+                // Determinamos cómo ordenar según el NOMBRE de la columna clickeada
+                switch (columnaClickeada.Name) // <-- CAMBIO AQUÍ: Usamos .Name
+                {
+                    case "colClienteNombre": // <-- Usamos el Name que definimos
+                        ordenesOrdenadas = (nuevaDireccion == ListSortDirection.Ascending)
+                            ? listaOrdenes.OrderBy(o => o.Cliente?.NombreCompleto)
+                            : listaOrdenes.OrderByDescending(o => o.Cliente?.NombreCompleto);
+                        break;
+                    case "colEquipoDesc": // <-- Usamos el Name que definimos
+                                          // Ordenamos por Tipo, como configuramos en CellFormatting
+                        ordenesOrdenadas = (nuevaDireccion == ListSortDirection.Ascending)
+                           ? listaOrdenes.OrderBy(o => o.Equipo?.Tipo)
+                           : listaOrdenes.OrderByDescending(o => o.Equipo?.Tipo);
+                        break;
+                    case "colEstado": // <-- Usamos el Name que definimos
+                        ordenesOrdenadas = (nuevaDireccion == ListSortDirection.Ascending)
+                            ? listaOrdenes.OrderBy(o => o.Estado?.Nombre)
+                            : listaOrdenes.OrderByDescending(o => o.Estado?.Nombre);
+                        break;
+                    default: // Ordenar por propiedades directas (usando DataPropertyName)
+                        if (!string.IsNullOrEmpty(nombrePropiedad)) // Asegurarnos de que SÍ tenga DataPropertyName
+                        {
+                            var propInfo = typeof(OrdenDeServicio).GetProperty(nombrePropiedad);
+                            if (propInfo != null)
+                            {
+                                ordenesOrdenadas = (nuevaDireccion == ListSortDirection.Ascending)
+                                  ? listaOrdenes.OrderBy(o => propInfo.GetValue(o))
+                                  : listaOrdenes.OrderByDescending(o => propInfo.GetValue(o));
+                            }
+                            else { ordenesOrdenadas = listaOrdenes; }
+                        }
+                        else { ordenesOrdenadas = listaOrdenes; }
+                        break;
+                }
+                // --- FIN LÓGICA CORREGIDA ---
+
+
+                // Actualizamos el DataSource con la lista ordenada
+                // Convertimos de nuevo a BindingList para mantener el enlace
+                dgvOrdenes.DataSource = new BindingList<OrdenDeServicio>(ordenesOrdenadas.ToList());
+
+                // Guardamos la columna y dirección actual para la próxima vez
+                _columnaOrdenActual = nombrePropiedad;
+                _direccionOrdenActual = nuevaDireccion;
+
+                // Opcional: Podríamos añadir un glifo (flechita ??) a la cabecera
+                // dgvOrdenes.Columns[e.ColumnIndex].HeaderCell.SortGlyphDirection = ...
+            }
+        }
+    }
 }
