@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             menuStrip1 = new MenuStrip();
             toolStripMenuItem1 = new ToolStripMenuItem();
             salirToolStripMenuItem = new ToolStripMenuItem();
@@ -44,18 +45,21 @@
             lblDetalleClienteNombre = new Label();
             lblDetalleEquipoDesc = new Label();
             lblDetalleEstadoActual = new Label();
-            lblDetalleFalla = new Label();
             lblDetalleHistorial = new Label();
             txtDetalleClienteNombre = new TextBox();
             txtDetalleEquipoDesc = new TextBox();
             txtDetalleEstadoActual = new TextBox();
             txtDetalleFalla = new TextBox();
+            lblDetalleFalla = new Label();
+            cmsOrdenes = new ContextMenuStrip(components);
+            tsmiCambiarEstado = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvOrdenes).BeginInit();
             panel1.SuspendLayout();
             pnlDetalles.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvHistorial).BeginInit();
             tableLayoutPanel1.SuspendLayout();
+            cmsOrdenes.SuspendLayout();
             SuspendLayout();
             // 
             // menuStrip1
@@ -100,6 +104,7 @@
             dgvOrdenes.AllowUserToAddRows = false;
             dgvOrdenes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvOrdenes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvOrdenes.ContextMenuStrip = cmsOrdenes;
             dgvOrdenes.Dock = DockStyle.Fill;
             dgvOrdenes.Location = new Point(0, 85);
             dgvOrdenes.Name = "dgvOrdenes";
@@ -183,12 +188,12 @@
             tableLayoutPanel1.Controls.Add(lblDetalleClienteNombre, 0, 0);
             tableLayoutPanel1.Controls.Add(lblDetalleEquipoDesc, 0, 1);
             tableLayoutPanel1.Controls.Add(lblDetalleEstadoActual, 0, 2);
-            tableLayoutPanel1.Controls.Add(lblDetalleFalla, 0, 3);
             tableLayoutPanel1.Controls.Add(lblDetalleHistorial, 0, 4);
             tableLayoutPanel1.Controls.Add(txtDetalleClienteNombre, 1, 0);
             tableLayoutPanel1.Controls.Add(txtDetalleEquipoDesc, 1, 1);
             tableLayoutPanel1.Controls.Add(txtDetalleEstadoActual, 1, 2);
             tableLayoutPanel1.Controls.Add(txtDetalleFalla, 1, 3);
+            tableLayoutPanel1.Controls.Add(lblDetalleFalla, 0, 3);
             tableLayoutPanel1.Dock = DockStyle.Top;
             tableLayoutPanel1.Location = new Point(0, 0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -209,9 +214,9 @@
             lblDetalleClienteNombre.Location = new Point(3, 9);
             lblDetalleClienteNombre.Margin = new Padding(3, 9, 3, 9);
             lblDetalleClienteNombre.Name = "lblDetalleClienteNombre";
-            lblDetalleClienteNombre.Size = new Size(152, 22);
+            lblDetalleClienteNombre.Size = new Size(79, 22);
             lblDetalleClienteNombre.TabIndex = 0;
-            lblDetalleClienteNombre.Text = "Nombre Cliente :";
+            lblDetalleClienteNombre.Text = "Cliente :";
             // 
             // lblDetalleEquipoDesc
             // 
@@ -235,17 +240,6 @@
             lblDetalleEstadoActual.TabIndex = 3;
             lblDetalleEstadoActual.Text = "Estado :";
             // 
-            // lblDetalleFalla
-            // 
-            lblDetalleFalla.AutoSize = true;
-            lblDetalleFalla.Font = new Font("Arial", 14.25F);
-            lblDetalleFalla.Location = new Point(3, 129);
-            lblDetalleFalla.Margin = new Padding(3, 9, 3, 9);
-            lblDetalleFalla.Name = "lblDetalleFalla";
-            lblDetalleFalla.Size = new Size(60, 22);
-            lblDetalleFalla.TabIndex = 2;
-            lblDetalleFalla.Text = "Falla :";
-            // 
             // lblDetalleHistorial
             // 
             lblDetalleHistorial.AutoSize = true;
@@ -261,7 +255,7 @@
             // 
             txtDetalleClienteNombre.BorderStyle = BorderStyle.None;
             txtDetalleClienteNombre.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleClienteNombre.Location = new Point(161, 9);
+            txtDetalleClienteNombre.Location = new Point(96, 9);
             txtDetalleClienteNombre.Margin = new Padding(3, 9, 3, 9);
             txtDetalleClienteNombre.Name = "txtDetalleClienteNombre";
             txtDetalleClienteNombre.ReadOnly = true;
@@ -272,7 +266,7 @@
             // 
             txtDetalleEquipoDesc.BorderStyle = BorderStyle.None;
             txtDetalleEquipoDesc.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleEquipoDesc.Location = new Point(161, 49);
+            txtDetalleEquipoDesc.Location = new Point(96, 49);
             txtDetalleEquipoDesc.Margin = new Padding(3, 9, 3, 9);
             txtDetalleEquipoDesc.Name = "txtDetalleEquipoDesc";
             txtDetalleEquipoDesc.ReadOnly = true;
@@ -283,7 +277,7 @@
             // 
             txtDetalleEstadoActual.BorderStyle = BorderStyle.None;
             txtDetalleEstadoActual.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleEstadoActual.Location = new Point(161, 89);
+            txtDetalleEstadoActual.Location = new Point(96, 89);
             txtDetalleEstadoActual.Margin = new Padding(3, 9, 3, 9);
             txtDetalleEstadoActual.Name = "txtDetalleEstadoActual";
             txtDetalleEstadoActual.ReadOnly = true;
@@ -295,14 +289,38 @@
             txtDetalleFalla.BorderStyle = BorderStyle.None;
             txtDetalleFalla.Dock = DockStyle.Fill;
             txtDetalleFalla.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleFalla.Location = new Point(161, 129);
+            txtDetalleFalla.Location = new Point(96, 129);
             txtDetalleFalla.Margin = new Padding(3, 9, 3, 9);
             txtDetalleFalla.Multiline = true;
             txtDetalleFalla.Name = "txtDetalleFalla";
             txtDetalleFalla.ReadOnly = true;
             txtDetalleFalla.ScrollBars = ScrollBars.Vertical;
-            txtDetalleFalla.Size = new Size(285, 63);
+            txtDetalleFalla.Size = new Size(350, 63);
             txtDetalleFalla.TabIndex = 8;
+            // 
+            // lblDetalleFalla
+            // 
+            lblDetalleFalla.AutoSize = true;
+            lblDetalleFalla.Font = new Font("Arial", 14.25F);
+            lblDetalleFalla.Location = new Point(6, 129);
+            lblDetalleFalla.Margin = new Padding(6, 9, 3, 9);
+            lblDetalleFalla.Name = "lblDetalleFalla";
+            lblDetalleFalla.Size = new Size(60, 22);
+            lblDetalleFalla.TabIndex = 2;
+            lblDetalleFalla.Text = "Falla :";
+            // 
+            // cmsOrdenes
+            // 
+            cmsOrdenes.Items.AddRange(new ToolStripItem[] { tsmiCambiarEstado });
+            cmsOrdenes.Name = "cmsOrdenes";
+            cmsOrdenes.Size = new Size(181, 48);
+            // 
+            // tsmiCambiarEstado
+            // 
+            tsmiCambiarEstado.Name = "tsmiCambiarEstado";
+            tsmiCambiarEstado.Size = new Size(180, 22);
+            tsmiCambiarEstado.Text = "Cambiar Estado";
+            tsmiCambiarEstado.Click += tsmiCambiarEstado_Click;
             // 
             // frmPrincipal
             // 
@@ -315,7 +333,7 @@
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;
             Name = "frmPrincipal";
-            Text = "Form1";
+            Text = "Menu Principal";
             Load += frmPrincipal_Load;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
@@ -326,6 +344,7 @@
             ((System.ComponentModel.ISupportInitialize)dgvHistorial).EndInit();
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
+            cmsOrdenes.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -354,5 +373,7 @@
         private TextBox txtDetalleEstadoActual;
         private TextBox txtDetalleFalla;
         private DataGridView dgvHistorial;
+        private ContextMenuStrip cmsOrdenes;
+        private ToolStripMenuItem tsmiCambiarEstado;
     }
 }
