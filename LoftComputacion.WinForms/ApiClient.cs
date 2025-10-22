@@ -167,5 +167,58 @@ namespace LoftComputacion.WinForms
             var fileBytes = await response.Content.ReadAsByteArrayAsync();
             return fileBytes;
         }
+
+        // Método para OBTENER la lista de fotos de una orden
+        public async Task<List<Foto>> GetFotosAsync(int ordenId)
+        {
+            var response = await _httpClient.GetAsync($"{_apiUrl}/ordenes/{ordenId}/fotos"); // <-- ¡Endpoint nuevo!
+            response.EnsureSuccessStatusCode();
+            var json_response = await response.Content.ReadAsStringAsync();
+            var fotos = JsonConvert.DeserializeObject<List<Foto>>(json_response);
+            return fotos ?? new List<Foto>();
+        }
+
+        // Método para SUBIR una foto (comprimida)
+        public async Task<Foto> UploadFotoAsync(int ordenId, Stream imageStream, string fileName)
+        {
+            // Usamos MultipartFormDataContent para enviar archivos
+            using (var content = new MultipartFormDataContent())
+            {
+                // "fileStream" es el contenido (bytes) de la imagen
+                // "file" es el nombre que espera la API (IFormFile file)
+                // "fileName" es el nombre del archivo
+                content.Add(new StreamContent(imageStream), "file", fileName);
+
+                var response = await _httpClient.PostAsync($"{_apiUrl}/ordenes/{ordenId}/fotos", content);
+                response.EnsureSuccessStatusCode();
+
+                var json_response = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<Foto>(json_response);
+            }
+        }
+
+        // Nuevo método para descargar una imagen desde una URL
+        public async Task<Image?> DownloadImageAsync(string url)
+        {
+            try
+            {
+                // Descarga los bytes de la imagen
+                byte[] imageData = await _httpClient.GetByteArrayAsync(url);
+                // Convierte los bytes en un objeto Image
+                using (var ms = new MemoryStream(imageData))
+                {
+                    return Image.FromStream(ms);
+                }
+            }
+            catch
+            {
+                return null; // Devuelve null si la descarga falla
+            }
+        }
+        public async Task DeleteFotoAsync(int fotoId)
+        {
+            var response = await _httpClient.DeleteAsync($"{_apiUrl}/fotos/{fotoId}");
+            response.EnsureSuccessStatusCode();
+        }
     }
 }
