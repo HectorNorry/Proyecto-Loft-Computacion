@@ -124,5 +124,48 @@ namespace LoftComputacion.WinForms
             var usuarios = JsonConvert.DeserializeObject<List<Usuario>>(json_response);
             return usuarios ?? new List<Usuario>();
         }
+
+        // Nuevo método para obtener las ganancias
+        public async Task<GananciasDto> GetGananciasAsync(DateTime fechaDesde, DateTime fechaHasta)
+        {
+            // Formateamos las fechas al formato YYYY-MM-DD que espera la API
+            string fechaDesdeStr = fechaDesde.ToString("yyyy-MM-dd");
+            string fechaHastaStr = fechaHasta.ToString("yyyy-MM-dd");
+
+            string url = $"{_apiUrl}/ganancias?fechaDesde={fechaDesdeStr}&fechaHasta={fechaHastaStr}";
+
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode(); // Lanza excepción si hay error
+
+            var json_response = await response.Content.ReadAsStringAsync();
+
+            // Creamos una clase temporal para deserializar la respuesta completa (lista + total)
+            var resultado = JsonConvert.DeserializeObject<GananciasDto>(json_response);
+
+            return resultado ?? new GananciasDto(); // Devolvemos el objeto o uno vacío si falla
+        }
+
+        // --- AGREGA ESTA CLASE AUXILIAR DENTRO DE ApiClient.cs (o en un archivo aparte si prefieres) ---
+        public class GananciasDto
+        {
+            public List<OrdenDeServicio> Ordenes { get; set; } = new List<OrdenDeServicio>();
+            public decimal Total { get; set; }
+        }
+
+        public async Task<byte[]> DownloadGananciasExcelAsync(DateTime fechaDesde, DateTime fechaHasta)
+        {
+            // Formateamos las fechas al formato YYYY-MM-DD
+            string fechaDesdeStr = fechaDesde.ToString("yyyy-MM-dd");
+            string fechaHastaStr = fechaHasta.ToString("yyyy-MM-dd");
+
+            string url = $"{_apiUrl}/ganancias/exportar?fechaDesde={fechaDesdeStr}&fechaHasta={fechaHastaStr}";
+
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode(); // Lanza excepción si hay error
+
+            // Leemos la respuesta no como texto/json, sino como un array de bytes
+            var fileBytes = await response.Content.ReadAsByteArrayAsync();
+            return fileBytes;
+        }
     }
 }
