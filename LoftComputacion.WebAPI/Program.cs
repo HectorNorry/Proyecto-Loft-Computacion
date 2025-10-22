@@ -19,6 +19,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<OrdenDeServicioService>();
 builder.Services.AddScoped<AIService>();
 builder.Services.AddScoped<GananciasService>();
+builder.Services.AddScoped<BlobService>();
 
 // --- 3. Conexión a la base de datos (DbContext) ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

@@ -1,5 +1,7 @@
 ﻿using LoftComputacion.Domain;
 using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Threading.Tasks; // Asegúrate de tener este
 using System.Windows.Forms;
 
@@ -35,28 +37,45 @@ namespace LoftComputacion.WinForms
             cmbTipoEquipo.Items.Add("PC de Escritorio");
             cmbTipoEquipo.Items.Add("Impresora");
 
-            // --- NUEVO: Cargar ComboBox de Estados ---
+            // Cargar ComboBox de Estados (siempre)
             try
             {
                 var estados = await _apiClient.GetEstadosAsync();
-                // Configuramos el ComboBox para que muestre el Nombre pero guarde el Id
                 cmbEstado.DataSource = estados;
-                cmbEstado.DisplayMember = "Nombre"; // Propiedad a mostrar
-                cmbEstado.ValueMember = "Id";       // Propiedad a usar como valor interno
+                cmbEstado.DisplayMember = "Nombre";
+                cmbEstado.ValueMember = "Id";
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al cargar los estados: {ex.Message}", "Error de Conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                // Podríamos deshabilitar el ComboBox o cerrar el form si falla
             }
-            // --- FIN NUEVO ---
 
+            // --- LÓGICA DE MODO EDICIÓN VS. CREACIÓN ---
 
             if (_ordenParaEditar != null) // MODO EDICIÓN
             {
                 this.Text = $"Editando Orden N° {_ordenParaEditar.Id}";
+                btnGuardar.Text = "Actualizar";
 
-                // --- RESTAURAR ESTE BLOQUE: Cargar Cliente y Equipo ---
+                // --- Habilitar/Deshabilitar Paneles ---
+                groupBox4.Enabled = true; // HABILITAMOS el panel de fotos
+                btnBuscarCliente.Enabled = false;
+                cmbTipoEquipo.Enabled = false;
+                txtNombreCliente.ReadOnly = true;
+                txtTelefonoCliente.ReadOnly = true;
+                txtEmailCliente.ReadOnly = true;
+                txtDniCliente.ReadOnly = true;
+                txtMarca.ReadOnly = true;
+                txtModelo.ReadOnly = true;
+                txtNumeroSerie.ReadOnly = true;
+                txtComponentes.ReadOnly = true;
+                txtFallaDeclarada.ReadOnly = true;
+                cmbEstado.Enabled = true;
+                txtPrecioPresupuesto.ReadOnly = false;
+                txtPrecioFinal.ReadOnly = false;
+
+                // --- Cargar Datos ---
+                // Cliente
                 if (_ordenParaEditar.Cliente != null)
                 {
                     _clienteSeleccionado = _ordenParaEditar.Cliente;
@@ -64,17 +83,11 @@ namespace LoftComputacion.WinForms
                     txtTelefonoCliente.Text = _ordenParaEditar.Cliente.Telefono;
                     txtEmailCliente.Text = _ordenParaEditar.Cliente.Email;
                     txtDniCliente.Text = _ordenParaEditar.Cliente.DNI;
-
-                    txtNombreCliente.ReadOnly = true;
-                    txtTelefonoCliente.ReadOnly = true;
-                    txtEmailCliente.ReadOnly = true;
-                    txtDniCliente.ReadOnly = true;
-                    btnBuscarCliente.Enabled = false;
                 }
 
+                // Equipo
                 if (_ordenParaEditar.Equipo != null)
                 {
-                    // Asegurarse que cmbTipoEquipo tenga items antes de seleccionar
                     if (cmbTipoEquipo.Items.Count > (int)_ordenParaEditar.Equipo.Tipo)
                     {
                         cmbTipoEquipo.SelectedIndex = (int)_ordenParaEditar.Equipo.Tipo;
@@ -83,35 +96,47 @@ namespace LoftComputacion.WinForms
                     txtModelo.Text = _ordenParaEditar.Equipo.Modelo;
                     txtNumeroSerie.Text = _ordenParaEditar.Equipo.NumeroDeSerie;
                     txtComponentes.Text = _ordenParaEditar.Equipo.Componentes;
-
-                    cmbTipoEquipo.Enabled = false;
-                    txtMarca.ReadOnly = true;
-                    txtModelo.ReadOnly = true;
-                    txtNumeroSerie.ReadOnly = true;
-                    txtComponentes.ReadOnly = true;
                 }
-                // --- FIN DEL BLOQUE RESTAURADO ---
 
+                // Falla
+                txtFallaDeclarada.Text = _ordenParaEditar.FallaDeclaradaPorCliente;
 
-                // --- Cargar Estado y Precios (Esto ya estaba bien) ---
+                // Estado y Precios
                 cmbEstado.SelectedValue = _ordenParaEditar.EstadoId;
                 txtPrecioPresupuesto.Text = _ordenParaEditar.PrecioPresupuestado?.ToString("F2");
                 txtPrecioFinal.Text = _ordenParaEditar.PrecioFinal?.ToString("F2");
 
-                cmbEstado.Enabled = true;
-                txtPrecioPresupuesto.ReadOnly = false;
-                txtPrecioFinal.ReadOnly = false;
-                // --- FIN CARGA ESTADO Y PRECIOS ---
-
-                // Bloqueamos Falla inicial (Esto ya estaba bien)
-                txtFallaDeclarada.Text = _ordenParaEditar.FallaDeclaradaPorCliente;
-                txtFallaDeclarada.ReadOnly = true;
-
-                btnGuardar.Text = "Actualizar";
+                // Cargar Fotos (al final)
+                await CargarFotosDeLaOrden();
             }
-            else // MODO CREACIÓN (Esto ya estaba bien)
+            else // MODO CREACIÓN
             {
-                // ... (el código del else sigue igual) ...
+                this.Text = "Crear Nueva Orden de Servicio";
+                btnGuardar.Text = "Guardar";
+
+                // --- Habilitar/Deshabilitar Paneles ---
+                groupBox4.Enabled = false; // DESHABILITAMOS el panel de fotos
+                btnBuscarCliente.Enabled = true;
+                cmbTipoEquipo.Enabled = true; // Habilitado para crear
+                txtNombreCliente.ReadOnly = false;
+                txtTelefonoCliente.ReadOnly = false;
+                txtEmailCliente.ReadOnly = false;
+                txtDniCliente.ReadOnly = false;
+                txtMarca.ReadOnly = false;
+                txtModelo.ReadOnly = false;
+                txtNumeroSerie.ReadOnly = false;
+                txtComponentes.ReadOnly = false;
+                txtFallaDeclarada.ReadOnly = false;
+                cmbEstado.Enabled = false; // El estado inicial (Recibido) no se elige
+                txtPrecioPresupuesto.ReadOnly = true;
+                txtPrecioFinal.ReadOnly = true;
+
+                // --- Estado Inicial ---
+                cmbTipoEquipo.SelectedIndex = 0; // Notebook por defecto
+                if (cmbEstado.Items.Count > 0)
+                {
+                    cmbEstado.SelectedIndex = 0; // "Recibido" por defecto
+                }
             }
         }
 
@@ -270,5 +295,165 @@ namespace LoftComputacion.WinForms
                 default: throw new InvalidOperationException("Tipo de equipo no válido.");
             }
         }
+
+        private async void btnAdjuntarFoto_Click(object sender, EventArgs e)
+        {
+            // 1. Verificar que estemos en modo edición
+            if (_ordenParaEditar == null)
+            {
+                MessageBox.Show("Debe guardar la orden antes de poder adjuntar fotos.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 2. Abrir el diálogo para seleccionar archivos
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Archivos de Imagen|*.jpg;*.jpeg;*.png";
+                openFileDialog.Title = "Seleccionar una o más fotos";
+                openFileDialog.Multiselect = true; // Permitir seleccionar varias
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    foreach (string filePath in openFileDialog.FileNames)
+                    {
+                        try
+                        {
+                            // 3. Comprimir la imagen antes de subirla
+                            using (var imageStream = new MemoryStream())
+                            {
+                                using (var img = Image.FromFile(filePath))
+                                {
+                                    // (Opcional: Reescalar si es muy grande)
+                                    // var resizedImg = ReescalarImagen(img, 1024); 
+
+                                    // Guardamos la imagen en el stream en formato Jpeg con calidad 85%
+                                    img.Save(imageStream, ImageFormat.Jpeg);
+                                }
+
+                                imageStream.Position = 0; // Rebobinamos el stream al inicio
+
+                                // 4. Subir la imagen comprimida usando el ApiClient
+                                var fileName = Path.GetFileName(filePath);
+                                var fotoSubida = await _apiClient.UploadFotoAsync(_ordenParaEditar.Id, imageStream, fileName);
+
+                                // 5. Agregar la foto recién subida a la lista visual
+                                lstFotosAdjuntas.Items.Add(fotoSubida);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Error al subir la foto '{Path.GetFileName(filePath)}': {ex.Message}", "Error de Subida", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    MessageBox.Show("¡Fotos adjuntadas con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        private async void lstFotosAdjuntas_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Verificamos que el ítem sea un objeto Foto
+            if (lstFotosAdjuntas.SelectedItem is Foto fotoSeleccionada)
+            {
+                try
+                {
+                    // Obtenemos la URL del objeto Foto
+                    string urlImagen = fotoSeleccionada.RutaArchivo;
+
+                    if (!string.IsNullOrEmpty(urlImagen))
+                    {
+                        // Limpiamos la imagen anterior
+                        picFotoPreview.Image = null;
+
+                        // Llamamos a nuestro ApiClient para descargar la imagen
+                        picFotoPreview.Image = await _apiClient.DownloadImageAsync(urlImagen);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    picFotoPreview.Image = null;
+                    MessageBox.Show($"Error al cargar la vista previa: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private async void btnQuitarFoto_Click(object sender, EventArgs e)
+        {
+            if (lstFotosAdjuntas.SelectedItem is Foto fotoSeleccionada)
+            {
+                // Confirmación
+                var confirmResult = MessageBox.Show(
+                    "¿Está seguro de que desea eliminar esta foto permanentemente?",
+                    "Confirmar Eliminación",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (confirmResult == DialogResult.Yes)
+                {
+                    try
+                    {
+                        // Llamamos a la API para borrarla
+                        await _apiClient.DeleteFotoAsync(fotoSeleccionada.Id);
+
+                        // Si la API no dio error, la quitamos de la lista
+                        lstFotosAdjuntas.Items.Remove(fotoSeleccionada);
+                        picFotoPreview.Image = null; // Limpiamos vista previa
+                        MessageBox.Show("Foto eliminada.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error al eliminar la foto: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Por favor, seleccione una foto de la lista para eliminar.", "No hay foto seleccionada", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void picFotoPreview_Click(object sender, EventArgs e)
+        {
+            // Verificamos si hay una imagen cargada en la vista previa
+            if (picFotoPreview.Image != null)
+            {
+                // Creamos el visor pasándole el objeto Image que YA descargamos
+                using (frmImageViewer visor = new frmImageViewer(picFotoPreview.Image))
+                {
+                    visor.ShowDialog();
+                }
+            }
+        }
+
+        private async Task CargarFotosDeLaOrden()
+        {
+            // 1. Asegurarnos de que estamos en modo edición
+            if (_ordenParaEditar == null) return;
+
+            try
+            {
+                // 2. Limpiamos los controles
+                lstFotosAdjuntas.Items.Clear();
+                picFotoPreview.Image = null;
+
+                // 3. Llamamos a la API para obtener la lista de fotos de esta orden
+                // (¡Asegurate de que el método GetFotosAsync exista en tu ApiClient!)
+                var fotos = await _apiClient.GetFotosAsync(_ordenParaEditar.Id);
+
+                // 4. Llenamos el ListBox con los objetos 'Foto'
+                foreach (var foto in fotos)
+                {
+                    lstFotosAdjuntas.Items.Add(foto);
+                }
+
+                // 5. Le decimos al ListBox qué propiedad del objeto 'Foto' debe mostrar
+                lstFotosAdjuntas.DisplayMember = "RutaArchivo";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar las fotos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
+
 }

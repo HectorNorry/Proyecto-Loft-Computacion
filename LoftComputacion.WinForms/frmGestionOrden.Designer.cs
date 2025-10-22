@@ -62,17 +62,28 @@
             label2 = new Label();
             label1 = new Label();
             flowLayoutPanel1 = new FlowLayoutPanel();
+            groupBox4 = new GroupBox();
+            btnQuitarFoto = new Button();
+            btnAdjuntarFoto = new Button();
+            splitFotos = new SplitContainer();
+            lstFotosAdjuntas = new ListBox();
+            picFotoPreview = new PictureBox();
             panel1.SuspendLayout();
             groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             groupBox1.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
+            groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitFotos).BeginInit();
+            splitFotos.Panel1.SuspendLayout();
+            splitFotos.Panel2.SuspendLayout();
+            splitFotos.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)picFotoPreview).BeginInit();
             SuspendLayout();
             // 
             // panel1
             // 
-            panel1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             panel1.Controls.Add(label12);
             panel1.Controls.Add(label11);
             panel1.Controls.Add(txtPrecioFinal);
@@ -81,16 +92,17 @@
             panel1.Controls.Add(cmbEstado);
             panel1.Controls.Add(btnGuardar);
             panel1.Controls.Add(btnCancelar);
-            panel1.Location = new Point(3, 547);
+            panel1.Dock = DockStyle.Bottom;
+            panel1.Location = new Point(0, 727);
             panel1.Name = "panel1";
-            panel1.Size = new Size(951, 170);
-            panel1.TabIndex = 5;
+            panel1.Size = new Size(1199, 204);
+            panel1.TabIndex = 1;
             // 
             // label12
             // 
             label12.AutoSize = true;
             label12.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label12.Location = new Point(118, 128);
+            label12.Location = new Point(122, 130);
             label12.Name = "label12";
             label12.Size = new Size(128, 25);
             label12.TabIndex = 10;
@@ -100,7 +112,7 @@
             // 
             label11.AutoSize = true;
             label11.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label11.Location = new Point(121, 78);
+            label11.Location = new Point(125, 80);
             label11.Name = "label11";
             label11.Size = new Size(125, 25);
             label11.TabIndex = 9;
@@ -109,7 +121,7 @@
             // txtPrecioFinal
             // 
             txtPrecioFinal.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
-            txtPrecioFinal.Location = new Point(258, 130);
+            txtPrecioFinal.Location = new Point(262, 132);
             txtPrecioFinal.Name = "txtPrecioFinal";
             txtPrecioFinal.Size = new Size(216, 33);
             txtPrecioFinal.TabIndex = 8;
@@ -117,7 +129,7 @@
             // txtPrecioPresupuesto
             // 
             txtPrecioPresupuesto.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
-            txtPrecioPresupuesto.Location = new Point(258, 78);
+            txtPrecioPresupuesto.Location = new Point(262, 80);
             txtPrecioPresupuesto.Name = "txtPrecioPresupuesto";
             txtPrecioPresupuesto.Size = new Size(216, 33);
             txtPrecioPresupuesto.TabIndex = 7;
@@ -126,7 +138,7 @@
             // 
             label10.AutoSize = true;
             label10.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label10.Location = new Point(70, 25);
+            label10.Location = new Point(74, 27);
             label10.Name = "label10";
             label10.Size = new Size(173, 25);
             label10.TabIndex = 6;
@@ -136,7 +148,7 @@
             // 
             cmbEstado.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             cmbEstado.FormattingEnabled = true;
-            cmbEstado.Location = new Point(256, 25);
+            cmbEstado.Location = new Point(260, 27);
             cmbEstado.Name = "cmbEstado";
             cmbEstado.Size = new Size(216, 33);
             cmbEstado.TabIndex = 5;
@@ -144,7 +156,7 @@
             // btnGuardar
             // 
             btnGuardar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnGuardar.Location = new Point(683, 115);
+            btnGuardar.Location = new Point(865, 110);
             btnGuardar.Name = "btnGuardar";
             btnGuardar.Size = new Size(112, 55);
             btnGuardar.TabIndex = 3;
@@ -155,7 +167,7 @@
             // btnCancelar
             // 
             btnCancelar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnCancelar.Location = new Point(837, 115);
+            btnCancelar.Location = new Point(716, 110);
             btnCancelar.Name = "btnCancelar";
             btnCancelar.Size = new Size(111, 55);
             btnCancelar.TabIndex = 4;
@@ -167,9 +179,9 @@
             // 
             groupBox3.Controls.Add(txtFallaDeclarada);
             groupBox3.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            groupBox3.Location = new Point(3, 437);
+            groupBox3.Location = new Point(3, 632);
             groupBox3.Name = "groupBox3";
-            groupBox3.Size = new Size(951, 104);
+            groupBox3.Size = new Size(1178, 89);
             groupBox3.TabIndex = 2;
             groupBox3.TabStop = false;
             groupBox3.Text = "Falla Declarada";
@@ -178,18 +190,18 @@
             // 
             txtFallaDeclarada.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             txtFallaDeclarada.Location = new Point(13, 45);
+            txtFallaDeclarada.Multiline = true;
             txtFallaDeclarada.Name = "txtFallaDeclarada";
-            txtFallaDeclarada.Size = new Size(929, 33);
+            txtFallaDeclarada.Size = new Size(1156, 38);
             txtFallaDeclarada.TabIndex = 0;
             // 
             // groupBox2
             // 
-            groupBox2.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             groupBox2.Controls.Add(tableLayoutPanel1);
             groupBox2.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBox2.Location = new Point(3, 222);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(951, 209);
+            groupBox2.Size = new Size(1184, 209);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
             groupBox2.Text = "Datos del Equipo";
@@ -198,7 +210,7 @@
             // 
             tableLayoutPanel1.ColumnCount = 4;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 29.94709F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
             tableLayoutPanel1.Controls.Add(label4, 0, 0);
@@ -210,16 +222,16 @@
             tableLayoutPanel1.Controls.Add(txtComponentes, 3, 0);
             tableLayoutPanel1.Controls.Add(txtModelo, 1, 3);
             tableLayoutPanel1.Controls.Add(label8, 0, 3);
-            tableLayoutPanel1.Controls.Add(label7, 2, 2);
+            tableLayoutPanel1.Controls.Add(label7, 2, 0);
             tableLayoutPanel1.Dock = DockStyle.Fill;
             tableLayoutPanel1.Location = new Point(3, 29);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 4;
-            tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.Size = new Size(945, 177);
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            tableLayoutPanel1.Size = new Size(1178, 177);
             tableLayoutPanel1.TabIndex = 0;
             // 
             // label4
@@ -236,32 +248,32 @@
             // 
             cmbTipoEquipo.Dock = DockStyle.Fill;
             cmbTipoEquipo.FormattingEnabled = true;
-            cmbTipoEquipo.Location = new Point(192, 3);
+            cmbTipoEquipo.Location = new Point(238, 3);
             cmbTipoEquipo.Name = "cmbTipoEquipo";
-            cmbTipoEquipo.Size = new Size(277, 33);
+            cmbTipoEquipo.Size = new Size(347, 33);
             cmbTipoEquipo.TabIndex = 1;
             // 
             // txtMarca
             // 
             txtMarca.Dock = DockStyle.Fill;
-            txtMarca.Location = new Point(192, 42);
+            txtMarca.Location = new Point(238, 47);
             txtMarca.Name = "txtMarca";
-            txtMarca.Size = new Size(277, 33);
+            txtMarca.Size = new Size(347, 33);
             txtMarca.TabIndex = 3;
             // 
             // txtNumeroSerie
             // 
             txtNumeroSerie.Dock = DockStyle.Fill;
-            txtNumeroSerie.Location = new Point(192, 81);
+            txtNumeroSerie.Location = new Point(238, 91);
             txtNumeroSerie.Name = "txtNumeroSerie";
-            txtNumeroSerie.Size = new Size(277, 33);
+            txtNumeroSerie.Size = new Size(347, 33);
             txtNumeroSerie.TabIndex = 4;
             // 
             // label6
             // 
             label6.AutoSize = true;
             label6.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label6.Location = new Point(3, 78);
+            label6.Location = new Point(3, 88);
             label6.Name = "label6";
             label6.Size = new Size(126, 25);
             label6.TabIndex = 5;
@@ -271,7 +283,7 @@
             // 
             label5.AutoSize = true;
             label5.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label5.Location = new Point(3, 39);
+            label5.Location = new Point(3, 44);
             label5.Name = "label5";
             label5.Size = new Size(79, 25);
             label5.TabIndex = 2;
@@ -280,26 +292,26 @@
             // txtComponentes
             // 
             txtComponentes.Dock = DockStyle.Fill;
-            txtComponentes.Location = new Point(664, 3);
+            txtComponentes.Location = new Point(826, 3);
             txtComponentes.Multiline = true;
             txtComponentes.Name = "txtComponentes";
             tableLayoutPanel1.SetRowSpan(txtComponentes, 4);
-            txtComponentes.Size = new Size(278, 171);
+            txtComponentes.Size = new Size(349, 171);
             txtComponentes.TabIndex = 7;
             // 
             // txtModelo
             // 
             txtModelo.Dock = DockStyle.Fill;
-            txtModelo.Location = new Point(192, 120);
+            txtModelo.Location = new Point(238, 135);
             txtModelo.Name = "txtModelo";
-            txtModelo.Size = new Size(277, 33);
+            txtModelo.Size = new Size(347, 33);
             txtModelo.TabIndex = 8;
             // 
             // label8
             // 
             label8.AutoSize = true;
             label8.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label8.Location = new Point(3, 117);
+            label8.Location = new Point(3, 132);
             label8.Name = "label8";
             label8.Size = new Size(86, 25);
             label8.TabIndex = 9;
@@ -309,7 +321,7 @@
             // 
             label7.AutoSize = true;
             label7.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label7.Location = new Point(475, 78);
+            label7.Location = new Point(591, 0);
             label7.Name = "label7";
             label7.Size = new Size(143, 25);
             label7.TabIndex = 6;
@@ -317,7 +329,6 @@
             // 
             // groupBox1
             // 
-            groupBox1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             groupBox1.Controls.Add(txtDniCliente);
             groupBox1.Controls.Add(label9);
             groupBox1.Controls.Add(btnBuscarCliente);
@@ -330,7 +341,7 @@
             groupBox1.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBox1.Location = new Point(3, 3);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(951, 213);
+            groupBox1.Size = new Size(1184, 213);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Datos del Cliente";
@@ -355,9 +366,9 @@
             // btnBuscarCliente
             // 
             btnBuscarCliente.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            btnBuscarCliente.Location = new Point(657, 78);
+            btnBuscarCliente.Location = new Point(769, 67);
             btnBuscarCliente.Name = "btnBuscarCliente";
-            btnBuscarCliente.Size = new Size(225, 44);
+            btnBuscarCliente.Size = new Size(320, 92);
             btnBuscarCliente.TabIndex = 6;
             btnBuscarCliente.Text = "Buscar Cliente";
             btnBuscarCliente.UseVisualStyleBackColor = true;
@@ -416,23 +427,99 @@
             // 
             // flowLayoutPanel1
             // 
+            flowLayoutPanel1.AutoScroll = true;
             flowLayoutPanel1.Controls.Add(groupBox1);
             flowLayoutPanel1.Controls.Add(groupBox2);
+            flowLayoutPanel1.Controls.Add(groupBox4);
             flowLayoutPanel1.Controls.Add(groupBox3);
-            flowLayoutPanel1.Controls.Add(panel1);
             flowLayoutPanel1.Dock = DockStyle.Fill;
             flowLayoutPanel1.FlowDirection = FlowDirection.TopDown;
             flowLayoutPanel1.Location = new Point(0, 0);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
-            flowLayoutPanel1.Size = new Size(1199, 749);
+            flowLayoutPanel1.Size = new Size(1199, 727);
             flowLayoutPanel1.TabIndex = 1;
+            flowLayoutPanel1.WrapContents = false;
+            // 
+            // groupBox4
+            // 
+            groupBox4.Controls.Add(btnQuitarFoto);
+            groupBox4.Controls.Add(btnAdjuntarFoto);
+            groupBox4.Controls.Add(splitFotos);
+            groupBox4.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold);
+            groupBox4.Location = new Point(3, 437);
+            groupBox4.Name = "groupBox4";
+            groupBox4.Size = new Size(1184, 189);
+            groupBox4.TabIndex = 1;
+            groupBox4.TabStop = false;
+            groupBox4.Text = "Fotos Adjuntas";
+            // 
+            // btnQuitarFoto
+            // 
+            btnQuitarFoto.Location = new Point(272, 147);
+            btnQuitarFoto.Name = "btnQuitarFoto";
+            btnQuitarFoto.Size = new Size(253, 38);
+            btnQuitarFoto.TabIndex = 2;
+            btnQuitarFoto.Text = "Eliminar Foto";
+            btnQuitarFoto.UseVisualStyleBackColor = true;
+            btnQuitarFoto.Click += btnQuitarFoto_Click;
+            // 
+            // btnAdjuntarFoto
+            // 
+            btnAdjuntarFoto.Location = new Point(3, 147);
+            btnAdjuntarFoto.Name = "btnAdjuntarFoto";
+            btnAdjuntarFoto.Size = new Size(253, 38);
+            btnAdjuntarFoto.TabIndex = 1;
+            btnAdjuntarFoto.Text = "Adjuntar Foto";
+            btnAdjuntarFoto.UseVisualStyleBackColor = true;
+            btnAdjuntarFoto.Click += btnAdjuntarFoto_Click;
+            // 
+            // splitFotos
+            // 
+            splitFotos.Dock = DockStyle.Top;
+            splitFotos.Location = new Point(3, 29);
+            splitFotos.Name = "splitFotos";
+            // 
+            // splitFotos.Panel1
+            // 
+            splitFotos.Panel1.Controls.Add(lstFotosAdjuntas);
+            // 
+            // splitFotos.Panel2
+            // 
+            splitFotos.Panel2.Controls.Add(picFotoPreview);
+            splitFotos.Size = new Size(1178, 112);
+            splitFotos.SplitterDistance = 392;
+            splitFotos.TabIndex = 0;
+            // 
+            // lstFotosAdjuntas
+            // 
+            lstFotosAdjuntas.Dock = DockStyle.Fill;
+            lstFotosAdjuntas.FormattingEnabled = true;
+            lstFotosAdjuntas.ItemHeight = 25;
+            lstFotosAdjuntas.Location = new Point(0, 0);
+            lstFotosAdjuntas.Name = "lstFotosAdjuntas";
+            lstFotosAdjuntas.Size = new Size(392, 112);
+            lstFotosAdjuntas.TabIndex = 0;
+            lstFotosAdjuntas.SelectedIndexChanged += lstFotosAdjuntas_SelectedIndexChanged;
+            // 
+            // picFotoPreview
+            // 
+            picFotoPreview.BorderStyle = BorderStyle.FixedSingle;
+            picFotoPreview.Dock = DockStyle.Fill;
+            picFotoPreview.Location = new Point(0, 0);
+            picFotoPreview.Name = "picFotoPreview";
+            picFotoPreview.Size = new Size(782, 112);
+            picFotoPreview.SizeMode = PictureBoxSizeMode.Zoom;
+            picFotoPreview.TabIndex = 0;
+            picFotoPreview.TabStop = false;
+            picFotoPreview.Click += picFotoPreview_Click;
             // 
             // frmGestionOrden
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1199, 749);
+            ClientSize = new Size(1199, 931);
             Controls.Add(flowLayoutPanel1);
+            Controls.Add(panel1);
             Name = "frmGestionOrden";
             Text = "frmGestionOrden";
             Load += frmGestionOrden_Load;
@@ -446,11 +533,19 @@
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             flowLayoutPanel1.ResumeLayout(false);
+            groupBox4.ResumeLayout(false);
+            splitFotos.Panel1.ResumeLayout(false);
+            splitFotos.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitFotos).EndInit();
+            splitFotos.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)picFotoPreview).EndInit();
             ResumeLayout(false);
         }
 
         #endregion
 
+        // --- ESTA SECCIÓN ES LA QUE FALTABA ---
+        // Aquí se declaran las variables para que el archivo .cs las vea
         private Panel panel1;
         private Button btnGuardar;
         private Button btnCancelar;
@@ -485,5 +580,11 @@
         private Label label11;
         private TextBox txtPrecioFinal;
         private TextBox txtPrecioPresupuesto;
+        private GroupBox groupBox4;
+        private SplitContainer splitFotos;
+        private Button btnAdjuntarFoto;
+        private Button btnQuitarFoto;
+        private ListBox lstFotosAdjuntas;
+        private PictureBox picFotoPreview;
     }
 }
