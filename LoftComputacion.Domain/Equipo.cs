@@ -21,5 +21,15 @@ namespace LoftComputacion.Domain
         public string? Modelo { get; set; }
         public string? Componentes { get; set; } // Para describir RAM, CPU, etc.
         public string? NumeroDeSerie { get; set; }
+
+        public string DescripcionCompleta
+        {
+            get
+            {
+                // Convertimos el enum a texto y quitamos guiones bajos
+                string tipoTexto = Tipo.ToString().Replace("_", " ");
+                return $"{tipoTexto} {Marca} {Modelo}".Trim();
+            }
+        }
     }
 }
