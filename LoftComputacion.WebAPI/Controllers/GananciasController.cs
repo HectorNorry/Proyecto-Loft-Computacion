@@ -1,13 +1,15 @@
-﻿using System.IO;
-using LoftComputacion.Application; // Necesario para el servicio
+﻿using LoftComputacion.Application; // Necesario para el servicio
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System; // Necesario para DateTime
+using System.IO;
 using System.Linq; // Necesario para Sum()
 using System.Text;
 using System.Threading.Tasks; // Necesario para async/await
 
 namespace LoftComputacion.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class GananciasController : ControllerBase
