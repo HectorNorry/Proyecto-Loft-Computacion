@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmBuscarCliente));
             label1 = new Label();
             txtBusquedaCliente = new TextBox();
             dgvClientes = new DataGridView();
@@ -108,6 +109,7 @@
             Controls.Add(dgvClientes);
             Controls.Add(pnlAcciones);
             Controls.Add(pnlBusqueda);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "frmBuscarCliente";
             Text = "Buscar Cliente";
             Load += frmBuscarCliente_Load;

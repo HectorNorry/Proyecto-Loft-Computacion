@@ -220,5 +220,29 @@ namespace LoftComputacion.WinForms
             var response = await _httpClient.DeleteAsync($"{_apiUrl}/fotos/{fotoId}");
             response.EnsureSuccessStatusCode();
         }
+
+        public async Task<UsuarioAutenticado?> LoginAsync(string nombreUsuario, string password)
+        {
+            // 1. Creamos el objeto anónimo que espera la API (similar al LoginDto)
+            var loginRequest = new { NombreUsuario = nombreUsuario, Password = password };
+            var json = JsonConvert.SerializeObject(loginRequest);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            // 2. Llamamos al endpoint de login
+            var response = await _httpClient.PostAsync($"{_apiUrl}/usuarios/login", content);
+
+            // 3. Manejamos la respuesta
+            if (response.IsSuccessStatusCode)
+            {
+                // Si el login es exitoso (200 OK), devolvemos los datos del usuario
+                var json_response = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<UsuarioAutenticado>(json_response);
+            }
+            else
+            {
+                // Si el login falla (401 Unauthorized), devolvemos null
+                return null;
+            }
+        }
     }
 }

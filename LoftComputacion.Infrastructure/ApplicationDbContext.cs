@@ -43,7 +43,13 @@ namespace LoftComputacion.Infrastructure
             {
                 entity.HasIndex(e => e.DNI).IsUnique();
             });
-            
+
+            modelBuilder.Entity<Usuario>(entity =>
+            {
+                // Hacemos que el Email sea único
+                entity.HasIndex(e => e.Email).IsUnique();
+            });
+
         }
     }
 

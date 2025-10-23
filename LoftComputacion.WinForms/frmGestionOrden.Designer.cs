@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmGestionOrden));
             panel1 = new Panel();
             label12 = new Label();
             label11 = new Label();
@@ -520,6 +521,7 @@
             ClientSize = new Size(1199, 931);
             Controls.Add(flowLayoutPanel1);
             Controls.Add(panel1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "frmGestionOrden";
             Text = "frmGestionOrden";
             Load += frmGestionOrden_Load;
