@@ -1,29 +1,36 @@
 ﻿using LoftComputacion.Domain;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+// (No necesitás todos los otros usings si no los usás directamente aquí)
 
 namespace LoftComputacion.WinForms
 {
     public partial class frmLogin : Form
     {
-        public frmLogin()
+        // Guardamos la instancia ÚNICA del ApiClient que nos pasa el Program.cs
+        private readonly ApiClient _apiClient;
+
+        /// <summary>
+        /// Constructor modificado. Ahora RECIBE la instancia del ApiClient.
+        /// </summary>
+        /// <param name="apiClient">La instancia única del cliente API para toda la aplicación.</param>
+        public frmLogin(ApiClient apiClient) // <-- CAMBIO AQUÍ
         {
             InitializeComponent();
+            _apiClient = apiClient; // <-- CAMBIO AQUÍ (Guardamos la instancia recibida)
         }
 
+        /// <summary>
+        /// Cierra la aplicación por completo si el usuario cancela el login.
+        /// </summary>
         private void btnCancelar_Click(object sender, EventArgs e)
         {
-            // Cierra la aplicación por completo.
             Application.Exit();
         }
 
+        /// <summary>
+        /// Maneja el intento de inicio de sesión.
+        /// </summary>
         private async void btnIngresar_Click(object sender, EventArgs e)
         {
             string nombreUsuario = txtUsuario.Text;
@@ -35,33 +42,32 @@ namespace LoftComputacion.WinForms
                 return;
             }
 
-            // Mostramos un cursor de espera
+            // Mostramos feedback visual al usuario
             this.Cursor = Cursors.WaitCursor;
-            btnIngresar.Enabled = false; // Deshabilitamos el botón
+            btnIngresar.Enabled = false;
+            btnIngresar.Text = "Ingresando...";
 
             try
             {
-                // 1. Llamamos al ApiClient que ya creamos
-                var apiClient = new ApiClient();
-                UsuarioAutenticado? usuario = await apiClient.LoginAsync(nombreUsuario, password);
+                // 1. Llamamos a LoginAsync usando la instancia _apiClient del formulario
+                string? token = await _apiClient.LoginAsync(nombreUsuario, password);
 
-                // 2. Verificamos la respuesta
-                if (usuario != null)
+                if (!string.IsNullOrEmpty(token))
                 {
-                    // ¡Login Exitoso!
-                    // Ocultamos el formulario de login
-                    this.Hide();
+                    // ¡Login Exitoso! 
 
-                    // Creamos y mostramos el formulario principal
-                    frmPrincipal formularioPrincipal = new frmPrincipal();
-                    formularioPrincipal.ShowDialog(); // ShowDialog() espera a que frmPrincipal se cierre
+                    // 2. Establecemos el token en la instancia compartida del ApiClient
+                    _apiClient.SetToken(token);
 
-                    // Cuando frmPrincipal se cierre, cerramos la aplicación
-                    Application.Exit();
+                    // 3. Indicamos al Program.cs que el login fue exitoso
+                    this.DialogResult = DialogResult.OK;
+
+                    // 4. Cerramos este formulario para que Program.cs pueda abrir el frmPrincipal
+                    this.Close();
                 }
                 else
                 {
-                    // Error de login (401 Unauthorized)
+                    // Error de login (401 Unauthorized), la API devolvió null
                     MessageBox.Show("Usuario o contraseña incorrectos.", "Login Fallido", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -72,9 +78,10 @@ namespace LoftComputacion.WinForms
             }
             finally
             {
-                // Devolvemos el cursor y habilitamos el botón
+                // Restauramos la interfaz sin importar el resultado
                 this.Cursor = Cursors.Default;
                 btnIngresar.Enabled = true;
+                btnIngresar.Text = "Ingresar";
             }
         }
     }

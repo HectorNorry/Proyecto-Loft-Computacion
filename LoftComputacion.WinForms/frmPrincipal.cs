@@ -21,10 +21,10 @@ namespace LoftComputacion.WinForms
         /// <summary>
         /// Constructor del formulario principal.
         /// </summary>
-        public frmPrincipal()
+        public frmPrincipal(ApiClient apiClient) // <-- Recibe el ApiClient
         {
-            InitializeComponent(); // Método autogenerado que crea y configura los controles visuales.
-            _apiClient = new ApiClient(); // Crea una nueva instancia del cliente API.
+            InitializeComponent();
+            _apiClient = apiClient; // Asigna el cliente que viene del login (ya tiene el token)
         }
 
         /// <summary>
@@ -120,11 +120,10 @@ namespace LoftComputacion.WinForms
         /// </summary>
         private async void nuevaOrdenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (frmGestionOrden formNuevaOrden = new frmGestionOrden())
+            using (frmGestionOrden formNuevaOrden = new frmGestionOrden(_apiClient))
             {
-                formNuevaOrden.ShowDialog(); // Muestra el formulario y espera a que se cierre.
+                formNuevaOrden.ShowDialog();
             }
-            // Después de cerrar, recarga la grilla por si se creó una nueva orden.
             await CargarOrdenesDeServicio();
         }
 
@@ -134,17 +133,15 @@ namespace LoftComputacion.WinForms
         /// </summary>
         private async void dgvOrdenes_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0) // Ignora clics en la cabecera.
+            if (e.RowIndex >= 0)
             {
-                // Obtiene el objeto OrdenDeServicio asociado a la fila clickeada.
                 if (dgvOrdenes.Rows[e.RowIndex].DataBoundItem is OrdenDeServicio ordenSeleccionada)
                 {
-                    // Crea y muestra el formulario de gestión pasándole la orden.
-                    using (var formGestion = new frmGestionOrden(ordenSeleccionada))
+                    // Le pasamos la orden Y el _apiClient que ya tiene el token
+                    using (var formGestion = new frmGestionOrden(ordenSeleccionada, _apiClient))
                     {
                         formGestion.ShowDialog();
                     }
-                    // Después de cerrar, recarga la grilla por si hubo cambios.
                     await CargarOrdenesDeServicio();
                 }
             }

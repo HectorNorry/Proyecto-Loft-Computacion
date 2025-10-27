@@ -8,10 +8,18 @@ namespace LoftComputacion.WinForms
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Application.Run(new frmLogin());
+
+            ApiClient apiClient = new ApiClient();
+            frmLogin loginForm = new frmLogin(apiClient); // Le pasamos el ApiClient al Login
+
+            if (loginForm.ShowDialog() == DialogResult.OK)
+            {
+                // Si el login fue exitoso, abrimos el principal
+                // El ApiClient ya tiene el token guardado
+                Application.Run(new frmPrincipal(apiClient));
+            }
+            // Si el login se cancela o se cierra, la aplicación termina.
         }
     }
 }
