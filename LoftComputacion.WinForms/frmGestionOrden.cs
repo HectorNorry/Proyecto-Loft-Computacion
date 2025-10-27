@@ -15,16 +15,16 @@ namespace LoftComputacion.WinForms
         private OrdenDeServicio? _ordenParaEditar = null; // Variable para guardar la orden en modo edición
 
         // Constructor para CREAR una nueva orden
-        public frmGestionOrden()
+        public frmGestionOrden(ApiClient apiClient)
         {
             InitializeComponent();
-            _apiClient = new ApiClient();
+            _apiClient = apiClient;
         }
 
         // Constructor para EDITAR una orden existente
-        public frmGestionOrden(OrdenDeServicio orden) : this() // Llama al constructor de arriba
+        public frmGestionOrden(OrdenDeServicio orden, ApiClient apiClient) : this(apiClient) // Llama al constructor de arriba
         {
-            _ordenParaEditar = orden; // Guardamos la orden que recibimos
+            _ordenParaEditar = orden;
         }
 
         // --- EVENTOS ---
@@ -350,23 +350,25 @@ namespace LoftComputacion.WinForms
             }
         }
 
-        private async void lstFotosAdjuntas_SelectedIndexChanged(object sender, EventArgs e)
+        private void lstFotosAdjuntas_SelectedIndexChanged(object sender, EventArgs e)
         {
             // Verificamos que el ítem sea un objeto Foto
             if (lstFotosAdjuntas.SelectedItem is Foto fotoSeleccionada)
             {
                 try
                 {
-                    // Obtenemos la URL del objeto Foto
                     string urlImagen = fotoSeleccionada.RutaArchivo;
 
                     if (!string.IsNullOrEmpty(urlImagen))
                     {
-                        // Limpiamos la imagen anterior
-                        picFotoPreview.Image = null;
-
-                        // Llamamos a nuestro ApiClient para descargar la imagen
-                        picFotoPreview.Image = await _apiClient.DownloadImageAsync(urlImagen);
+                        // ¡LA SOLUCIÓN!
+                        // Usamos el método nativo de PictureBox para cargar una imagen desde una URL.
+                        // Esto maneja la descarga en segundo plano (asíncrona) automáticamente.
+                        picFotoPreview.LoadAsync(urlImagen);
+                    }
+                    else
+                    {
+                        picFotoPreview.Image = null; // Limpiamos si no hay URL
                     }
                 }
                 catch (Exception ex)
@@ -414,11 +416,12 @@ namespace LoftComputacion.WinForms
 
         private void picFotoPreview_Click(object sender, EventArgs e)
         {
-            // Verificamos si hay una imagen cargada en la vista previa
-            if (picFotoPreview.Image != null)
+            // Verificamos si el PictureBox tiene una URL de imagen asignada
+            if (!string.IsNullOrEmpty(picFotoPreview.ImageLocation))
             {
-                // Creamos el visor pasándole el objeto Image que YA descargamos
-                using (frmImageViewer visor = new frmImageViewer(picFotoPreview.Image))
+                // Creamos el visor pasándole la URL, no la imagen.
+                // Es más simple y el visor descargará su propia copia.
+                using (frmImageViewer visor = new frmImageViewer(picFotoPreview.ImageLocation))
                 {
                     visor.ShowDialog();
                 }
