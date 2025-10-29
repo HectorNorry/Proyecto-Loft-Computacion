@@ -170,7 +170,7 @@
             Controls.Add(pnlFiltros);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "frmGanancias";
-            Text = "frmGanancias";
+            Text = "Ganancias";
             Load += frmGanancias_Load;
             pnlFiltros.ResumeLayout(false);
             pnlFiltros.PerformLayout();

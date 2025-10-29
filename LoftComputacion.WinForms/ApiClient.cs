@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+    
 
 namespace LoftComputacion.WinForms
 {
@@ -18,16 +19,21 @@ namespace LoftComputacion.WinForms
         public ApiClient()
         {
             _httpClient = new HttpClient();
-
-            
-
         }
 
-        public void SetToken(string token)
+               public void SetToken(string token)
         {
             // Agrega el token a los encabezados por defecto
             _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        public class LoginResponseDto
+        {
+            public string Token { get; set; } = string.Empty;
+            public int Id { get; set; }
+            public string NombreCompleto { get; set; } = string.Empty;
+            public string Rol { get; set; } = string.Empty;
         }
 
         public async Task<List<Cliente>> GetClientesAsync()
@@ -158,7 +164,7 @@ namespace LoftComputacion.WinForms
             return resultado ?? new GananciasDto(); // Devolvemos el objeto o uno vacío si falla
         }
 
-        // --- AGREGA ESTA CLASE AUXILIAR DENTRO DE ApiClient.cs (o en un archivo aparte si prefieres) ---
+        
         public class GananciasDto
         {
             public List<OrdenDeServicio> Ordenes { get; set; } = new List<OrdenDeServicio>();
@@ -210,7 +216,6 @@ namespace LoftComputacion.WinForms
             }
         }
 
-        // Nuevo método para descargar una imagen desde una URL
         public async Task<Image?> DownloadImageAsync(string url)
         {
             try
@@ -234,7 +239,7 @@ namespace LoftComputacion.WinForms
             response.EnsureSuccessStatusCode();
         }
 
-        public async Task<string?> LoginAsync(string nombreUsuario, string password)
+        public async Task<LoginResponseDto?> LoginAsync(string nombreUsuario, string password)
         {
             var loginRequest = new { NombreUsuario = nombreUsuario, Password = password };
             var json = JsonConvert.SerializeObject(loginRequest);
@@ -245,14 +250,24 @@ namespace LoftComputacion.WinForms
             if (response.IsSuccessStatusCode)
             {
                 var json_response = await response.Content.ReadAsStringAsync();
-                var tokenResponse = JsonConvert.DeserializeObject<TokenDto>(json_response);
-                return tokenResponse?.Token; // Devuelve el string del token
+                // Deserializa la respuesta completa
+                var loginResponse = JsonConvert.DeserializeObject<LoginResponseDto>(json_response);
+
+                if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
+                {
+                    // Guardamos el token en el cliente
+                    SetToken(loginResponse.Token);
+                    return loginResponse; // Devolvemos el objeto completo
+                }
+                return null;
             }
             else
             {
                 return null; // Falla el login
             }
         }
+
+       
 
         // Clase DTO anidada
         private class TokenDto { public string Token { get; set; } = string.Empty; }

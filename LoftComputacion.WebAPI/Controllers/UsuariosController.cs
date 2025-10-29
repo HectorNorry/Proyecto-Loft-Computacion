@@ -142,11 +142,15 @@ namespace LoftComputacion.WebAPI.Controllers
                 return Unauthorized("Usuario o contraseña incorrectos.");
             }
 
-            // --- ¡CAMBIO IMPORTANTE! ---
-            // En lugar de devolver solo los datos del usuario, generamos y devolvemos un token.
             var token = GenerarJwtToken(usuario);
 
-            return Ok(new { token = token }); // Devolvemos un objeto JSON que contiene el token
+            return Ok(new
+            {
+                token = token,
+                id = usuario.Id,
+                nombreCompleto = usuario.NombreCompleto,
+                rol = usuario.Rol
+            });
         }
 
         private string GenerarJwtToken(Usuario usuario)

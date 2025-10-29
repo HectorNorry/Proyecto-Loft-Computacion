@@ -151,7 +151,7 @@ namespace LoftComputacion.WinForms
             {
                 // --- MOSTRAR VENTANA DE CONFIRMACIÓN ---
                 int usuarioIdConfirmado = 0; // Variable para guardar el ID del usuario validado
-                using (var formConfirmacion = new frmConfirmarCambio())
+                using (var formConfirmacion = new frmConfirmarCambio(_apiClient))
                 {
                     // Mostramos el formulario de confirmación
                     if (formConfirmacion.ShowDialog() == DialogResult.OK)
@@ -264,7 +264,7 @@ namespace LoftComputacion.WinForms
 
         private void btnBuscarCliente_Click(object sender, EventArgs e)
         {
-            using (var formBusqueda = new frmBuscarCliente())
+            using (var formBusqueda = new frmBuscarCliente(_apiClient))
             {
                 if (formBusqueda.ShowDialog() == DialogResult.OK)
                 {
