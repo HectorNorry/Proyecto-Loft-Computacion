@@ -356,19 +356,22 @@ namespace LoftComputacion.WinForms
 
         private void tsmiAdministracion_Click(object sender, EventArgs e)
         {
+            // 1. Pedimos la contraseña de Admin (esto sigue igual)
             using (var formPassword = new frmPasswordPrompt(_apiClient))
             {
                 if (formPassword.ShowDialog() == DialogResult.OK)
                 {
-                    // ¡CAMBIO AQUÍ! Le pasamos nuestro _apiClient
-                    using (var formGanancias = new frmGanancias(_apiClient))
+                    // 2. ¡CAMBIO! Abrimos el formulario de Gestión de Usuarios
+                    using (var formUsuarios = new frmGestionUsuarios(_apiClient)) // <-- Le pasamos el ApiClient
                     {
-                        formGanancias.ShowDialog();
+                        formUsuarios.ShowDialog();
                     }
+
+                    // (La parte de frmGanancias la moveremos a otro botón después)
                 }
             }
         }
-        
+
 
         private void dgvOrdenes_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
