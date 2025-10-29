@@ -311,7 +311,7 @@ namespace LoftComputacion.WinForms
 
                 // 3. Abrir form para confirmar usuario
                 Usuario? usuarioConfirmado = null;
-                using (var formConfirmacion = new frmConfirmarCambio())
+                using (var formConfirmacion = new frmConfirmarCambio(_apiClient))
                 {
                     if (formConfirmacion.ShowDialog() == DialogResult.OK)
                     {
@@ -356,21 +356,19 @@ namespace LoftComputacion.WinForms
 
         private void tsmiAdministracion_Click(object sender, EventArgs e)
         {
-            // 1. Pedimos la contraseña
-            using (var formPassword = new frmPasswordPrompt())
+            using (var formPassword = new frmPasswordPrompt(_apiClient))
             {
-                // Si la contraseña es correcta (DialogResult.OK)...
                 if (formPassword.ShowDialog() == DialogResult.OK)
                 {
-                    // ...abrimos el formulario de ganancias
-                    using (var formGanancias = new frmGanancias())
+                    // ¡CAMBIO AQUÍ! Le pasamos nuestro _apiClient
+                    using (var formGanancias = new frmGanancias(_apiClient))
                     {
                         formGanancias.ShowDialog();
                     }
                 }
-                // Si cancela o la contraseña es incorrecta, no hacemos nada.
             }
         }
+        
 
         private void dgvOrdenes_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {

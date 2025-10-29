@@ -92,7 +92,7 @@
             btnIngresar.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             btnIngresar.Location = new Point(250, 386);
             btnIngresar.Name = "btnIngresar";
-            btnIngresar.Size = new Size(107, 50);
+            btnIngresar.Size = new Size(147, 50);
             btnIngresar.TabIndex = 5;
             btnIngresar.Text = "Ingresar";
             btnIngresar.UseVisualStyleBackColor = true;
@@ -101,9 +101,9 @@
             // btnCancelar
             // 
             btnCancelar.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            btnCancelar.Location = new Point(480, 388);
+            btnCancelar.Location = new Point(456, 388);
             btnCancelar.Name = "btnCancelar";
-            btnCancelar.Size = new Size(112, 50);
+            btnCancelar.Size = new Size(136, 50);
             btnCancelar.TabIndex = 6;
             btnCancelar.Text = "Cancelar";
             btnCancelar.UseVisualStyleBackColor = true;
