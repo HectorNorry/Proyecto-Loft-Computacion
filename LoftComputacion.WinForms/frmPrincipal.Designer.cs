@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmPrincipal));
             menuStrip1 = new MenuStrip();
             toolStripMenuItem1 = new ToolStripMenuItem();
             salirToolStripMenuItem = new ToolStripMenuItem();
@@ -114,9 +115,9 @@
             dgvOrdenes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvOrdenes.ContextMenuStrip = cmsOrdenes;
             dgvOrdenes.Dock = DockStyle.Fill;
-            dgvOrdenes.Location = new Point(0, 85);
+            dgvOrdenes.Location = new Point(0, 92);
             dgvOrdenes.Name = "dgvOrdenes";
-            dgvOrdenes.Size = new Size(435, 524);
+            dgvOrdenes.Size = new Size(435, 599);
             dgvOrdenes.TabIndex = 1;
             dgvOrdenes.CellDoubleClick += dgvOrdenes_CellDoubleClick;
             dgvOrdenes.CellFormatting += dgvOrdenes_CellFormatting;
@@ -140,7 +141,7 @@
             // 
             lblbuscar.AutoSize = true;
             lblbuscar.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            lblbuscar.Location = new Point(12, 15);
+            lblbuscar.Location = new Point(12, 17);
             lblbuscar.Name = "lblbuscar";
             lblbuscar.Size = new Size(52, 20);
             lblbuscar.TabIndex = 2;
@@ -149,18 +150,18 @@
             // txtBuscar
             // 
             txtBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtBuscar.Location = new Point(70, 15);
+            txtBuscar.Location = new Point(70, 17);
             txtBuscar.Name = "txtBuscar";
-            txtBuscar.Size = new Size(721, 23);
+            txtBuscar.Size = new Size(721, 25);
             txtBuscar.TabIndex = 3;
             txtBuscar.KeyDown += txtBuscar_KeyDown;
             // 
             // btnBuscar
             // 
             btnBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnBuscar.Location = new Point(797, 8);
+            btnBuscar.Location = new Point(797, 9);
             btnBuscar.Name = "btnBuscar";
-            btnBuscar.Size = new Size(75, 35);
+            btnBuscar.Size = new Size(75, 40);
             btnBuscar.TabIndex = 4;
             btnBuscar.Text = "Buscar";
             btnBuscar.UseVisualStyleBackColor = true;
@@ -174,7 +175,7 @@
             panel1.Dock = DockStyle.Top;
             panel1.Location = new Point(0, 33);
             panel1.Name = "panel1";
-            panel1.Size = new Size(884, 52);
+            panel1.Size = new Size(884, 59);
             panel1.TabIndex = 5;
             // 
             // pnlDetalles
@@ -182,9 +183,9 @@
             pnlDetalles.Controls.Add(dgvHistorial);
             pnlDetalles.Controls.Add(tableLayoutPanel1);
             pnlDetalles.Dock = DockStyle.Right;
-            pnlDetalles.Location = new Point(435, 85);
+            pnlDetalles.Location = new Point(435, 92);
             pnlDetalles.Name = "pnlDetalles";
-            pnlDetalles.Size = new Size(449, 524);
+            pnlDetalles.Size = new Size(449, 599);
             pnlDetalles.TabIndex = 6;
             // 
             // dgvHistorial
@@ -194,11 +195,11 @@
             dgvHistorial.BorderStyle = BorderStyle.Fixed3D;
             dgvHistorial.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvHistorial.Dock = DockStyle.Fill;
-            dgvHistorial.Location = new Point(0, 238);
+            dgvHistorial.Location = new Point(0, 270);
             dgvHistorial.Name = "dgvHistorial";
             dgvHistorial.ReadOnly = true;
             dgvHistorial.RowHeadersVisible = false;
-            dgvHistorial.Size = new Size(449, 286);
+            dgvHistorial.Size = new Size(449, 329);
             dgvHistorial.TabIndex = 9;
             dgvHistorial.CellFormatting += dgvHistorial_CellFormatting;
             // 
@@ -225,16 +226,16 @@
             tableLayoutPanel1.RowStyles.Add(new RowStyle());
             tableLayoutPanel1.RowStyles.Add(new RowStyle());
             tableLayoutPanel1.RowStyles.Add(new RowStyle());
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            tableLayoutPanel1.Size = new Size(449, 238);
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 23F));
+            tableLayoutPanel1.Size = new Size(449, 270);
             tableLayoutPanel1.TabIndex = 5;
             // 
             // lblDetalleClienteNombre
             // 
             lblDetalleClienteNombre.AutoSize = true;
             lblDetalleClienteNombre.Font = new Font("Arial", 14.25F);
-            lblDetalleClienteNombre.Location = new Point(3, 9);
-            lblDetalleClienteNombre.Margin = new Padding(3, 9, 3, 9);
+            lblDetalleClienteNombre.Location = new Point(3, 11);
+            lblDetalleClienteNombre.Margin = new Padding(3, 11, 3, 11);
             lblDetalleClienteNombre.Name = "lblDetalleClienteNombre";
             lblDetalleClienteNombre.Size = new Size(79, 22);
             lblDetalleClienteNombre.TabIndex = 0;
@@ -244,8 +245,8 @@
             // 
             lblDetalleEquipoDesc.AutoSize = true;
             lblDetalleEquipoDesc.Font = new Font("Arial", 14.25F);
-            lblDetalleEquipoDesc.Location = new Point(3, 49);
-            lblDetalleEquipoDesc.Margin = new Padding(3, 9, 3, 9);
+            lblDetalleEquipoDesc.Location = new Point(3, 55);
+            lblDetalleEquipoDesc.Margin = new Padding(3, 11, 3, 11);
             lblDetalleEquipoDesc.Name = "lblDetalleEquipoDesc";
             lblDetalleEquipoDesc.Size = new Size(80, 22);
             lblDetalleEquipoDesc.TabIndex = 1;
@@ -255,8 +256,8 @@
             // 
             lblDetalleEstadoActual.AutoSize = true;
             lblDetalleEstadoActual.Font = new Font("Arial", 14.25F);
-            lblDetalleEstadoActual.Location = new Point(3, 89);
-            lblDetalleEstadoActual.Margin = new Padding(3, 9, 3, 9);
+            lblDetalleEstadoActual.Location = new Point(3, 99);
+            lblDetalleEstadoActual.Margin = new Padding(3, 11, 3, 11);
             lblDetalleEstadoActual.Name = "lblDetalleEstadoActual";
             lblDetalleEstadoActual.Size = new Size(80, 22);
             lblDetalleEstadoActual.TabIndex = 3;
@@ -266,8 +267,8 @@
             // 
             lblDetalleHistorial.AutoSize = true;
             lblDetalleHistorial.Font = new Font("Arial", 14.25F);
-            lblDetalleHistorial.Location = new Point(3, 210);
-            lblDetalleHistorial.Margin = new Padding(3, 9, 3, 9);
+            lblDetalleHistorial.Location = new Point(3, 236);
+            lblDetalleHistorial.Margin = new Padding(3, 11, 3, 11);
             lblDetalleHistorial.Name = "lblDetalleHistorial";
             lblDetalleHistorial.Size = new Size(87, 22);
             lblDetalleHistorial.TabIndex = 4;
@@ -277,8 +278,8 @@
             // 
             txtDetalleClienteNombre.BorderStyle = BorderStyle.None;
             txtDetalleClienteNombre.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleClienteNombre.Location = new Point(96, 9);
-            txtDetalleClienteNombre.Margin = new Padding(3, 9, 3, 9);
+            txtDetalleClienteNombre.Location = new Point(96, 11);
+            txtDetalleClienteNombre.Margin = new Padding(3, 11, 3, 11);
             txtDetalleClienteNombre.Name = "txtDetalleClienteNombre";
             txtDetalleClienteNombre.ReadOnly = true;
             txtDetalleClienteNombre.Size = new Size(206, 20);
@@ -288,8 +289,8 @@
             // 
             txtDetalleEquipoDesc.BorderStyle = BorderStyle.None;
             txtDetalleEquipoDesc.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleEquipoDesc.Location = new Point(96, 49);
-            txtDetalleEquipoDesc.Margin = new Padding(3, 9, 3, 9);
+            txtDetalleEquipoDesc.Location = new Point(96, 55);
+            txtDetalleEquipoDesc.Margin = new Padding(3, 11, 3, 11);
             txtDetalleEquipoDesc.Name = "txtDetalleEquipoDesc";
             txtDetalleEquipoDesc.ReadOnly = true;
             txtDetalleEquipoDesc.Size = new Size(206, 20);
@@ -299,8 +300,8 @@
             // 
             txtDetalleEstadoActual.BorderStyle = BorderStyle.None;
             txtDetalleEstadoActual.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleEstadoActual.Location = new Point(96, 89);
-            txtDetalleEstadoActual.Margin = new Padding(3, 9, 3, 9);
+            txtDetalleEstadoActual.Location = new Point(96, 99);
+            txtDetalleEstadoActual.Margin = new Padding(3, 11, 3, 11);
             txtDetalleEstadoActual.Name = "txtDetalleEstadoActual";
             txtDetalleEstadoActual.ReadOnly = true;
             txtDetalleEstadoActual.Size = new Size(206, 20);
@@ -311,21 +312,21 @@
             txtDetalleFalla.BorderStyle = BorderStyle.None;
             txtDetalleFalla.Dock = DockStyle.Fill;
             txtDetalleFalla.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleFalla.Location = new Point(96, 129);
-            txtDetalleFalla.Margin = new Padding(3, 9, 3, 9);
+            txtDetalleFalla.Location = new Point(96, 143);
+            txtDetalleFalla.Margin = new Padding(3, 11, 3, 11);
             txtDetalleFalla.Multiline = true;
             txtDetalleFalla.Name = "txtDetalleFalla";
             txtDetalleFalla.ReadOnly = true;
             txtDetalleFalla.ScrollBars = ScrollBars.Vertical;
-            txtDetalleFalla.Size = new Size(350, 63);
+            txtDetalleFalla.Size = new Size(350, 71);
             txtDetalleFalla.TabIndex = 8;
             // 
             // lblDetalleFalla
             // 
             lblDetalleFalla.AutoSize = true;
             lblDetalleFalla.Font = new Font("Arial", 14.25F);
-            lblDetalleFalla.Location = new Point(6, 129);
-            lblDetalleFalla.Margin = new Padding(6, 9, 3, 9);
+            lblDetalleFalla.Location = new Point(6, 143);
+            lblDetalleFalla.Margin = new Padding(6, 11, 3, 11);
             lblDetalleFalla.Name = "lblDetalleFalla";
             lblDetalleFalla.Size = new Size(60, 22);
             lblDetalleFalla.TabIndex = 2;
@@ -333,16 +334,19 @@
             // 
             // frmPrincipal
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(884, 609);
+            ClientSize = new Size(884, 691);
             Controls.Add(dgvOrdenes);
             Controls.Add(pnlDetalles);
             Controls.Add(panel1);
             Controls.Add(menuStrip1);
+            Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStrip1;
             Name = "frmPrincipal";
             Text = "Menu Principal";
+            WindowState = FormWindowState.Maximized;
             Load += frmPrincipal_Load;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();

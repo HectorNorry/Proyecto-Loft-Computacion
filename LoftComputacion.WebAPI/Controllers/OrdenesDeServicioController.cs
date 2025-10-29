@@ -1,10 +1,12 @@
 ﻿using LoftComputacion.Application;
 using LoftComputacion.Domain;
 using LoftComputacion.WebAPI.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoftComputacion.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class OrdenesDeServicioController : ControllerBase

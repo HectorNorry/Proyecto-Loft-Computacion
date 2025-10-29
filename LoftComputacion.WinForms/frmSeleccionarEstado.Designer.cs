@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmSeleccionarEstado));
             label1 = new Label();
             cmbNuevosEstados = new ComboBox();
             btnAceptarEstado = new Button();
@@ -84,6 +85,7 @@
             Controls.Add(btnAceptarEstado);
             Controls.Add(cmbNuevosEstados);
             Controls.Add(label1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "frmSeleccionarEstado";
             Text = "Cambiar Estado";
             Load += frmSeleccionarEstado_Load;

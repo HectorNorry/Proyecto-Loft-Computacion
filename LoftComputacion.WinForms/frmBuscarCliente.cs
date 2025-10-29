@@ -13,10 +13,10 @@ namespace LoftComputacion.WinForms
 
         public Cliente ClienteSeleccionado { get; private set; }
 
-        public frmBuscarCliente()
+        public frmBuscarCliente(ApiClient apiClient) // Recibe el ApiClient
         {
             InitializeComponent();
-            _apiClient = new ApiClient();
+            _apiClient = apiClient; // Asigna la instancia recibida (que ya tiene el token)
             _listaCompletaClientes = new List<Cliente>();
         }
 

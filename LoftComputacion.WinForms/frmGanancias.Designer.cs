@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmGanancias));
             pnlFiltros = new Panel();
             btnFiltrarGanancias = new Button();
             label3 = new Label();
@@ -167,8 +168,9 @@
             Controls.Add(dgvGanancias);
             Controls.Add(pnlTotales);
             Controls.Add(pnlFiltros);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "frmGanancias";
-            Text = "frmGanancias";
+            Text = "Ganancias";
             Load += frmGanancias_Load;
             pnlFiltros.ResumeLayout(false);
             pnlFiltros.PerformLayout();

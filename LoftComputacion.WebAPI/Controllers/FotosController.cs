@@ -1,6 +1,7 @@
 ﻿using LoftComputacion.Application; // Para BlobService
 using LoftComputacion.Domain;      // Para la clase Foto
 using LoftComputacion.Infrastructure; // Para ApplicationDbContext
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace LoftComputacion.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api")] // Ruta base personalizada
     [ApiController]
     public class FotosController : ControllerBase

@@ -1,10 +1,12 @@
 ﻿using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoftComputacion.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class EquiposController : ControllerBase

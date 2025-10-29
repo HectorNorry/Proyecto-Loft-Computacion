@@ -15,10 +15,10 @@ namespace LoftComputacion.WinForms
     public partial class frmGanancias : Form
     {
         private readonly ApiClient _apiClient;
-        public frmGanancias()
+        public frmGanancias(ApiClient apiClient)
         {
             InitializeComponent();
-            _apiClient = new ApiClient();
+            _apiClient = apiClient;
         }
 
         private void frmGanancias_Load(object sender, EventArgs e)
