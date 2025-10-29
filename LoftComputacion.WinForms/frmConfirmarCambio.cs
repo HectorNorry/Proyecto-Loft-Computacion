@@ -10,13 +10,10 @@ namespace LoftComputacion.WinForms
         private readonly ApiClient _apiClient;
         public Usuario UsuarioSeleccionado { get; private set; } // Para devolver el usuario validado
 
-        public frmConfirmarCambio()
+        public frmConfirmarCambio(ApiClient apiClient) // Recibe el ApiClient
         {
             InitializeComponent();
-            _apiClient = new ApiClient();
-            // Inicializamos UsuarioSeleccionado para evitar advertencias
-            UsuarioSeleccionado = new Usuario();
-
+            _apiClient = apiClient; // Asigna la instancia recibida (que ya tiene el token)
         }
 
         private async void frmConfirmarCambio_Load(object sender, EventArgs e)
@@ -36,38 +33,52 @@ namespace LoftComputacion.WinForms
             }
         }
 
-        private void btnConfirmar_Click(object sender, EventArgs e)
+        private async void btnConfirmar_Click(object sender, EventArgs e)
         {
-            // Validación simple de contraseña
-            if (txtPasswordConfirmacion.Text == "1234") // ¡IMPORTANTE! Esto es una contraseña SIMULADA para desarrollo.
-                                              // En un sistema real, NUNCA harías esto y verificarías contra un hash.
+            if (cmbUsuarios.SelectedItem == null || string.IsNullOrWhiteSpace(txtPasswordConfirmacion.Text))
             {
-                if (cmbUsuarios.SelectedItem is Usuario usuarioConfirmado)
+                MessageBox.Show("Por favor, seleccione un usuario e ingrese la contraseña.", "Datos Requeridos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var usuario = cmbUsuarios.SelectedItem as Usuario;
+            var passwordIngresada = txtPasswordConfirmacion.Text;
+
+            this.Cursor = Cursors.WaitCursor;
+            btnConfirmar.Enabled = false;
+
+            try
+            {
+                // --- CORRECCIÓN AQUÍ ---
+                // 1. Cambiamos 'string? tokenRespuesta' por 'var loginResponse'
+                var loginResponse = await _apiClient.LoginAsync(usuario.NombreCompleto, passwordIngresada);
+
+                // 2. Comprobamos 'loginResponse', no 'tokenRespuesta'
+                if (loginResponse != null)
+                // --- FIN CORRECCIÓN ---
                 {
-                    UsuarioSeleccionado = usuarioConfirmado; // Guardamos el usuario
-                    this.DialogResult = DialogResult.OK; // Indicamos que la confirmación fue exitosa
+                    // ¡Éxito! La contraseña es correcta.
+                    UsuarioSeleccionado = usuario;
+                    this.DialogResult = DialogResult.OK;
                     this.Close();
                 }
                 else
                 {
-                    MessageBox.Show("Por favor, seleccione un usuario.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Contraseña incorrecta.", "Error de Validación", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Contraseña incorrecta.", "Error de Autenticación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Error al validar: {ex.Message}", "Error de Conexión", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+                btnConfirmar.Enabled = true;
             }
         }
 
-        // --- MÉTODO TEMPORAL DE SIMULACIÓN ---
-        // Este método DEBE reemplazarse por una llamada a la API
-        private async Task<bool> ValidarPasswordSimuladoAsync(int usuarioId, string password)
-        {
-            // Simulación MUY BÁSICA: Suponemos que la contraseña correcta es "1234" para todos
-            await Task.Delay(100); // Simula llamada a la red
-            return password == "1234";
-        }
-        // --- FIN MÉTODO TEMPORAL ---
+
 
 
         private void btnCancelarConfirmacion_Click(object sender, EventArgs e)

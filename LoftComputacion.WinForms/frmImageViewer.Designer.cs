@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmImageViewer));
             picGrande = new PictureBox();
             ((System.ComponentModel.ISupportInitialize)picGrande).BeginInit();
             SuspendLayout();
@@ -48,6 +49,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
             Controls.Add(picGrande);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "frmImageViewer";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Visor de Imagen";
