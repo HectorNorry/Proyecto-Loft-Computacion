@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-    
+
 
 namespace LoftComputacion.WinForms
 {
@@ -269,7 +269,53 @@ namespace LoftComputacion.WinForms
 
        
 
-        // Clase DTO anidada
         private class TokenDto { public string Token { get; set; } = string.Empty; }
+
+        public async Task DeleteUsuarioAsync(int usuarioId)
+        {
+            var response = await _httpClient.DeleteAsync($"{_apiUrl}/usuarios/{usuarioId}");
+            response.EnsureSuccessStatusCode(); // Lanzará una excepción si la API devuelve un error (ej: 401, 404, 500)
+        }
+
+        public async Task<Usuario> CreateUsuarioAsync(string nombreCompleto, string email, string password, string rol)
+        {
+            // 1. Creamos un objeto anónimo que tiene la "forma" del DTO que espera la API
+            var nuevoUsuarioDto = new
+            {
+                NombreCompleto = nombreCompleto,
+                Email = email,
+                Password = password,
+                Rol = rol
+            };
+
+            // 2. Lo convertimos a JSON
+            var json = JsonConvert.SerializeObject(nuevoUsuarioDto);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            // 3. Lo enviamos al endpoint
+            var response = await _httpClient.PostAsync($"{_apiUrl}/usuarios", content);
+            response.EnsureSuccessStatusCode();
+
+            var json_response = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<Usuario>(json_response);
+        }
+
+        public async Task UpdateUsuarioAsync(int usuarioId, string nombre, string email, string rol, string? password)
+        {
+            // Creamos un objeto anónimo que coincide con el UpdateUsuarioDto
+            var updateDto = new
+            {
+                NombreCompleto = nombre,
+                Email = email,
+                Rol = rol,
+                Password = password // Será null si está vacío, lo cual es perfecto
+            };
+
+            var json = JsonConvert.SerializeObject(updateDto);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PutAsync($"{_apiUrl}/usuarios/{usuarioId}", content);
+            response.EnsureSuccessStatusCode();
+        }
     }
 }

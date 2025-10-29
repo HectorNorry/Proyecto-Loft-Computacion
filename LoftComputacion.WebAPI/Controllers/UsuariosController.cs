@@ -71,17 +71,44 @@ namespace LoftComputacion.WebAPI.Controllers
         }
         // PUT: api/usuarios/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUsuario(int id, [FromBody] Usuario usuario)
+        public async Task<IActionResult> UpdateUsuario(int id, [FromBody] UpdateUsuarioDto updateDto)
         {
-            if (id != usuario.Id)
+            var usuario = await _context.Usuarios.FindAsync(id);
+
+            if (usuario == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(usuario).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            // Actualizamos los campos que sí pueden cambiar
+            usuario.NombreCompleto = updateDto.NombreCompleto;
+            usuario.Email = updateDto.Email;
+            usuario.Rol = updateDto.Rol;
 
-            return NoContent();
+            // ¡Importante! Solo actualizamos la contraseña SI el usuario escribió una nueva.
+            if (!string.IsNullOrWhiteSpace(updateDto.Password))
+            {
+                // Si se proveyó una nueva contraseña, la hasheamos
+                usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updateDto.Password);
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Usuarios.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent(); // Código 204: Éxito, sin contenido
         }
         // DELETE: api/usuarios/5
         [HttpDelete("{id}")]

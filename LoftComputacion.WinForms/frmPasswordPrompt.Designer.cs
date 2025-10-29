@@ -54,7 +54,7 @@
             txtPasswordAdmin.Location = new Point(192, 144);
             txtPasswordAdmin.Name = "txtPasswordAdmin";
             txtPasswordAdmin.Size = new Size(208, 33);
-            txtPasswordAdmin.TabIndex = 1;
+            txtPasswordAdmin.TabIndex = 2;
             txtPasswordAdmin.UseSystemPasswordChar = true;
             // 
             // btnAceptarPass
@@ -84,7 +84,7 @@
             txtAdminUsuario.Location = new Point(192, 94);
             txtAdminUsuario.Name = "txtAdminUsuario";
             txtAdminUsuario.Size = new Size(208, 33);
-            txtAdminUsuario.TabIndex = 4;
+            txtAdminUsuario.TabIndex = 1;
             // 
             // label2
             // 

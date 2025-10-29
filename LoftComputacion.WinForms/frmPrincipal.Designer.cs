@@ -33,7 +33,7 @@
             menuStrip1 = new MenuStrip();
             toolStripMenuItem1 = new ToolStripMenuItem();
             salirToolStripMenuItem = new ToolStripMenuItem();
-            tsmiAdministracion = new ToolStripMenuItem();
+            tsmiGestionUsuarios = new ToolStripMenuItem();
             órdenesToolStripMenuItem = new ToolStripMenuItem();
             nuevaOrdenToolStripMenuItem = new ToolStripMenuItem();
             dgvOrdenes = new DataGridView();
@@ -76,7 +76,7 @@
             // 
             // toolStripMenuItem1
             // 
-            toolStripMenuItem1.DropDownItems.AddRange(new ToolStripItem[] { salirToolStripMenuItem, tsmiAdministracion });
+            toolStripMenuItem1.DropDownItems.AddRange(new ToolStripItem[] { salirToolStripMenuItem, tsmiGestionUsuarios });
             toolStripMenuItem1.Name = "toolStripMenuItem1";
             toolStripMenuItem1.Size = new Size(100, 29);
             toolStripMenuItem1.Text = "Archivo";
@@ -84,15 +84,15 @@
             // salirToolStripMenuItem
             // 
             salirToolStripMenuItem.Name = "salirToolStripMenuItem";
-            salirToolStripMenuItem.Size = new Size(234, 30);
+            salirToolStripMenuItem.Size = new Size(276, 30);
             salirToolStripMenuItem.Text = "Salir";
             // 
-            // tsmiAdministracion
+            // tsmiGestionUsuarios
             // 
-            tsmiAdministracion.Name = "tsmiAdministracion";
-            tsmiAdministracion.Size = new Size(234, 30);
-            tsmiAdministracion.Text = "Administracion";
-            tsmiAdministracion.Click += tsmiAdministracion_Click;
+            tsmiGestionUsuarios.Name = "tsmiGestionUsuarios";
+            tsmiGestionUsuarios.Size = new Size(276, 30);
+            tsmiGestionUsuarios.Text = "Gestionar Usuarios";
+            tsmiGestionUsuarios.Click += tsmiAdministracion_Click;
             // 
             // órdenesToolStripMenuItem
             // 
@@ -388,6 +388,6 @@
         private DataGridView dgvHistorial;
         private ContextMenuStrip cmsOrdenes;
         private ToolStripMenuItem tsmiCambiarEstado;
-        private ToolStripMenuItem tsmiAdministracion;
+        private ToolStripMenuItem tsmiGestionUsuarios;
     }
 }
