@@ -18,7 +18,8 @@ namespace LoftComputacion.WebAPI.Controllers
         [HttpPost("generar-resumen")]
         public async Task<IActionResult> GenerarResumen([FromBody] GenerarResumenDto dto)
         {
-            var resumen = await _aiService.GenerarResumenAsync(dto.TextoTecnico);
+            
+            var resumen = await _aiService.GenerarResumenDesdeTecnicoAsync(dto.TextoTecnico);
 
             if (string.IsNullOrEmpty(resumen))
             {

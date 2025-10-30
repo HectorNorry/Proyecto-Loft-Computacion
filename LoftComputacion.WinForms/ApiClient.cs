@@ -1,10 +1,13 @@
 ﻿using LoftComputacion.Domain;
 using Newtonsoft.Json;
+using System; // Agregado para Uri
 using System.Collections.Generic;
+using System.Drawing; // Para Image
+using System.IO; // Para MemoryStream
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-
+// using System.Text.Json; // <-- Eliminado para evitar conflictos
 
 namespace LoftComputacion.WinForms
 {
@@ -12,20 +15,23 @@ namespace LoftComputacion.WinForms
     {
         private readonly HttpClient _httpClient;
 
+        // Esta es la URL correcta que ya tenías
         private const string _apiUrl = "https://localhost:52004/api";
 
         private static string? _jwtToken;
 
+        // private readonly JsonSerializerOptions _jsonOptions; // <-- Eliminado, no se usa
+
         public ApiClient()
         {
             _httpClient = new HttpClient();
+            // (El constructor está bien así)
         }
 
-               public void SetToken(string token)
+        public void SetToken(string token)
         {
-            // Agrega el token a los encabezados por defecto
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+            _jwtToken = token; // Guardamos el token por si lo necesitamos
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
         public class LoginResponseDto
@@ -48,13 +54,11 @@ namespace LoftComputacion.WinForms
             return new List<Cliente>();
         }
 
-        // Reemplaza el método existente por este
-        public async Task<List<OrdenDeServicio>> GetOrdenesDeServicioAsync(string? filtro = null) // Agregamos el parámetro opcional
+        public async Task<List<OrdenDeServicio>> GetOrdenesDeServicioAsync(string? filtro = null)
         {
             string url = $"{_apiUrl}/ordenesdeservicio";
             if (!string.IsNullOrEmpty(filtro))
             {
-                // Si hay un filtro, lo agregamos a la URL como un 'query parameter'
                 url += $"?filtro={Uri.EscapeDataString(filtro)}";
             }
 
@@ -77,7 +81,7 @@ namespace LoftComputacion.WinForms
             response.EnsureSuccessStatusCode();
 
             var json_response = await response.Content.ReadAsStringAsync();
-            return  JsonConvert.DeserializeObject<Cliente>(json_response);
+            return JsonConvert.DeserializeObject<Cliente>(json_response);
         }
 
         public async Task<Equipo> CreateEquipoAsync(Equipo nuevoEquipo)
@@ -94,7 +98,6 @@ namespace LoftComputacion.WinForms
 
         public async Task<OrdenDeServicio> CreateOrdenDeServicioAsync(OrdenDeServicio nuevaOrden)
         {
-            // La API espera un DTO, así que creamos un objeto anónimo con la estructura correcta
             var createDto = new { nuevaOrden.ClienteId, nuevaOrden.EquipoId, nuevaOrden.FallaDeclaradaPorCliente };
             var dto_json = JsonConvert.SerializeObject(createDto);
             var dto_content = new StringContent(dto_json, System.Text.Encoding.UTF8, "application/json");
@@ -106,7 +109,6 @@ namespace LoftComputacion.WinForms
             return JsonConvert.DeserializeObject<OrdenDeServicio>(json_response);
         }
 
-        // Asegúrate de que el método reciba el usuarioId
         public async Task UpdateOrdenDeServicioAsync(int id, OrdenDeServicio ordenActualizada, int usuarioId)
         {
             var updateDto = new
@@ -114,7 +116,8 @@ namespace LoftComputacion.WinForms
                 ordenActualizada.EstadoId,
                 ordenActualizada.PrecioPresupuestado,
                 ordenActualizada.PrecioFinal,
-                UsuarioId = usuarioId // Usamos el ID recibido
+                ordenActualizada.ResumenTecnico,
+                UsuarioId = usuarioId
             };
             var dto_json = JsonConvert.SerializeObject(updateDto);
             var dto_content = new StringContent(dto_json, System.Text.Encoding.UTF8, "application/json");
@@ -144,27 +147,22 @@ namespace LoftComputacion.WinForms
             return usuarios ?? new List<Usuario>();
         }
 
-        // Nuevo método para obtener las ganancias
         public async Task<GananciasDto> GetGananciasAsync(DateTime fechaDesde, DateTime fechaHasta)
         {
-            // Formateamos las fechas al formato YYYY-MM-DD que espera la API
             string fechaDesdeStr = fechaDesde.ToString("yyyy-MM-dd");
             string fechaHastaStr = fechaHasta.ToString("yyyy-MM-dd");
 
             string url = $"{_apiUrl}/ganancias?fechaDesde={fechaDesdeStr}&fechaHasta={fechaHastaStr}";
 
             var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode(); // Lanza excepción si hay error
+            response.EnsureSuccessStatusCode();
 
             var json_response = await response.Content.ReadAsStringAsync();
-
-            // Creamos una clase temporal para deserializar la respuesta completa (lista + total)
             var resultado = JsonConvert.DeserializeObject<GananciasDto>(json_response);
 
-            return resultado ?? new GananciasDto(); // Devolvemos el objeto o uno vacío si falla
+            return resultado ?? new GananciasDto();
         }
 
-        
         public class GananciasDto
         {
             public List<OrdenDeServicio> Ordenes { get; set; } = new List<OrdenDeServicio>();
@@ -173,39 +171,31 @@ namespace LoftComputacion.WinForms
 
         public async Task<byte[]> DownloadGananciasExcelAsync(DateTime fechaDesde, DateTime fechaHasta)
         {
-            // Formateamos las fechas al formato YYYY-MM-DD
             string fechaDesdeStr = fechaDesde.ToString("yyyy-MM-dd");
             string fechaHastaStr = fechaHasta.ToString("yyyy-MM-dd");
 
             string url = $"{_apiUrl}/ganancias/exportar?fechaDesde={fechaDesdeStr}&fechaHasta={fechaHastaStr}";
 
             var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode(); // Lanza excepción si hay error
+            response.EnsureSuccessStatusCode();
 
-            // Leemos la respuesta no como texto/json, sino como un array de bytes
             var fileBytes = await response.Content.ReadAsByteArrayAsync();
             return fileBytes;
         }
 
-        // Método para OBTENER la lista de fotos de una orden
         public async Task<List<Foto>> GetFotosAsync(int ordenId)
         {
-            var response = await _httpClient.GetAsync($"{_apiUrl}/ordenes/{ordenId}/fotos"); // <-- ¡Endpoint nuevo!
+            var response = await _httpClient.GetAsync($"{_apiUrl}/ordenes/{ordenId}/fotos");
             response.EnsureSuccessStatusCode();
             var json_response = await response.Content.ReadAsStringAsync();
             var fotos = JsonConvert.DeserializeObject<List<Foto>>(json_response);
             return fotos ?? new List<Foto>();
         }
 
-        // Método para SUBIR una foto (comprimida)
         public async Task<Foto> UploadFotoAsync(int ordenId, Stream imageStream, string fileName)
         {
-            // Usamos MultipartFormDataContent para enviar archivos
             using (var content = new MultipartFormDataContent())
             {
-                // "fileStream" es el contenido (bytes) de la imagen
-                // "file" es el nombre que espera la API (IFormFile file)
-                // "fileName" es el nombre del archivo
                 content.Add(new StreamContent(imageStream), "file", fileName);
 
                 var response = await _httpClient.PostAsync($"{_apiUrl}/ordenes/{ordenId}/fotos", content);
@@ -220,9 +210,7 @@ namespace LoftComputacion.WinForms
         {
             try
             {
-                // Descarga los bytes de la imagen
                 byte[] imageData = await _httpClient.GetByteArrayAsync(url);
-                // Convierte los bytes en un objeto Image
                 using (var ms = new MemoryStream(imageData))
                 {
                     return Image.FromStream(ms);
@@ -230,7 +218,7 @@ namespace LoftComputacion.WinForms
             }
             catch
             {
-                return null; // Devuelve null si la descarga falla
+                return null;
             }
         }
         public async Task DeleteFotoAsync(int fotoId)
@@ -250,36 +238,31 @@ namespace LoftComputacion.WinForms
             if (response.IsSuccessStatusCode)
             {
                 var json_response = await response.Content.ReadAsStringAsync();
-                // Deserializa la respuesta completa
                 var loginResponse = JsonConvert.DeserializeObject<LoginResponseDto>(json_response);
 
                 if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
                 {
-                    // Guardamos el token en el cliente
                     SetToken(loginResponse.Token);
-                    return loginResponse; // Devolvemos el objeto completo
+                    return loginResponse;
                 }
                 return null;
             }
             else
             {
-                return null; // Falla el login
+                return null;
             }
         }
-
-       
 
         private class TokenDto { public string Token { get; set; } = string.Empty; }
 
         public async Task DeleteUsuarioAsync(int usuarioId)
         {
             var response = await _httpClient.DeleteAsync($"{_apiUrl}/usuarios/{usuarioId}");
-            response.EnsureSuccessStatusCode(); // Lanzará una excepción si la API devuelve un error (ej: 401, 404, 500)
+            response.EnsureSuccessStatusCode();
         }
 
         public async Task<Usuario> CreateUsuarioAsync(string nombreCompleto, string email, string password, string rol)
         {
-            // 1. Creamos un objeto anónimo que tiene la "forma" del DTO que espera la API
             var nuevoUsuarioDto = new
             {
                 NombreCompleto = nombreCompleto,
@@ -287,12 +270,8 @@ namespace LoftComputacion.WinForms
                 Password = password,
                 Rol = rol
             };
-
-            // 2. Lo convertimos a JSON
             var json = JsonConvert.SerializeObject(nuevoUsuarioDto);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-            // 3. Lo enviamos al endpoint
             var response = await _httpClient.PostAsync($"{_apiUrl}/usuarios", content);
             response.EnsureSuccessStatusCode();
 
@@ -302,13 +281,12 @@ namespace LoftComputacion.WinForms
 
         public async Task UpdateUsuarioAsync(int usuarioId, string nombre, string email, string rol, string? password)
         {
-            // Creamos un objeto anónimo que coincide con el UpdateUsuarioDto
             var updateDto = new
             {
                 NombreCompleto = nombre,
                 Email = email,
                 Rol = rol,
-                Password = password // Será null si está vacío, lo cual es perfecto
+                Password = password
             };
 
             var json = JsonConvert.SerializeObject(updateDto);
@@ -316,6 +294,30 @@ namespace LoftComputacion.WinForms
 
             var response = await _httpClient.PutAsync($"{_apiUrl}/usuarios/{usuarioId}", content);
             response.EnsureSuccessStatusCode();
+        }
+
+        // --- MÉTODO DEL HISTORIAL CORREGIDO ---
+        public async Task<List<HistorialOrden>> GetHistorialDeOrdenAsync(int ordenId)
+        {
+            SetToken(_jwtToken); // Nos aseguramos que el token esté
+
+            // --- 1. CORRECCIÓN DE URL ---
+            // Añadimos la variable _apiUrl como en el resto de tus métodos
+            // y usamos el endpoint correcto de la API (ordenesdeservicio)
+            var response = await _httpClient.GetAsync($"{_apiUrl}/ordenesdeservicio/{ordenId}/historial");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Error al obtener el historial ({response.StatusCode}): {errorContent}");
+            }
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+
+            // --- 2. CORRECCIÓN DE JSON ---
+            // Usamos Newtonsoft (JsonConvert) para ser consistentes con el resto del archivo
+            var historial = JsonConvert.DeserializeObject<List<HistorialOrden>>(jsonResponse);
+            return historial ?? new List<HistorialOrden>();
         }
     }
 }

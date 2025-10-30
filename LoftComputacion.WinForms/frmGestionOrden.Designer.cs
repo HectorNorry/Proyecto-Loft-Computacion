@@ -29,15 +29,18 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmGestionOrden));
-            panel1 = new Panel();
+            pnlGestionTecnica = new Panel();
+            txtResumenTecnico = new TextBox();
+            label13 = new Label();
+            pnlBotones = new Panel();
+            btnGuardar = new Button();
+            btnCancelar = new Button();
             label12 = new Label();
             label11 = new Label();
             txtPrecioFinal = new TextBox();
             txtPrecioPresupuesto = new TextBox();
             label10 = new Label();
             cmbEstado = new ComboBox();
-            btnGuardar = new Button();
-            btnCancelar = new Button();
             groupBox3 = new GroupBox();
             txtFallaDeclarada = new TextBox();
             groupBox2 = new GroupBox();
@@ -69,7 +72,8 @@
             splitFotos = new SplitContainer();
             lstFotosAdjuntas = new ListBox();
             picFotoPreview = new PictureBox();
-            panel1.SuspendLayout();
+            pnlGestionTecnica.SuspendLayout();
+            pnlBotones.SuspendLayout();
             groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
@@ -83,81 +87,55 @@
             ((System.ComponentModel.ISupportInitialize)picFotoPreview).BeginInit();
             SuspendLayout();
             // 
-            // panel1
+            // pnlGestionTecnica
             // 
-            panel1.Controls.Add(label12);
-            panel1.Controls.Add(label11);
-            panel1.Controls.Add(txtPrecioFinal);
-            panel1.Controls.Add(txtPrecioPresupuesto);
-            panel1.Controls.Add(label10);
-            panel1.Controls.Add(cmbEstado);
-            panel1.Controls.Add(btnGuardar);
-            panel1.Controls.Add(btnCancelar);
-            panel1.Dock = DockStyle.Bottom;
-            panel1.Location = new Point(0, 727);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(1199, 204);
-            panel1.TabIndex = 1;
+            pnlGestionTecnica.Controls.Add(txtResumenTecnico);
+            pnlGestionTecnica.Controls.Add(label13);
+            pnlGestionTecnica.Controls.Add(pnlBotones);
+            pnlGestionTecnica.Controls.Add(label12);
+            pnlGestionTecnica.Controls.Add(label11);
+            pnlGestionTecnica.Controls.Add(txtPrecioFinal);
+            pnlGestionTecnica.Controls.Add(txtPrecioPresupuesto);
+            pnlGestionTecnica.Controls.Add(label10);
+            pnlGestionTecnica.Controls.Add(cmbEstado);
+            pnlGestionTecnica.Dock = DockStyle.Bottom;
+            pnlGestionTecnica.Location = new Point(0, 626);
+            pnlGestionTecnica.Name = "pnlGestionTecnica";
+            pnlGestionTecnica.Size = new Size(1199, 305);
+            pnlGestionTecnica.TabIndex = 1;
             // 
-            // label12
+            // txtResumenTecnico
             // 
-            label12.AutoSize = true;
-            label12.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label12.Location = new Point(122, 130);
-            label12.Name = "label12";
-            label12.Size = new Size(128, 25);
-            label12.TabIndex = 10;
-            label12.Text = "Precio FINAL: ";
+            txtResumenTecnico.Location = new Point(92, 48);
+            txtResumenTecnico.Multiline = true;
+            txtResumenTecnico.Name = "txtResumenTecnico";
+            txtResumenTecnico.Size = new Size(426, 111);
+            txtResumenTecnico.TabIndex = 13;
             // 
-            // label11
+            // label13
             // 
-            label11.AutoSize = true;
-            label11.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label11.Location = new Point(125, 80);
-            label11.Name = "label11";
-            label11.Size = new Size(125, 25);
-            label11.TabIndex = 9;
-            label11.Text = "Presupuesto :";
+            label13.AutoSize = true;
+            label13.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label13.Location = new Point(147, 15);
+            label13.Name = "label13";
+            label13.Size = new Size(293, 30);
+            label13.TabIndex = 12;
+            label13.Text = "Resumen del trabajo realizado";
             // 
-            // txtPrecioFinal
+            // pnlBotones
             // 
-            txtPrecioFinal.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
-            txtPrecioFinal.Location = new Point(262, 132);
-            txtPrecioFinal.Name = "txtPrecioFinal";
-            txtPrecioFinal.Size = new Size(216, 33);
-            txtPrecioFinal.TabIndex = 8;
-            // 
-            // txtPrecioPresupuesto
-            // 
-            txtPrecioPresupuesto.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
-            txtPrecioPresupuesto.Location = new Point(262, 80);
-            txtPrecioPresupuesto.Name = "txtPrecioPresupuesto";
-            txtPrecioPresupuesto.Size = new Size(216, 33);
-            txtPrecioPresupuesto.TabIndex = 7;
-            // 
-            // label10
-            // 
-            label10.AutoSize = true;
-            label10.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label10.Location = new Point(74, 27);
-            label10.Name = "label10";
-            label10.Size = new Size(173, 25);
-            label10.TabIndex = 6;
-            label10.Text = "Estado del trabajo :";
-            // 
-            // cmbEstado
-            // 
-            cmbEstado.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            cmbEstado.FormattingEnabled = true;
-            cmbEstado.Location = new Point(260, 27);
-            cmbEstado.Name = "cmbEstado";
-            cmbEstado.Size = new Size(216, 33);
-            cmbEstado.TabIndex = 5;
+            pnlBotones.Controls.Add(btnGuardar);
+            pnlBotones.Controls.Add(btnCancelar);
+            pnlBotones.Dock = DockStyle.Right;
+            pnlBotones.Location = new Point(677, 0);
+            pnlBotones.Name = "pnlBotones";
+            pnlBotones.Size = new Size(522, 305);
+            pnlBotones.TabIndex = 11;
             // 
             // btnGuardar
             // 
             btnGuardar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnGuardar.Location = new Point(865, 110);
+            btnGuardar.Location = new Point(361, 181);
             btnGuardar.Name = "btnGuardar";
             btnGuardar.Size = new Size(112, 55);
             btnGuardar.TabIndex = 3;
@@ -168,7 +146,7 @@
             // btnCancelar
             // 
             btnCancelar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnCancelar.Location = new Point(716, 110);
+            btnCancelar.Location = new Point(206, 184);
             btnCancelar.Name = "btnCancelar";
             btnCancelar.Size = new Size(111, 55);
             btnCancelar.TabIndex = 4;
@@ -176,11 +154,66 @@
             btnCancelar.UseVisualStyleBackColor = true;
             btnCancelar.Click += btnCancelar_Click;
             // 
+            // label12
+            // 
+            label12.AutoSize = true;
+            label12.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label12.Location = new Point(116, 264);
+            label12.Name = "label12";
+            label12.Size = new Size(128, 25);
+            label12.TabIndex = 10;
+            label12.Text = "Precio FINAL: ";
+            // 
+            // label11
+            // 
+            label11.AutoSize = true;
+            label11.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label11.Location = new Point(116, 225);
+            label11.Name = "label11";
+            label11.Size = new Size(125, 25);
+            label11.TabIndex = 9;
+            label11.Text = "Presupuesto :";
+            // 
+            // txtPrecioFinal
+            // 
+            txtPrecioFinal.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
+            txtPrecioFinal.Location = new Point(244, 256);
+            txtPrecioFinal.Name = "txtPrecioFinal";
+            txtPrecioFinal.Size = new Size(216, 33);
+            txtPrecioFinal.TabIndex = 8;
+            // 
+            // txtPrecioPresupuesto
+            // 
+            txtPrecioPresupuesto.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
+            txtPrecioPresupuesto.Location = new Point(244, 217);
+            txtPrecioPresupuesto.Name = "txtPrecioPresupuesto";
+            txtPrecioPresupuesto.Size = new Size(216, 33);
+            txtPrecioPresupuesto.TabIndex = 7;
+            // 
+            // label10
+            // 
+            label10.AutoSize = true;
+            label10.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label10.Location = new Point(65, 189);
+            label10.Name = "label10";
+            label10.Size = new Size(173, 25);
+            label10.TabIndex = 6;
+            label10.Text = "Estado del trabajo :";
+            // 
+            // cmbEstado
+            // 
+            cmbEstado.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            cmbEstado.FormattingEnabled = true;
+            cmbEstado.Location = new Point(244, 181);
+            cmbEstado.Name = "cmbEstado";
+            cmbEstado.Size = new Size(216, 33);
+            cmbEstado.TabIndex = 5;
+            // 
             // groupBox3
             // 
             groupBox3.Controls.Add(txtFallaDeclarada);
             groupBox3.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            groupBox3.Location = new Point(3, 632);
+            groupBox3.Location = new Point(3, 531);
             groupBox3.Name = "groupBox3";
             groupBox3.Size = new Size(1178, 89);
             groupBox3.TabIndex = 2;
@@ -200,9 +233,9 @@
             // 
             groupBox2.Controls.Add(tableLayoutPanel1);
             groupBox2.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            groupBox2.Location = new Point(3, 222);
+            groupBox2.Location = new Point(3, 170);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(1184, 209);
+            groupBox2.Size = new Size(1184, 160);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
             groupBox2.Text = "Datos del Equipo";
@@ -232,99 +265,104 @@
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
-            tableLayoutPanel1.Size = new Size(1178, 177);
+            tableLayoutPanel1.Size = new Size(1178, 128);
             tableLayoutPanel1.TabIndex = 0;
             // 
             // label4
             // 
             label4.AutoSize = true;
-            label4.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label4.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
             label4.Location = new Point(3, 0);
             label4.Name = "label4";
-            label4.Size = new Size(153, 25);
+            label4.Size = new Size(133, 21);
             label4.TabIndex = 0;
             label4.Text = "Tipo de Equipo : ";
             // 
             // cmbTipoEquipo
             // 
             cmbTipoEquipo.Dock = DockStyle.Fill;
+            cmbTipoEquipo.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             cmbTipoEquipo.FormattingEnabled = true;
             cmbTipoEquipo.Location = new Point(238, 3);
             cmbTipoEquipo.Name = "cmbTipoEquipo";
-            cmbTipoEquipo.Size = new Size(347, 33);
+            cmbTipoEquipo.Size = new Size(347, 29);
             cmbTipoEquipo.TabIndex = 1;
             // 
             // txtMarca
             // 
             txtMarca.Dock = DockStyle.Fill;
-            txtMarca.Location = new Point(238, 47);
+            txtMarca.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtMarca.Location = new Point(238, 35);
             txtMarca.Name = "txtMarca";
-            txtMarca.Size = new Size(347, 33);
+            txtMarca.Size = new Size(347, 29);
             txtMarca.TabIndex = 3;
             // 
             // txtNumeroSerie
             // 
             txtNumeroSerie.Dock = DockStyle.Fill;
-            txtNumeroSerie.Location = new Point(238, 91);
+            txtNumeroSerie.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtNumeroSerie.Location = new Point(238, 67);
             txtNumeroSerie.Name = "txtNumeroSerie";
-            txtNumeroSerie.Size = new Size(347, 33);
+            txtNumeroSerie.Size = new Size(347, 29);
             txtNumeroSerie.TabIndex = 4;
             // 
             // label6
             // 
             label6.AutoSize = true;
-            label6.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label6.Location = new Point(3, 88);
+            label6.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
+            label6.Location = new Point(3, 64);
             label6.Name = "label6";
-            label6.Size = new Size(126, 25);
+            label6.Size = new Size(110, 21);
             label6.TabIndex = 5;
             label6.Text = "Nro de Serie :";
             // 
             // label5
             // 
             label5.AutoSize = true;
-            label5.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label5.Location = new Point(3, 44);
+            label5.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
+            label5.Location = new Point(3, 32);
             label5.Name = "label5";
-            label5.Size = new Size(79, 25);
+            label5.Size = new Size(67, 21);
             label5.TabIndex = 2;
             label5.Text = "Marca : ";
             // 
             // txtComponentes
             // 
             txtComponentes.Dock = DockStyle.Fill;
+            txtComponentes.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             txtComponentes.Location = new Point(826, 3);
             txtComponentes.Multiline = true;
             txtComponentes.Name = "txtComponentes";
             tableLayoutPanel1.SetRowSpan(txtComponentes, 4);
-            txtComponentes.Size = new Size(349, 171);
+            txtComponentes.Size = new Size(349, 122);
             txtComponentes.TabIndex = 7;
             // 
             // txtModelo
             // 
             txtModelo.Dock = DockStyle.Fill;
-            txtModelo.Location = new Point(238, 135);
+            txtModelo.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtModelo.Location = new Point(238, 99);
             txtModelo.Name = "txtModelo";
-            txtModelo.Size = new Size(347, 33);
+            txtModelo.Size = new Size(347, 29);
             txtModelo.TabIndex = 8;
             // 
             // label8
             // 
             label8.AutoSize = true;
-            label8.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label8.Location = new Point(3, 132);
+            label8.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
+            label8.Location = new Point(3, 96);
             label8.Name = "label8";
-            label8.Size = new Size(86, 25);
+            label8.Size = new Size(76, 21);
             label8.TabIndex = 9;
             label8.Text = "Modelo :";
             // 
             // label7
             // 
             label7.AutoSize = true;
-            label7.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label7.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
             label7.Location = new Point(591, 0);
             label7.Name = "label7";
-            label7.Size = new Size(143, 25);
+            label7.Size = new Size(125, 21);
             label7.TabIndex = 6;
             label7.Text = "Componentes : ";
             // 
@@ -342,32 +380,33 @@
             groupBox1.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             groupBox1.Location = new Point(3, 3);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(1184, 213);
+            groupBox1.Size = new Size(1184, 161);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Datos del Cliente";
             // 
             // txtDniCliente
             // 
-            txtDniCliente.Location = new Point(193, 174);
+            txtDniCliente.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtDniCliente.Location = new Point(195, 130);
             txtDniCliente.Name = "txtDniCliente";
-            txtDniCliente.Size = new Size(384, 33);
+            txtDniCliente.Size = new Size(384, 29);
             txtDniCliente.TabIndex = 8;
             // 
             // label9
             // 
             label9.AutoSize = true;
-            label9.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label9.Location = new Point(125, 174);
+            label9.Font = new Font("Microsoft Sans Serif", 12F);
+            label9.Location = new Point(144, 139);
             label9.Name = "label9";
-            label9.Size = new Size(53, 25);
+            label9.Size = new Size(45, 20);
             label9.TabIndex = 7;
             label9.Text = "DNI :";
             // 
             // btnBuscarCliente
             // 
             btnBuscarCliente.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            btnBuscarCliente.Location = new Point(769, 67);
+            btnBuscarCliente.Location = new Point(772, 34);
             btnBuscarCliente.Name = "btnBuscarCliente";
             btnBuscarCliente.Size = new Size(320, 92);
             btnBuscarCliente.TabIndex = 6;
@@ -377,52 +416,55 @@
             // 
             // txtEmailCliente
             // 
-            txtEmailCliente.Location = new Point(195, 126);
+            txtEmailCliente.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtEmailCliente.Location = new Point(195, 95);
             txtEmailCliente.Name = "txtEmailCliente";
-            txtEmailCliente.Size = new Size(384, 33);
+            txtEmailCliente.Size = new Size(384, 29);
             txtEmailCliente.TabIndex = 5;
             // 
             // txtTelefonoCliente
             // 
-            txtTelefonoCliente.Location = new Point(193, 78);
+            txtTelefonoCliente.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtTelefonoCliente.Location = new Point(195, 60);
             txtTelefonoCliente.Name = "txtTelefonoCliente";
-            txtTelefonoCliente.Size = new Size(384, 33);
+            txtTelefonoCliente.Size = new Size(384, 29);
             txtTelefonoCliente.TabIndex = 4;
             // 
             // txtNombreCliente
             // 
+            txtNombreCliente.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             txtNombreCliente.Location = new Point(195, 25);
             txtNombreCliente.Name = "txtNombreCliente";
-            txtNombreCliente.Size = new Size(384, 33);
+            txtNombreCliente.Size = new Size(384, 29);
             txtNombreCliente.TabIndex = 3;
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Font = new Font("Segoe UI", 14.25F);
-            label3.Location = new Point(108, 134);
+            label3.Font = new Font("Microsoft Sans Serif", 12F);
+            label3.Location = new Point(135, 104);
             label3.Name = "label3";
-            label3.Size = new Size(72, 25);
+            label3.Size = new Size(60, 20);
             label3.TabIndex = 2;
             label3.Text = "Email : ";
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Font = new Font("Segoe UI", 14.25F);
-            label2.Location = new Point(89, 86);
+            label2.Font = new Font("Microsoft Sans Serif", 12F);
+            label2.Location = new Point(112, 67);
             label2.Name = "label2";
-            label2.Size = new Size(98, 25);
+            label2.Size = new Size(83, 20);
             label2.TabIndex = 1;
             label2.Text = "Telefono : ";
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 14.25F);
-            label1.Location = new Point(6, 33);
+            label1.Font = new Font("Microsoft Sans Serif", 12F);
+            label1.Location = new Point(49, 34);
             label1.Name = "label1";
-            label1.Size = new Size(174, 25);
+            label1.Size = new Size(140, 20);
             label1.TabIndex = 0;
             label1.Text = "Nombre y Apellido:";
             // 
@@ -437,7 +479,7 @@
             flowLayoutPanel1.FlowDirection = FlowDirection.TopDown;
             flowLayoutPanel1.Location = new Point(0, 0);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
-            flowLayoutPanel1.Size = new Size(1199, 727);
+            flowLayoutPanel1.Size = new Size(1199, 626);
             flowLayoutPanel1.TabIndex = 1;
             flowLayoutPanel1.WrapContents = false;
             // 
@@ -447,7 +489,7 @@
             groupBox4.Controls.Add(btnAdjuntarFoto);
             groupBox4.Controls.Add(splitFotos);
             groupBox4.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold);
-            groupBox4.Location = new Point(3, 437);
+            groupBox4.Location = new Point(3, 336);
             groupBox4.Name = "groupBox4";
             groupBox4.Size = new Size(1184, 189);
             groupBox4.TabIndex = 1;
@@ -520,13 +562,14 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1199, 931);
             Controls.Add(flowLayoutPanel1);
-            Controls.Add(panel1);
+            Controls.Add(pnlGestionTecnica);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "frmGestionOrden";
             Text = "Gestion de Ordenes";
             Load += frmGestionOrden_Load;
-            panel1.ResumeLayout(false);
-            panel1.PerformLayout();
+            pnlGestionTecnica.ResumeLayout(false);
+            pnlGestionTecnica.PerformLayout();
+            pnlBotones.ResumeLayout(false);
             groupBox3.ResumeLayout(false);
             groupBox3.PerformLayout();
             groupBox2.ResumeLayout(false);
@@ -548,7 +591,7 @@
 
         // --- ESTA SECCIÓN ES LA QUE FALTABA ---
         // Aquí se declaran las variables para que el archivo .cs las vea
-        private Panel panel1;
+        private Panel pnlGestionTecnica;
         private Button btnGuardar;
         private Button btnCancelar;
         private GroupBox groupBox3;
@@ -588,5 +631,8 @@
         private Button btnQuitarFoto;
         private ListBox lstFotosAdjuntas;
         private PictureBox picFotoPreview;
+        private Panel pnlBotones;
+        private TextBox txtResumenTecnico;
+        private Label label13;
     }
 }

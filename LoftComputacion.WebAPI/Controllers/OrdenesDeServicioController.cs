@@ -13,6 +13,7 @@ namespace LoftComputacion.WebAPI.Controllers
     {
         private readonly OrdenDeServicioService _ordenDeServicioService;
 
+
         public OrdenesDeServicioController(OrdenDeServicioService ordenDeServicioService)
         {
             _ordenDeServicioService = ordenDeServicioService;
@@ -37,6 +38,19 @@ namespace LoftComputacion.WebAPI.Controllers
             return Ok(orden);
         }
 
+        [HttpGet("{id}/historial")]
+        public async Task<IActionResult> GetHistorialDeOrden(int id)
+        {
+            var historial = await _ordenDeServicioService.GetHistorialByOrdenIdAsync(id);
+
+            if (historial == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(historial);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateOrdenDeServicio([FromBody] CreateOrdenDto ordenDto)
         {
@@ -58,7 +72,8 @@ namespace LoftComputacion.WebAPI.Controllers
             {
                 EstadoId = ordenDto.EstadoId,
                 PrecioPresupuestado = ordenDto.PrecioPresupuestado,
-                PrecioFinal = ordenDto.PrecioFinal
+                PrecioFinal = ordenDto.PrecioFinal,
+                ResumenTecnico = ordenDto.ResumenTecnico
             };
 
             // Pasamos el UsuarioId al servicio
