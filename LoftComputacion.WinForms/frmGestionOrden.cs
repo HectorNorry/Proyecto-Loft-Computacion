@@ -44,6 +44,21 @@ namespace LoftComputacion.WinForms
                 cmbEstado.DataSource = estados;
                 cmbEstado.DisplayMember = "Nombre";
                 cmbEstado.ValueMember = "Id";
+
+                // Lógica de selección del ComboBox DESPUÉS de cargar el DataSource
+                if (_ordenParaEditar != null)
+                {
+                    // Estamos en MODO EDICIÓN, seleccionamos el valor guardado
+                    cmbEstado.SelectedValue = _ordenParaEditar.EstadoId;
+                }
+                else
+                {
+                    // Estamos en MODO CREACIÓN, seleccionamos el primero
+                    if (cmbEstado.Items.Count > 0)
+                    {
+                        cmbEstado.SelectedIndex = 0;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -57,9 +72,25 @@ namespace LoftComputacion.WinForms
                 this.Text = $"Editando Orden N° {_ordenParaEditar.Id}";
                 btnGuardar.Text = "Actualizar";
 
-                // --- Habilitar/Deshabilitar Paneles ---
-                groupBox4.Enabled = true; // HABILITAMOS el panel de fotos
+                // --- 1. Lógica de Visibilidad (La que hicimos) ---
+                pnlGestionTecnica.Visible = true;
+                pnlBotones.Visible = true;
+                label10.Visible = true; // "Estado del trabajo"
+                cmbEstado.Visible = true;
+                label11.Visible = true; // "Presupuesto"
+                txtPrecioPresupuesto.Visible = true;
+                label12.Visible = true; // "Precio FINAL"
+                txtPrecioFinal.Visible = true;
+                // Asumo que tienes un label para el resumen, si no, borra esta línea
+                // lblResumenTecnico.Visible = true; 
+                txtResumenTecnico.Visible = true;
+                // ---
+
+                // --- 2. Lógica de Habilitación (La que hicimos) ---
+                groupBox4.Enabled = true; // Panel de fotos
                 btnBuscarCliente.Enabled = false;
+
+                // --- ¡ESTO TAMBIÉN FALTABA! (Ponerlos ReadOnly) ---
                 cmbTipoEquipo.Enabled = false;
                 txtNombreCliente.ReadOnly = true;
                 txtTelefonoCliente.ReadOnly = true;
@@ -70,12 +101,14 @@ namespace LoftComputacion.WinForms
                 txtNumeroSerie.ReadOnly = true;
                 txtComponentes.ReadOnly = true;
                 txtFallaDeclarada.ReadOnly = true;
+                // Habilitar controles de gestión
                 cmbEstado.Enabled = true;
                 txtPrecioPresupuesto.ReadOnly = false;
                 txtPrecioFinal.ReadOnly = false;
+                txtResumenTecnico.ReadOnly = false;
+                // ---
 
-                // --- Cargar Datos ---
-                // Cliente
+                // --- 3. ¡EL CÓDIGO QUE SE BORRÓ! (Cargar Datos) ---
                 if (_ordenParaEditar.Cliente != null)
                 {
                     _clienteSeleccionado = _ordenParaEditar.Cliente;
@@ -85,7 +118,6 @@ namespace LoftComputacion.WinForms
                     txtDniCliente.Text = _ordenParaEditar.Cliente.DNI;
                 }
 
-                // Equipo
                 if (_ordenParaEditar.Equipo != null)
                 {
                     if (cmbTipoEquipo.Items.Count > (int)_ordenParaEditar.Equipo.Tipo)
@@ -98,26 +130,40 @@ namespace LoftComputacion.WinForms
                     txtComponentes.Text = _ordenParaEditar.Equipo.Componentes;
                 }
 
-                // Falla
                 txtFallaDeclarada.Text = _ordenParaEditar.FallaDeclaradaPorCliente;
-
-                // Estado y Precios
-                cmbEstado.SelectedValue = _ordenParaEditar.EstadoId;
                 txtPrecioPresupuesto.Text = _ordenParaEditar.PrecioPresupuestado?.ToString("F2");
                 txtPrecioFinal.Text = _ordenParaEditar.PrecioFinal?.ToString("F2");
+                txtResumenTecnico.Text = _ordenParaEditar.ResumenTecnico;
+                // --- FIN DEL BLOQUE QUE FALTABA ---
 
-                // Cargar Fotos (al final)
                 await CargarFotosDeLaOrden();
+
+                // (Si el dgvHistorial está en este form, aquí iría la llamada a CargarHistorial())
             }
             else // MODO CREACIÓN
             {
                 this.Text = "Crear Nueva Orden de Servicio";
                 btnGuardar.Text = "Guardar";
 
-                // --- Habilitar/Deshabilitar Paneles ---
-                groupBox4.Enabled = false; // DESHABILITAMOS el panel de fotos
+                // --- Lógica de Visibilidad (Modo Creación) ---
+                pnlGestionTecnica.Visible = true;
+                pnlBotones.Visible = true;
+                label10.Visible = false; // "Estado del trabajo"
+                cmbEstado.Visible = false;
+                label11.Visible = false; // "Presupuesto"
+                txtPrecioPresupuesto.Visible = false;
+                label12.Visible = false; // "Precio FINAL"
+                txtPrecioFinal.Visible = false;
+                // lblResumenTecnico.Visible = false;
+                txtResumenTecnico.Visible = false;
+                // ---
+
+                // --- Lógica de Habilitación (Modo Creación) ---
+                groupBox4.Enabled = false; // Panel de fotos
                 btnBuscarCliente.Enabled = true;
-                cmbTipoEquipo.Enabled = true; // Habilitado para crear
+
+                // ¡Habilitar los campos para la creación!
+                cmbTipoEquipo.Enabled = true;
                 txtNombreCliente.ReadOnly = false;
                 txtTelefonoCliente.ReadOnly = false;
                 txtEmailCliente.ReadOnly = false;
@@ -127,16 +173,10 @@ namespace LoftComputacion.WinForms
                 txtNumeroSerie.ReadOnly = false;
                 txtComponentes.ReadOnly = false;
                 txtFallaDeclarada.ReadOnly = false;
-                cmbEstado.Enabled = false; // El estado inicial (Recibido) no se elige
-                txtPrecioPresupuesto.ReadOnly = true;
-                txtPrecioFinal.ReadOnly = true;
+                // ---
 
-                // --- Estado Inicial ---
-                cmbTipoEquipo.SelectedIndex = 0; // Notebook por defecto
-                if (cmbEstado.Items.Count > 0)
-                {
-                    cmbEstado.SelectedIndex = 0; // "Recibido" por defecto
-                }
+                // Estado Inicial
+                cmbTipoEquipo.SelectedIndex = 0;
             }
         }
 
@@ -196,6 +236,10 @@ namespace LoftComputacion.WinForms
                         _ordenParaEditar.PrecioFinal = null;
                     }
 
+                    // --- ¡NUEVA LÍNEA! ---
+                    // Leemos el resumen del técnico desde el nuevo TextBox
+                    _ordenParaEditar.ResumenTecnico = txtResumenTecnico.Text;
+
                     // Llamamos al ApiClient PASANDO EL ID DEL USUARIO CONFIRMADO
                     await _apiClient.UpdateOrdenDeServicioAsync(_ordenParaEditar.Id, _ordenParaEditar, usuarioIdConfirmado);
 
@@ -213,6 +257,8 @@ namespace LoftComputacion.WinForms
             }
             else // Estamos en modo CREACIÓN
             {
+                // (El modo CREACIÓN no se toca, ya que el ResumenTecnico
+                //  se genera después, durante la edición/reparación)
                 try
                 {
                     Cliente clienteParaGuardar;
@@ -242,14 +288,14 @@ namespace LoftComputacion.WinForms
                     };
                     var equipoCreado = await _apiClient.CreateEquipoAsync(nuevoEquipo);
 
-                    // --- AQUÍ SE DECLARA nuevaOrden ---
                     var nuevaOrden = new OrdenDeServicio
                     {
                         ClienteId = clienteParaGuardar.Id,
                         EquipoId = equipoCreado.Id,
                         FallaDeclaradaPorCliente = txtFallaDeclarada.Text
+                        // ResumenTecnico se deja en null, está correcto.
                     };
-                    // --- Y AQUÍ SE USA ---
+
                     await _apiClient.CreateOrdenDeServicioAsync(nuevaOrden);
 
                     MessageBox.Show("¡Orden de servicio creada con éxito!", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -457,6 +503,8 @@ namespace LoftComputacion.WinForms
                 MessageBox.Show($"Error al cargar las fotos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        
     }
 
 }

@@ -38,6 +38,8 @@ namespace LoftComputacion.Domain
         public int EquipoId { get; set; }
         public Equipo Equipo { get; set; } = null!;
 
+        public string? ResumenTecnico { get; set; }
+
         // Colecciones de entidades relacionadas
         public ICollection<Foto> Fotos { get; set; }
         public ICollection<HistorialOrden> Historial { get; set; }
