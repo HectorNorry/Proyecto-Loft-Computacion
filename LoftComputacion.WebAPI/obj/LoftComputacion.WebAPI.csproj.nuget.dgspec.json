@@ -72,6 +72,10 @@
             "SendGrid": {
               "target": "Package",
               "version": "[9.29.3, )"
+            },
+            "mercadopago-sdk": {
+              "target": "Package",
+              "version": "[2.10.1, )"
             }
           },
           "imports": [
@@ -305,15 +309,27 @@
               "target": "Package",
               "version": "[8.0.21, )"
             },
+            "Microsoft.AspNetCore.Mvc.NewtonsoftJson": {
+              "target": "Package",
+              "version": "[8.0.21, )"
+            },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
               "version": "[8.0.20, )"
             },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.4, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[6.6.2, )"
+            },
+            "mercadopago-sdk": {
+              "target": "Package",
+              "version": "[2.10.1, )"
             }
           },
           "imports": [

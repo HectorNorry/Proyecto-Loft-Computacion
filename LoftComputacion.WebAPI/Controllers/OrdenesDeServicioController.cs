@@ -3,6 +3,7 @@ using LoftComputacion.Domain;
 using LoftComputacion.WebAPI.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks; 
 
 namespace LoftComputacion.WebAPI.Controllers
 {
@@ -12,18 +13,20 @@ namespace LoftComputacion.WebAPI.Controllers
     public class OrdenesDeServicioController : ControllerBase
     {
         private readonly OrdenDeServicioService _ordenDeServicioService;
+        private readonly MercadoPagoService _mercadoPagoService; 
 
-
-        public OrdenesDeServicioController(OrdenDeServicioService ordenDeServicioService)
+        public OrdenesDeServicioController(
+            OrdenDeServicioService ordenDeServicioService,
+            MercadoPagoService mercadoPagoService)
         {
             _ordenDeServicioService = ordenDeServicioService;
+            _mercadoPagoService = mercadoPagoService;
         }
 
         [HttpGet]
-        // Indicamos que 'filtro' viene de la URL (query string) y es opcional
         public async Task<IActionResult> GetOrdenesDeServicio([FromQuery] string? filtro = null)
         {
-            var ordenes = await _ordenDeServicioService.GetAllOrdenesAsync(filtro); // Pasamos el filtro al servicio
+            var ordenes = await _ordenDeServicioService.GetAllOrdenesAsync(filtro);
             return Ok(ordenes);
         }
 
@@ -38,18 +41,40 @@ namespace LoftComputacion.WebAPI.Controllers
             return Ok(orden);
         }
 
-        [HttpGet("{id}/historial")]
-        public async Task<IActionResult> GetHistorialDeOrden(int id)
+        // --- ¡NUESTRO NUEVO ENDPOINT PARA MERCADO PAGO! ---
+        [HttpPost("{id}/crear-pago")]
+        public async Task<IActionResult> CrearPreferenciaDePago(int id)
         {
-            var historial = await _ordenDeServicioService.GetHistorialByOrdenIdAsync(id);
-
-            if (historial == null)
+            try
             {
-                return NotFound();
-            }
+                // 1. Buscamos la orden completa para obtener el precio y los datos del cliente
+                var orden = await _ordenDeServicioService.GetOrdenByIdAsync(id);
+                if (orden == null)
+                {
+                    return NotFound("No se encontró la orden de servicio.");
+                }
 
-            return Ok(historial);
+                // 2. Validamos que la orden tenga un precio final asignado
+                if (orden.PrecioFinal == null || orden.PrecioFinal <= 0)
+                {
+                    return BadRequest("La orden no tiene un precio final válido para generar el pago.");
+                }
+
+                // 3. Llamamos a nuestro servicio para crear el link de pago
+                string urlPreferencia = await _mercadoPagoService.CrearPreferenciaDePagoAsync(orden);
+
+                // 4. Devolvemos el link de pago al frontend (WinForms)
+                //    Devolvemos un objeto anónimo para que sea un JSON limpio
+                return Ok(new { urlDePago = urlPreferencia });
+            }
+            catch (System.Exception ex)
+            {
+                // Manejamos cualquier error que ocurra al hablar con Mercado Pago
+                return StatusCode(500, $"Error al crear la preferencia de pago: {ex.Message}");
+            }
         }
+        // --- FIN DEL NUEVO ENDPOINT ---
+
 
         [HttpPost]
         public async Task<IActionResult> CreateOrdenDeServicio([FromBody] CreateOrdenDto ordenDto)
@@ -76,13 +101,23 @@ namespace LoftComputacion.WebAPI.Controllers
                 ResumenTecnico = ordenDto.ResumenTecnico
             };
 
-            // Pasamos el UsuarioId al servicio
             var resultado = await _ordenDeServicioService.UpdateOrdenAsync(id, ordenActualizada, ordenDto.UsuarioId);
             if (!resultado)
             {
                 return NotFound();
             }
             return NoContent();
+        }
+
+        [HttpGet("{id}/historial")]
+        public async Task<IActionResult> GetHistorialDeOrden(int id)
+        {
+            var historial = await _ordenDeServicioService.GetHistorialByOrdenIdAsync(id);
+            if (historial == null)
+            {
+                return NotFound();
+            }
+            return Ok(historial);
         }
 
         [HttpDelete("{id}")]
