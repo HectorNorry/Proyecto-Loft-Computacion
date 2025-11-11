@@ -86,6 +86,8 @@ namespace LoftComputacion.WinForms
 
         #endregion
 
+
+
         #region Carga y Refresco de Datos
 
         /// <summary>
@@ -483,6 +485,43 @@ namespace LoftComputacion.WinForms
             }
         }
 
+        
+
         #endregion
+
+        private void administraciónToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // 1. Validamos al administrador (reutilizando el método que ya definimos)
+            //    (Asumo que tu form de contraseña se llama frmPasswordPrompt)
+            if (ValidarAdministrador())
+            {
+                // 2. Si es OK, abrimos el NUEVO formulario "Hub"
+                using (var formHub = new frmAdminHub(_apiClient))
+                {
+                    formHub.ShowDialog();
+                }
+            }
+            // else: No hacemos nada, el validador (frmPasswordPrompt) ya se encargó.
+        }
+
+        /// <summary>
+        /// (Este es el método que te pasé antes, asegúrate de tenerlo)
+        /// Abre el formulario de contraseña y valida las credenciales.
+        /// </summary>
+        private bool ValidarAdministrador()
+        {
+            // ¡REVISA QUE EL NOMBRE 'frmPasswordPrompt' SEA CORRECTO!
+            using (var formPassword = new frmPasswordPrompt(_apiClient))
+            {
+                if (formPassword.ShowDialog() == DialogResult.OK)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
     }
 }

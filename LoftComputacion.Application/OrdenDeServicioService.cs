@@ -196,7 +196,6 @@ namespace LoftComputacion.Application
                         ordenExistente.Cliente.Email,                  // 1. emailCliente
                         ordenExistente.Cliente.NombreCompleto,         // 2. nombreCliente
                         resumenParaEmail,                              // 3. resumenIA
-                        ordenExistente.PrecioFinal ?? 0,               // 4. precioFinal
                         ordenExistente.Id                              // 5. ordenId (¡NUEVO!)
                     );
                 }

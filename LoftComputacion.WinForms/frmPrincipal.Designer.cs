@@ -33,9 +33,9 @@
             menuStrip1 = new MenuStrip();
             toolStripMenuItem1 = new ToolStripMenuItem();
             salirToolStripMenuItem = new ToolStripMenuItem();
-            tsmiGestionUsuarios = new ToolStripMenuItem();
             órdenesToolStripMenuItem = new ToolStripMenuItem();
             nuevaOrdenToolStripMenuItem = new ToolStripMenuItem();
+            administraciónToolStripMenuItem = new ToolStripMenuItem();
             dgvOrdenes = new DataGridView();
             cmsOrdenes = new ContextMenuStrip(components);
             tsmiCambiarEstado = new ToolStripMenuItem();
@@ -67,7 +67,7 @@
             // menuStrip1
             // 
             menuStrip1.Font = new Font("Verdana", 15F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            menuStrip1.Items.AddRange(new ToolStripItem[] { toolStripMenuItem1, órdenesToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { toolStripMenuItem1, órdenesToolStripMenuItem, administraciónToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(884, 33);
@@ -76,7 +76,7 @@
             // 
             // toolStripMenuItem1
             // 
-            toolStripMenuItem1.DropDownItems.AddRange(new ToolStripItem[] { salirToolStripMenuItem, tsmiGestionUsuarios });
+            toolStripMenuItem1.DropDownItems.AddRange(new ToolStripItem[] { salirToolStripMenuItem });
             toolStripMenuItem1.Name = "toolStripMenuItem1";
             toolStripMenuItem1.Size = new Size(100, 29);
             toolStripMenuItem1.Text = "Archivo";
@@ -84,15 +84,8 @@
             // salirToolStripMenuItem
             // 
             salirToolStripMenuItem.Name = "salirToolStripMenuItem";
-            salirToolStripMenuItem.Size = new Size(276, 30);
+            salirToolStripMenuItem.Size = new Size(131, 30);
             salirToolStripMenuItem.Text = "Salir";
-            // 
-            // tsmiGestionUsuarios
-            // 
-            tsmiGestionUsuarios.Name = "tsmiGestionUsuarios";
-            tsmiGestionUsuarios.Size = new Size(276, 30);
-            tsmiGestionUsuarios.Text = "Gestionar Usuarios";
-            tsmiGestionUsuarios.Click += tsmiAdministracion_Click;
             // 
             // órdenesToolStripMenuItem
             // 
@@ -107,6 +100,13 @@
             nuevaOrdenToolStripMenuItem.Size = new Size(217, 30);
             nuevaOrdenToolStripMenuItem.Text = "Nueva Orden";
             nuevaOrdenToolStripMenuItem.Click += nuevaOrdenToolStripMenuItem_Click;
+            // 
+            // administraciónToolStripMenuItem
+            // 
+            administraciónToolStripMenuItem.Name = "administraciónToolStripMenuItem";
+            administraciónToolStripMenuItem.Size = new Size(174, 29);
+            administraciónToolStripMenuItem.Text = "Administración";
+            administraciónToolStripMenuItem.Click += administraciónToolStripMenuItem_Click;
             // 
             // dgvOrdenes
             // 
@@ -205,6 +205,7 @@
             // 
             // tableLayoutPanel1
             // 
+            tableLayoutPanel1.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             tableLayoutPanel1.ColumnCount = 2;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle());
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
@@ -234,7 +235,7 @@
             // 
             lblDetalleClienteNombre.AutoSize = true;
             lblDetalleClienteNombre.Font = new Font("Arial", 14.25F);
-            lblDetalleClienteNombre.Location = new Point(3, 11);
+            lblDetalleClienteNombre.Location = new Point(4, 12);
             lblDetalleClienteNombre.Margin = new Padding(3, 11, 3, 11);
             lblDetalleClienteNombre.Name = "lblDetalleClienteNombre";
             lblDetalleClienteNombre.Size = new Size(79, 22);
@@ -245,7 +246,7 @@
             // 
             lblDetalleEquipoDesc.AutoSize = true;
             lblDetalleEquipoDesc.Font = new Font("Arial", 14.25F);
-            lblDetalleEquipoDesc.Location = new Point(3, 55);
+            lblDetalleEquipoDesc.Location = new Point(4, 57);
             lblDetalleEquipoDesc.Margin = new Padding(3, 11, 3, 11);
             lblDetalleEquipoDesc.Name = "lblDetalleEquipoDesc";
             lblDetalleEquipoDesc.Size = new Size(80, 22);
@@ -256,7 +257,7 @@
             // 
             lblDetalleEstadoActual.AutoSize = true;
             lblDetalleEstadoActual.Font = new Font("Arial", 14.25F);
-            lblDetalleEstadoActual.Location = new Point(3, 99);
+            lblDetalleEstadoActual.Location = new Point(4, 102);
             lblDetalleEstadoActual.Margin = new Padding(3, 11, 3, 11);
             lblDetalleEstadoActual.Name = "lblDetalleEstadoActual";
             lblDetalleEstadoActual.Size = new Size(80, 22);
@@ -267,7 +268,7 @@
             // 
             lblDetalleHistorial.AutoSize = true;
             lblDetalleHistorial.Font = new Font("Arial", 14.25F);
-            lblDetalleHistorial.Location = new Point(3, 236);
+            lblDetalleHistorial.Location = new Point(4, 241);
             lblDetalleHistorial.Margin = new Padding(3, 11, 3, 11);
             lblDetalleHistorial.Name = "lblDetalleHistorial";
             lblDetalleHistorial.Size = new Size(87, 22);
@@ -278,7 +279,7 @@
             // 
             txtDetalleClienteNombre.BorderStyle = BorderStyle.None;
             txtDetalleClienteNombre.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleClienteNombre.Location = new Point(96, 11);
+            txtDetalleClienteNombre.Location = new Point(98, 12);
             txtDetalleClienteNombre.Margin = new Padding(3, 11, 3, 11);
             txtDetalleClienteNombre.Name = "txtDetalleClienteNombre";
             txtDetalleClienteNombre.ReadOnly = true;
@@ -289,7 +290,7 @@
             // 
             txtDetalleEquipoDesc.BorderStyle = BorderStyle.None;
             txtDetalleEquipoDesc.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleEquipoDesc.Location = new Point(96, 55);
+            txtDetalleEquipoDesc.Location = new Point(98, 57);
             txtDetalleEquipoDesc.Margin = new Padding(3, 11, 3, 11);
             txtDetalleEquipoDesc.Name = "txtDetalleEquipoDesc";
             txtDetalleEquipoDesc.ReadOnly = true;
@@ -300,7 +301,7 @@
             // 
             txtDetalleEstadoActual.BorderStyle = BorderStyle.None;
             txtDetalleEstadoActual.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleEstadoActual.Location = new Point(96, 99);
+            txtDetalleEstadoActual.Location = new Point(98, 102);
             txtDetalleEstadoActual.Margin = new Padding(3, 11, 3, 11);
             txtDetalleEstadoActual.Name = "txtDetalleEstadoActual";
             txtDetalleEstadoActual.ReadOnly = true;
@@ -312,20 +313,20 @@
             txtDetalleFalla.BorderStyle = BorderStyle.None;
             txtDetalleFalla.Dock = DockStyle.Fill;
             txtDetalleFalla.Font = new Font("Segoe UI Semibold", 11.25F, FontStyle.Bold);
-            txtDetalleFalla.Location = new Point(96, 143);
+            txtDetalleFalla.Location = new Point(98, 147);
             txtDetalleFalla.Margin = new Padding(3, 11, 3, 11);
             txtDetalleFalla.Multiline = true;
             txtDetalleFalla.Name = "txtDetalleFalla";
             txtDetalleFalla.ReadOnly = true;
             txtDetalleFalla.ScrollBars = ScrollBars.Vertical;
-            txtDetalleFalla.Size = new Size(350, 71);
+            txtDetalleFalla.Size = new Size(347, 71);
             txtDetalleFalla.TabIndex = 8;
             // 
             // lblDetalleFalla
             // 
             lblDetalleFalla.AutoSize = true;
             lblDetalleFalla.Font = new Font("Arial", 14.25F);
-            lblDetalleFalla.Location = new Point(6, 143);
+            lblDetalleFalla.Location = new Point(7, 147);
             lblDetalleFalla.Margin = new Padding(6, 11, 3, 11);
             lblDetalleFalla.Name = "lblDetalleFalla";
             lblDetalleFalla.Size = new Size(60, 22);
@@ -388,6 +389,6 @@
         private DataGridView dgvHistorial;
         private ContextMenuStrip cmsOrdenes;
         private ToolStripMenuItem tsmiCambiarEstado;
-        private ToolStripMenuItem tsmiGestionUsuarios;
+        private ToolStripMenuItem administraciónToolStripMenuItem;
     }
 }
