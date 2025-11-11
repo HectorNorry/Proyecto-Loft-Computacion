@@ -1,5 +1,6 @@
 ﻿using LoftComputacion.Domain;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Threading.Tasks; // Asegúrate de tener este
@@ -81,9 +82,10 @@ namespace LoftComputacion.WinForms
                 txtPrecioPresupuesto.Visible = true;
                 label12.Visible = true; // "Precio FINAL"
                 txtPrecioFinal.Visible = true;
-                // Asumo que tienes un label para el resumen, si no, borra esta línea
-                // lblResumenTecnico.Visible = true; 
                 txtResumenTecnico.Visible = true;
+
+                btnPagarMP.Visible = (_ordenParaEditar.PrecioFinal ?? 0) > 0;
+
                 // ---
 
                 // --- 2. Lógica de Habilitación (La que hicimos) ---
@@ -173,6 +175,8 @@ namespace LoftComputacion.WinForms
                 txtNumeroSerie.ReadOnly = false;
                 txtComponentes.ReadOnly = false;
                 txtFallaDeclarada.ReadOnly = false;
+
+                btnPagarMP.Visible = false;
                 // ---
 
                 // Estado Inicial
@@ -504,7 +508,66 @@ namespace LoftComputacion.WinForms
             }
         }
 
-        
+        private async void btnPagarMP_Click(object sender, EventArgs e)
+        {
+            // 1. Verificamos que estemos en Modo Edición
+            if (_ordenParaEditar == null)
+            {
+                MessageBox.Show("Debe guardar la orden antes de poder generar un pago.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 2. Verificamos que haya un precio final para cobrar
+            if ((_ordenParaEditar.PrecioFinal ?? 0) <= 0)
+            {
+                MessageBox.Show("La orden no tiene un precio final válido para cobrar.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            this.Cursor = Cursors.WaitCursor;
+            btnPagarMP.Enabled = false;
+            btnPagarMP.Text = "Generando link...";
+
+            try
+            {
+                // 3. Llamamos al ApiClient (el método que creamos en el paso 5A)
+                string urlDePago = await _apiClient.CrearLinkDePagoAsync(_ordenParaEditar.Id);
+
+                // 4. ¡LA MAGIA! Abrimos el link de pago en el navegador
+                //    predeterminado del usuario (Chrome, Edge, etc.)
+
+                // --- Para que esto funcione, añade la siguiente línea ---
+                // --- al INICIO de tu archivo (arriba de todo):     ---
+                // using System.Diagnostics;
+                // --------------------------------------------------------
+                Process.Start(new ProcessStartInfo(urlDePago) { UseShellExecute = true });
+
+                // (Opcional) Preguntamos si el pago se completó
+                var result = MessageBox.Show(
+                    "Se ha abierto el link de pago en su navegador.\n\n¿El pago se completó exitosamente?",
+                    "Pago Enviado",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    // (Futuro) Aquí podríamos cambiar el estado a "Pagado" y cerrar la orden.
+                    // Por ahora, solo cerramos.
+                    this.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                // 5. Manejamos cualquier error de la API
+                MessageBox.Show($"Error al generar el link de pago: {ex.Message}", "Error de API", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+                btnPagarMP.Enabled = true;
+                btnPagarMP.Text = "Pagar con Mercado Pago";
+            }
+        }
     }
 
 }

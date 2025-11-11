@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmGestionOrden));
             pnlGestionTecnica = new Panel();
+            btnPagarMP = new Button();
             txtResumenTecnico = new TextBox();
             label13 = new Label();
             pnlBotones = new Panel();
@@ -89,6 +90,7 @@
             // 
             // pnlGestionTecnica
             // 
+            pnlGestionTecnica.Controls.Add(btnPagarMP);
             pnlGestionTecnica.Controls.Add(txtResumenTecnico);
             pnlGestionTecnica.Controls.Add(label13);
             pnlGestionTecnica.Controls.Add(pnlBotones);
@@ -104,19 +106,32 @@
             pnlGestionTecnica.Size = new Size(1199, 305);
             pnlGestionTecnica.TabIndex = 1;
             // 
+            // btnPagarMP
+            // 
+            btnPagarMP.BackColor = SystemColors.ActiveCaption;
+            btnPagarMP.FlatStyle = FlatStyle.Flat;
+            btnPagarMP.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            btnPagarMP.Location = new Point(484, 176);
+            btnPagarMP.Name = "btnPagarMP";
+            btnPagarMP.Size = new Size(148, 108);
+            btnPagarMP.TabIndex = 14;
+            btnPagarMP.Text = "Cobrar Mercado Pago";
+            btnPagarMP.UseVisualStyleBackColor = false;
+            btnPagarMP.Click += btnPagarMP_Click;
+            // 
             // txtResumenTecnico
             // 
-            txtResumenTecnico.Location = new Point(92, 48);
+            txtResumenTecnico.Location = new Point(21, 45);
             txtResumenTecnico.Multiline = true;
             txtResumenTecnico.Name = "txtResumenTecnico";
-            txtResumenTecnico.Size = new Size(426, 111);
+            txtResumenTecnico.Size = new Size(395, 111);
             txtResumenTecnico.TabIndex = 13;
             // 
             // label13
             // 
             label13.AutoSize = true;
             label13.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label13.Location = new Point(147, 15);
+            label13.Location = new Point(21, 12);
             label13.Name = "label13";
             label13.Size = new Size(293, 30);
             label13.TabIndex = 12;
@@ -158,7 +173,7 @@
             // 
             label12.AutoSize = true;
             label12.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label12.Location = new Point(116, 264);
+            label12.Location = new Point(76, 259);
             label12.Name = "label12";
             label12.Size = new Size(128, 25);
             label12.TabIndex = 10;
@@ -168,7 +183,7 @@
             // 
             label11.AutoSize = true;
             label11.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label11.Location = new Point(116, 225);
+            label11.Location = new Point(76, 220);
             label11.Name = "label11";
             label11.Size = new Size(125, 25);
             label11.TabIndex = 9;
@@ -177,7 +192,7 @@
             // txtPrecioFinal
             // 
             txtPrecioFinal.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
-            txtPrecioFinal.Location = new Point(244, 256);
+            txtPrecioFinal.Location = new Point(204, 251);
             txtPrecioFinal.Name = "txtPrecioFinal";
             txtPrecioFinal.Size = new Size(216, 33);
             txtPrecioFinal.TabIndex = 8;
@@ -185,7 +200,7 @@
             // txtPrecioPresupuesto
             // 
             txtPrecioPresupuesto.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
-            txtPrecioPresupuesto.Location = new Point(244, 217);
+            txtPrecioPresupuesto.Location = new Point(204, 212);
             txtPrecioPresupuesto.Name = "txtPrecioPresupuesto";
             txtPrecioPresupuesto.Size = new Size(216, 33);
             txtPrecioPresupuesto.TabIndex = 7;
@@ -194,7 +209,7 @@
             // 
             label10.AutoSize = true;
             label10.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label10.Location = new Point(65, 189);
+            label10.Location = new Point(25, 184);
             label10.Name = "label10";
             label10.Size = new Size(173, 25);
             label10.TabIndex = 6;
@@ -204,7 +219,7 @@
             // 
             cmbEstado.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             cmbEstado.FormattingEnabled = true;
-            cmbEstado.Location = new Point(244, 181);
+            cmbEstado.Location = new Point(204, 176);
             cmbEstado.Name = "cmbEstado";
             cmbEstado.Size = new Size(216, 33);
             cmbEstado.TabIndex = 5;
@@ -634,5 +649,6 @@
         private Panel pnlBotones;
         private TextBox txtResumenTecnico;
         private Label label13;
+        private Button btnPagarMP;
     }
 }

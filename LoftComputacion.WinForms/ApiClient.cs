@@ -7,7 +7,6 @@ using System.IO; // Para MemoryStream
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-// using System.Text.Json; // <-- Eliminado para evitar conflictos
 
 namespace LoftComputacion.WinForms
 {
@@ -20,17 +19,15 @@ namespace LoftComputacion.WinForms
 
         private static string? _jwtToken;
 
-        // private readonly JsonSerializerOptions _jsonOptions; // <-- Eliminado, no se usa
 
         public ApiClient()
         {
             _httpClient = new HttpClient();
-            // (El constructor está bien así)
         }
 
         public void SetToken(string token)
         {
-            _jwtToken = token; // Guardamos el token por si lo necesitamos
+            _jwtToken = token; 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
@@ -319,5 +316,53 @@ namespace LoftComputacion.WinForms
             var historial = JsonConvert.DeserializeObject<List<HistorialOrden>>(jsonResponse);
             return historial ?? new List<HistorialOrden>();
         }
+
+        // --- AGREGAR ESTE MÉTODO NUEVO DENTRO DE ApiClient.cs ---
+
+        /// <summary>
+        /// Llama a la API para crear una preferencia de pago en Mercado Pago.
+        /// </summary>
+        /// <param name="ordenId">El ID de la orden a pagar</param>
+        /// <returns>La URL del checkout de Mercado Pago para abrir en el navegador.</returns>
+        public async Task<string> CrearLinkDePagoAsync(int ordenId)
+        {
+            SetToken(_jwtToken); // Nos aseguramos que el token esté
+
+            // 1. Llamamos al nuevo endpoint. Usamos un 'HttpContent' vacío
+            //    porque el ID va en la URL y no enviamos datos en el body.
+            var response = await _httpClient.PostAsync($"{_apiUrl}/ordenesdeservicio/{ordenId}/crear-pago", null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Si la API da un error (ej: 400 "No hay precio"), lo leemos y lo mostramos
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Error al crear el link de pago: {errorContent}");
+            }
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+
+            // 2. Leemos el JSON anónimo que nos devuelve el controlador
+            //    (Necesitamos una clase helper para leer la 'urlDePago')
+            var resultado = JsonConvert.DeserializeObject<PagoResponseDto>(jsonResponse);
+
+            if (resultado == null || string.IsNullOrEmpty(resultado.UrlDePago))
+            {
+                throw new Exception("La API no devolvió una URL de pago válida.");
+            }
+
+            return resultado.UrlDePago;
+        }
+
+        
+    }
+    /// <summary>
+    /// Clase helper para leer la respuesta de la API al crear un link de pago.
+    /// </summary>
+    public class PagoResponseDto
+    {
+        // Le decimos a Newtonsoft que busque "urlDePago" (con minúscula) en el JSON
+        // para que coincida con el 'return Ok(new { urlDePago = ... })' del controlador.
+        [JsonProperty("urlDePago")]
+        public string UrlDePago { get; set; }
     }
 }

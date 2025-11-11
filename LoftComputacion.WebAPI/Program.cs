@@ -4,15 +4,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // --- 1. Servicios básicos de la API ---
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
-    // Esta es la opción clave que rompe los ciclos
-    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    // Esta es la opción equivalente para evitar ciclos en Newtonsoft
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 });
+
+builder.Services.AddHttpClient();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -69,6 +73,7 @@ builder.Services.AddScoped<AIService>();
 builder.Services.AddScoped<GananciasService>();
 builder.Services.AddScoped<BlobService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<MercadoPagoService>();
 
 // --- 3. Conexión a la base de datos (DbContext) ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -87,7 +92,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication(); 
 app.UseAuthorization();  
 app.MapControllers();
