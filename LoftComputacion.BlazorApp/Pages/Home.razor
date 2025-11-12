@@ -1,0 +1,10 @@
+﻿@page "/"
+
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Dashboard</PageTitle>
+
+<h1>¡Bienvenido, Administrador!</h1>
+
+<p>Este es el panel principal de administración.</p>

@@ -4,22 +4,36 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-// --- 1. Servicios básicos de la API ---
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
-    // Esta es la opción equivalente para evitar ciclos en Newtonsoft
+    // Esto soluciona los bucles (como ya tenías)
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+
+    // Le dice a la API que acepte JSON en camelCase (ej: "nombreUsuario")
+    // y lo mapee a propiedades PascalCase (ej: "NombreUsuario")
+    options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+});
+
+// --- 2. CORS ---
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazorApp", policy =>
+    {
+        policy
+            .WithOrigins("https://localhost:7022") // URL de tu BlazorApp
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
 
 builder.Services.AddHttpClient();
-
 builder.Services.AddEndpointsApiExplorer();
 
+// --- 3. Autenticación JWT ---
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -35,6 +49,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// --- 4. Swagger ---
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
@@ -62,12 +77,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddHttpClient();
-
-
-
-
-// --- 2. Nuestros servicios de la capa de Aplicación ---
+// --- 5. Servicios de tu aplicación ---
 builder.Services.AddScoped<OrdenDeServicioService>();
 builder.Services.AddScoped<AIService>();
 builder.Services.AddScoped<GananciasService>();
@@ -75,15 +85,15 @@ builder.Services.AddScoped<BlobService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<MercadoPagoService>();
 
-// --- 3. Conexión a la base de datos (DbContext) ---
+// --- 6. Base de datos ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlServerOptionsAction: sqlOptions =>
+    options.UseSqlServer(connectionString, sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure();
     }));
 
-// --- Construimos la aplicación ---
+// --- 7. Construcción de la app ---
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -93,7 +103,11 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
-app.UseAuthentication(); 
-app.UseAuthorization();  
+
+// --- Aplicar CORS y autenticación ---
+app.UseCors("AllowBlazorApp");
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 app.Run();

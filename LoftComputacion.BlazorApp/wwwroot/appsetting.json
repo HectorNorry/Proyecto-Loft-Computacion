@@ -1,0 +1,10 @@
+{
+  "Logging": {
+    "LogLevel": {
+      // "Default": "Information" <-- Esto le dice a Blazor
+      // que muestre los logs de nivel "Information" y superiores
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}

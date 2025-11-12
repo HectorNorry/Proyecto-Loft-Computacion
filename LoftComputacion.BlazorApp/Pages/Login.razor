@@ -1,0 +1,119 @@
+﻿@page "/login"
+@layout Layout.AnonymousLayout
+
+@* --- ¡AQUÍ ESTÁN LOS USINGS E INJECTS QUE FALTABAN! --- *@
+@using LoftComputacion.BlazorApp.DTOs
+@using System.Net.Http.Json
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
+@using LoftComputacion.BlazorApp.Services
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+
+
+<PageTitle>Iniciar Sesión</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-lg-4 col-md-6">
+        <div class="card shadow-lg">
+            <div class="card-header">
+                <h3 class="text-center">Iniciar Sesión (Admin)</h3>
+            </div>
+            <div class="card-body">
+                <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                    <DataAnnotationsValidator />
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @errorMessage
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Usuario:</label>
+                        <InputText id="username" class="form-control" @bind-Value="loginModel.NombreUsuario" />
+                        <ValidationMessage For="@(() => loginModel.NombreUsuario)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña:</label>
+                        <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
+                        <ValidationMessage For="@(() => loginModel.Password)" />
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span> Ingresando...</span>
+                            }
+                            else
+                            {
+                                <span>Ingresar</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    private string errorMessage;
+    private bool isSubmitting = false;
+
+    private async Task HandleLogin()
+    {
+        isSubmitting = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/usuarios/login", loginModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+
+                if (loginResponse != null && loginResponse.Rol.Equals("Administrador", StringComparison.OrdinalIgnoreCase))
+                {
+                    var token = loginResponse.Token;
+
+                    // Guardar token y actualizar estado de autenticación
+                    var customAuthProvider = (CustomAuthStateProvider)AuthStateProvider;
+                    await customAuthProvider.MarkUserAsAuthenticated(token);
+
+                    // 🔹 Esperar un pequeño tiempo para que Blazor actualice el estado
+                    await Task.Delay(300);
+
+                    // 🔹 Navegar al Home
+                    Navigation.NavigateTo("/");
+                }
+
+                else
+                {
+                    string rolRecibido = loginResponse?.Rol ?? "NULO";
+                    errorMessage = $"Acceso denegado. Rol recibido: [{rolRecibido}]. Se requiere 'Administrador'.";
+                }
+            }
+            else
+            {
+                errorMessage = "Usuario o contraseña incorrectos.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error de conexión: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

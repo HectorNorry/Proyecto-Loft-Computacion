@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoftComputacion.Application
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoftComputacion.WinForms", "LoftComputacion.WinForms\LoftComputacion.WinForms.csproj", "{D686FBC6-A140-4F95-A30F-A83996FED291}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoftComputacion.BlazorApp", "LoftComputacion.BlazorApp\LoftComputacion.BlazorApp.csproj", "{652EF116-1A9C-4BFA-AE6E-0917E183277A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{D686FBC6-A140-4F95-A30F-A83996FED291}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D686FBC6-A140-4F95-A30F-A83996FED291}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D686FBC6-A140-4F95-A30F-A83996FED291}.Release|Any CPU.Build.0 = Release|Any CPU
+		{652EF116-1A9C-4BFA-AE6E-0917E183277A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{652EF116-1A9C-4BFA-AE6E-0917E183277A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{652EF116-1A9C-4BFA-AE6E-0917E183277A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{652EF116-1A9C-4BFA-AE6E-0917E183277A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

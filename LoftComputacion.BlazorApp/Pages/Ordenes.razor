@@ -1,0 +1,84 @@
+﻿@page "/ordenes"
+
+@* --- 1. Imports y Seguridad --- *@
+@using LoftComputacion.Domain
+@using Microsoft.AspNetCore.Authorization
+@using System.Net.Http.Headers
+@using Microsoft.JSInterop
+@attribute [Authorize(Roles = "Administrador")]
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Órdenes de Servicio</PageTitle>
+
+<h1>Órdenes de Servicio</h1>
+
+
+@if (ordenes == null)
+{
+    <p><em>Cargando órdenes...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>N° Orden</th>
+                <th>Fecha Ingreso</th>
+                <th>Cliente</th>
+                <th>Equipo</th>
+                <th>Falla Declarada</th>
+                <th>Estado</th>
+                <th>Precio Final</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var orden in ordenes)
+            {
+                <tr>
+                    <td>@orden.Id</td>
+                    <td>@orden.FechaIngreso.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    <td>@orden.Cliente?.NombreCompleto</td>
+                    Dto<td>@orden.Equipo?.Tipo.ToString()</td>
+                    <td>@orden.FallaDeclaradaPorCliente</td>
+                    <td>@orden.Estado?.Nombre</td>
+                    <td>@orden.PrecioFinal?.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<OrdenDeServicio>? ordenes;
+    private string? errorMessage;
+
+    /// <summary>
+    /// Este método se ejecuta cuando la página se inicializa
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 1. Leemos el token que guardamos en el Login
+            var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+
+            if (string.IsNullOrEmpty(token))
+            {
+                // (Esto no debería pasar gracias al [Authorize], pero es una doble seguridad)
+                return;
+            }
+
+            // 2. Ponemos el token en la cabecera del HttpClient
+            //    (para que la API sepa que somos Admin)
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // 3. Llamamos a nuestra API (usando el HttpClient que ya configuramos)
+            ordenes = await Http.GetFromJsonAsync<List<OrdenDeServicio>>("api/ordenesdeservicio");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar órdenes: {ex.Message}";
+        }
+    }
+}
