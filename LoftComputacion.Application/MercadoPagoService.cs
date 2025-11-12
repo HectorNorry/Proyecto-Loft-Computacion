@@ -22,7 +22,8 @@ namespace LoftComputacion.Application
             _configuration = configuration;
 
             _accessToken = _configuration["MercadoPago:AccessToken"];
-            _ngrokPublicUrl = _configuration["NgrokPublicUrl"]; // <-- LEEMOS LA URL DE NGROK
+            _ngrokPublicUrl = _configuration["NgrokPublicUrl"]; // <-- LEEMOS LA URL DE NGROK}
+
 
             if (string.IsNullOrEmpty(_accessToken))
             {
@@ -30,8 +31,19 @@ namespace LoftComputacion.Application
             }
             if (string.IsNullOrEmpty(_ngrokPublicUrl))
             {
-                // Si la URL de ngrok no está, fallamos rápido para saberlo
-                throw new InvalidOperationException("La 'NgrokPublicUrl' no se encontró en appsettings.json.");
+                // En un entorno de producción, esto debería lanzar una excepción,
+                // pero en desarrollo, usamos localhost:52004 como URL de notificación temporal.
+                _ngrokPublicUrl = "https://localhost:52004";
+            }
+            else
+            {
+                _ngrokPublicUrl = _ngrokPublicUrl;
+            }
+
+            if (string.IsNullOrEmpty(_accessToken))
+            {
+                // Si el token es nulo, sí lanzamos excepción (es necesario para el SDK)
+                throw new InvalidOperationException("El 'MercadoPago:AccessToken' no está configurado.");
             }
         }
 
@@ -74,7 +86,7 @@ namespace LoftComputacion.Application
                 // --- ¡CAMBIO 2: FORZAMOS LA URL DEL WEBHOOK! ---
                 NotificationUrl = $"{_ngrokPublicUrl}/api/mercadopago/notificacion"
             };
-
+                
             var client = new PreferenceClient();
             Preference preference = await client.CreateAsync(request);
 

@@ -44,5 +44,6 @@ builder.Services.AddScoped(sp =>
 
 // --- Servicio que consume la API de órdenes ---
 builder.Services.AddScoped<OrdenesApiService>();
+builder.Services.AddScoped<ClientesApiService>();
 
 await builder.Build().RunAsync();

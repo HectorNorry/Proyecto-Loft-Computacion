@@ -1,0 +1,63 @@
+﻿@page "/clientes"
+
+@* --- 1. Imports y Seguridad --- *@
+@using LoftComputacion.Domain 
+@using LoftComputacion.BlazorApp.Services @* <-- ¡NUEVO! Para encontrar ClientesApiService *@
+@using Microsoft.AspNetCore.Authorization @* <-- ¡NUEVO! Para encontrar el atributo [Authorize] *@
+@attribute [Authorize(Roles = "Administrador")]
+@inject ClientesApiService ApiService   
+
+<PageTitle>Clientes Registrados</PageTitle>
+
+<h1>Clientes Registrados</h1>
+
+@if (clientes == null)
+{
+    <p><em>Cargando clientes...</em></p>
+}
+else
+{
+    <table class="table table-hover table-striped table-sm">
+        <thead>
+            <tr class="table-success">
+                <th>N° Cliente</th>
+                <th>Nombre Completo</th>
+                <th>DNI</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cliente in clientes)
+            {
+                <tr>
+                    <td>@cliente.Id</td>
+                    <td>@cliente.NombreCompleto</td>
+                    <td>@cliente.DNI</td>
+                    <td>@cliente.Telefono</td>
+                    <td>@cliente.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    // --- ¡ATENCIÓN! La clase 'Cliente' viene del proyecto Domain (que ya referenciamos) ---
+    private List<Cliente>? clientes;
+    
+    // El método OnInitializedAsync se ejecuta cuando la página se inicializa
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Usamos el servicio que acabamos de crear (inyectado arriba con @inject)
+            clientes = await ApiService.GetClientesAsync();
+        }
+        catch (Exception ex)
+        {
+            // Por ahora, solo mostramos el error en la consola
+            Console.WriteLine($"Error al cargar clientes: {ex.Message}");
+        }
+    }
+}
