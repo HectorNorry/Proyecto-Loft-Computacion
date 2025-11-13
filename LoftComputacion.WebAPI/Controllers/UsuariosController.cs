@@ -61,31 +61,31 @@ namespace LoftComputacion.WebAPI.Controllers
         // ----------------------------------------------------------------------
         // POST: api/usuarios/login (Login - RUTA CORREGIDA)
         // ----------------------------------------------------------------------
-        [HttpPost("login")] // ⬅️ Usa la ruta más específica para evitar el conflicto 405
-        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
-        {
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u =>
-                u.NombreCompleto == loginDto.NombreUsuario ||
-                u.Email == loginDto.NombreUsuario
-            );
-
-            if (usuario == null) { return Unauthorized("Usuario o contraseña incorrectos."); }
-
-            // ⚠️ La validación de seguridad (BCrypt.Verify) SÍ debe estar aquí ⚠️
-            bool esPasswordValida = BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash);
-
-            if (!esPasswordValida) { return Unauthorized("Usuario o contraseña incorrectos."); }
-
-            var token = GenerarJwtToken(usuario);
-
-            return Ok(new
-            {
-                token = token,
-                id = usuario.Id,
-                nombreCompleto = usuario.NombreCompleto,
-                rol = usuario.Rol
-            });
-        }
+        //[HttpPost("login")] // ⬅️ Usa la ruta más específica para evitar el conflicto 405
+        //public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        //{
+        //    var usuario = await _context.Usuarios.FirstOrDefaultAsync(u =>
+        //        u.NombreCompleto == loginDto.NombreUsuario ||
+        //        u.Email == loginDto.NombreUsuario
+        //    );
+        //
+        //    if (usuario == null) { return Unauthorized("Usuario o contraseña incorrectos."); }
+        //
+        //    // ⚠️ La validación de seguridad (BCrypt.Verify) SÍ debe estar aquí ⚠️
+        //    bool esPasswordValida = BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash);
+        //
+        //    if (!esPasswordValida) { return Unauthorized("Usuario o contraseña incorrectos."); }
+        //
+        //    var token = GenerarJwtToken(usuario);
+        //
+        //    return Ok(new
+        //    {
+        //        token = token,
+        //        id = usuario.Id,
+        //        nombreCompleto = usuario.NombreCompleto,
+        //        rol = usuario.Rol
+        //    });
+        //}
 
         // ----------------------------------------------------------------------
         // PUT, DELETE, GET/{id} y GenerarJwtToken (Se mantienen limpios)
@@ -138,40 +138,40 @@ namespace LoftComputacion.WebAPI.Controllers
             return Ok(respuestaUsuario);
         }
 
-        private string GenerarJwtToken(Usuario usuario)
-        {
-            // 1. Leemos la clave secreta y el emisor desde appsettings.json
-            var jwtKey = _configuration["Jwt:Key"];
-            var jwtIssuer = _configuration["Jwt:Issuer"];
-            var jwtAudience = _configuration["Jwt:Audience"];
-
-            if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
-            {
-                throw new InvalidOperationException("Configuración de JWT incompleta en appsettings.json");
-            }
-
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            // 2. Creamos los "Claims" (información que guardamos dentro del token)
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Name, usuario.NombreCompleto),
-                new Claim(ClaimTypes.Role, usuario.Rol),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            // 3. Creamos el token
-            var token = new JwtSecurityToken(
-                issuer: jwtIssuer,
-                audience: jwtAudience,
-                claims: claims,
-                expires: DateTime.Now.AddHours(8),
-                signingCredentials: credentials);
-
-            // 4. Lo convertimos a un string y lo devolvemos
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+        //private string GenerarJwtToken(Usuario usuario)
+        //{
+        //    // 1. Leemos la clave secreta y el emisor desde appsettings.json
+        //    var jwtKey = _configuration["Jwt:Key"];
+        //    var jwtIssuer = _configuration["Jwt:Issuer"];
+        //    var jwtAudience = _configuration["Jwt:Audience"];
+        //
+        //    if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
+        //    {
+        //        throw new InvalidOperationException("Configuración de JWT incompleta en appsettings.json");
+        //    }
+        //
+        //    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+        //    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        //
+        //    // 2. Creamos los "Claims" (información que guardamos dentro del token)
+        //    var claims = new[]
+        //    {
+        //        new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
+        //        new Claim(JwtRegisteredClaimNames.Name, usuario.NombreCompleto),
+        //        new Claim(ClaimTypes.Role, usuario.Rol),
+        //        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        //    };
+        //
+        //    // 3. Creamos el token
+        //    var token = new JwtSecurityToken(
+        //        issuer: jwtIssuer,
+        //        audience: jwtAudience,
+        //        claims: claims,
+        //        expires: DateTime.Now.AddHours(8),
+        //        signingCredentials: credentials);
+        //
+        //    // 4. Lo convertimos a un string y lo devolvemos
+        //    return new JwtSecurityTokenHandler().WriteToken(token);
+        //}
     }
 }

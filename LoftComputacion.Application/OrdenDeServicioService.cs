@@ -1,4 +1,5 @@
-﻿using LoftComputacion.Domain;
+﻿using LoftComputacion.Application.DTOs;
+using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure; // Asumo que aquí está tu DbContext
 using Microsoft.EntityFrameworkCore;
 
@@ -81,9 +82,8 @@ namespace LoftComputacion.Application
         }
 
 
-        public async Task<IEnumerable<OrdenDeServicio>> GetAllOrdenesAsync(string? filtro)
+        public async Task<IEnumerable<OrdenListaDto>> GetAllOrdenesAsync(string? filtro)
         {
-            // ... (Tu código de Get con filtro)
             var query = _context.OrdenesDeServicio
                                 .Include(o => o.Cliente)
                                 .Include(o => o.Equipo)
@@ -92,10 +92,30 @@ namespace LoftComputacion.Application
 
             if (!string.IsNullOrEmpty(filtro))
             {
-                query = query.Where(o => o.Cliente.NombreCompleto.Contains(filtro) || o.Equipo.Modelo.Contains(filtro) || o.Id.ToString() == filtro);
+                // Aplicamos el filtro seguro que ya tenías
+                query = query.Where(o =>
+                    (o.Id.ToString() == filtro) ||
+                    (o.Cliente != null && o.Cliente.NombreCompleto != null && o.Cliente.NombreCompleto.Contains(filtro)) ||
+                    (o.Equipo != null && o.Equipo.Modelo != null && o.Equipo.Modelo.Contains(filtro))
+                );
             }
 
-            return await query.ToListAsync();
+            // Proyectamos (aplanamos) al DTO simple
+            var resultado = await query
+                .OrderByDescending(o => o.FechaIngreso)
+                .Select(o => new OrdenListaDto
+                {
+                    Id = o.Id,
+                    FechaIngreso = o.FechaIngreso,
+                    FallaDeclaradaPorCliente = o.FallaDeclaradaPorCliente,
+                    NombreCliente = (o.Cliente != null) ? o.Cliente.NombreCompleto : "N/A",
+                    NombreEstado = (o.Estado != null) ? o.Estado.Nombre : "N/A", // Asegúrate que tu entidad Estado tenga 'Nombre'
+                    ModeloEquipo = (o.Equipo != null) ? o.Equipo.Modelo : "N/A", // Asegúrate que tu entidad Equipo tenga 'Modelo'
+                    PrecioFinal = o.PrecioFinal
+                })
+                .ToListAsync();
+
+            return resultado;
         }
 
         // --- AGREGAR ESTE MÉTODO NUEVO ---

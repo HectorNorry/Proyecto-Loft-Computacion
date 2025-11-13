@@ -3,11 +3,11 @@
     "LoftComputacion.WebAPI": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "swagger", 
+      "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:52004;http://localhost:52005"
+      "applicationUrl": "https://*:52004;http://*:52005;https://fay-squirrellike-tamala.ngrok-free.dev"
     }
   }
 }

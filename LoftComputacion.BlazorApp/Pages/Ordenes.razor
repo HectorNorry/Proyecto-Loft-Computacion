@@ -1,18 +1,18 @@
 ﻿@page "/ordenes"
 
 @* --- 1. Imports y Seguridad --- *@
-@using LoftComputacion.Domain
+@using LoftComputacion.BlazorApp.DTOs
+@using LoftComputacion.BlazorApp.Services
 @using Microsoft.AspNetCore.Authorization
-@using System.Net.Http.Headers
-@using Microsoft.JSInterop
+@using System.Globalization
 @attribute [Authorize(Roles = "Administrador")]
-@inject HttpClient Http
-@inject IJSRuntime JSRuntime
+
+@* 2. Inyección del servicio *@
+@inject OrdenesApiService ApiService
 
 <PageTitle>Órdenes de Servicio</PageTitle>
 
 <h1>Órdenes de Servicio</h1>
-
 
 @if (ordenes == null)
 {
@@ -20,29 +20,30 @@
 }
 else
 {
-    <table class="table table-hover table-striped table-sm"> @* <-- ¡CLASES DE BOOTSTRAP APLICADAS! *@
+    <table class="table table-hover table-striped table-sm">
         <thead>
-            <tr class="table-primary"> @* <-- Encabezado con color *@
-                <th>N° Orden</th>
+            <tr class="table-primary">
+                <th>ID</th>
                 <th>Fecha Ingreso</th>
                 <th>Cliente</th>
                 <th>Equipo</th>
                 <th>Falla Declarada</th>
                 <th>Estado</th>
-                <th>Precio Final</th>
+                <th class="text-end">Precio Final</th>
             </tr>
         </thead>
         <tbody>
+            @* 3. Bucle limpio usando las propiedades del DTO *@
             @foreach (var orden in ordenes)
             {
                 <tr>
                     <td>@orden.Id</td>
-                    <td>@orden.FechaIngreso.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                    <td>@orden.Cliente?.NombreCompleto</td>
-                    <td>@orden.Equipo?.Tipo.ToString()</td>
+                    <td>@orden.FechaIngreso.ToShortDateString()</td>
+                    <td>@orden.NombreCliente</td>
+                    <td>@orden.ModeloEquipo</td>
                     <td>@orden.FallaDeclaradaPorCliente</td>
-                    <td>@orden.Estado?.Nombre</td>
-                    <td>@orden.PrecioFinal?.ToString("C")</td>
+                    <td>@orden.NombreEstado</td>
+                    <td class="text-end">@((orden.PrecioFinal ?? 0).ToString("C", new CultureInfo("es-AR")))</td>
                 </tr>
             }
         </tbody>
@@ -50,35 +51,20 @@ else
 }
 
 @code {
-    private List<OrdenDeServicio>? ordenes;
-    private string? errorMessage;
+    // 4. Variable que usa el DTO
+    private IEnumerable<OrdenListaDto>? ordenes;
 
-    /// <summary>
-    /// Este método se ejecuta cuando la página se inicializa
-    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // 1. Leemos el token que guardamos en el Login
-            var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
-
-            if (string.IsNullOrEmpty(token))
-            {
-                // (Esto no debería pasar gracias al [Authorize], pero es una doble seguridad)
-                return;
-            }
-
-            // 2. Ponemos el token en la cabecera del HttpClient
-            //    (para que la API sepa que somos Admin)
-            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            // 3. Llamamos a nuestra API (usando el HttpClient que ya configuramos)
-            ordenes = await Http.GetFromJsonAsync<List<OrdenDeServicio>>("api/ordenesdeservicio");
+            // 5. Llama al servicio inyectado (ApiService)
+            ordenes = await ApiService.GetOrdenesAsync();
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error al cargar órdenes: {ex.Message}";
+            Console.WriteLine($"Error al cargar órdenes: {ex.Message}");
+            // Aquí podrías asignar un mensaje de error para mostrar en la UI
         }
     }
 }

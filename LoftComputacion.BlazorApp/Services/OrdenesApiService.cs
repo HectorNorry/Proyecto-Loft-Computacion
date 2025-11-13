@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using LoftComputacion.BlazorApp.Models;
+using LoftComputacion.BlazorApp.DTOs;
 
 namespace LoftComputacion.BlazorApp.Services
 {
@@ -15,10 +16,10 @@ namespace LoftComputacion.BlazorApp.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<OrdenDeServicioDto>> GetOrdenesAsync()
+        public async Task<IEnumerable<OrdenListaDto>?> GetOrdenesAsync()
         {
-            var response = await _httpClient.GetFromJsonAsync<List<OrdenDeServicioDto>>("api/OrdenesDeServicio");
-            return response ?? new List<OrdenDeServicioDto>();
+            // 🚨 El tipo de retorno ahora es OrdenListaDto 🚨
+            return await _httpClient.GetFromJsonAsync<IEnumerable<OrdenListaDto>>("api/ordenesdeservicio");
         }
     }
 }

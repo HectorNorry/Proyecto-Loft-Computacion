@@ -1,4 +1,4 @@
-﻿// --- Program.cs FINAL para LoftComputacion.BlazorApp ---
+﻿// --- Program.cs SIMPLE para LoftComputacion.BlazorApp ---
 
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -16,8 +16,8 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // --- Servicios base ---
-builder.Services.AddBlazoredLocalStorage(); // Para guardar el token JWT
-builder.Services.AddAuthorizationCore();    // Para [Authorize]
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 
 // --- Handler que agrega el token JWT automáticamente ---
@@ -29,20 +29,18 @@ builder.Services.AddScoped(sp =>
     var localStorage = sp.GetRequiredService<ILocalStorageService>();
     var handler = new AuthorizedHandler(localStorage);
 
-    // --- ¡AQUÍ VA LA LÍNEA QUE FALTA! ---
+    // 🚨 Dejamos solo el handler base (sin el bypass de SSL)
     handler.InnerHandler = new HttpClientHandler();
-    // ----------------------------------------
 
-    // 🚨 CORRECCIÓN CLAVE: CAMBIAR LOCALHOST POR LA URL DE NGROK 🚨
     var httpClient = new HttpClient(handler)
     {
-        // 💡 Usamos la URL pública de Ngrok para las peticiones API
-        BaseAddress = new Uri("https://fay-squirrellike-tamala.ngrok-free.dev/")
+        // Apuntamos a la API local
+        BaseAddress = new Uri("https://localhost:52004")
     };
     return httpClient;
 });
 
-// --- Servicio que consume la API de órdenes ---
+// --- Servicios que consumen la API ---
 builder.Services.AddScoped<OrdenesApiService>();
 builder.Services.AddScoped<ClientesApiService>();
 builder.Services.AddScoped<UsuarioApiService>();
