@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="appsettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="appsettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="mercadopago-sdk" Version="2.10.1" />
@@ -22,13 +30,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LoftComputacion.Application\LoftComputacion.Application.csproj" />
+    <ProjectReference Include="..\LoftComputacion.Domain\LoftComputacion.Domain.csproj" />
     <ProjectReference Include="..\LoftComputacion.Infrastructure\LoftComputacion.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
 </Project>

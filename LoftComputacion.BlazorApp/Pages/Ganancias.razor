@@ -1,0 +1,134 @@
+﻿@page "/ganancias"
+@using LoftComputacion.Domain
+@using LoftComputacion.BlazorApp.Services
+@using System.Globalization
+@inject GananciasApiService GananciasApi
+
+<h3>Reporte de Ganancias</h3>
+
+<div class="card p-3 mb-4">
+    <div class="row">
+        <div class="col-md-5">
+            <label for="fechaInicio">Desde:</label>
+            <InputDate id="fechaInicio" class="form-control" @bind-Value="FechaInicio" />
+        </div>
+        <div class="col-md-5">
+            <label for="fechaFin">Hasta:</label>
+            <InputDate id="fechaFin" class="form-control" @bind-Value="FechaFin" />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary w-100" @onclick="ObtenerReporte" disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span> Cargando...</span>
+                }
+                else
+                {
+                    <span> Obtener Reporte</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (ReporteOrdenes != null && ReporteOrdenes.Any())
+{
+    <div class="alert alert-success mt-3">
+        <h4>📈 Resumen de Ganancias (Netas)</h4>
+        <p>
+            <strong>Órdenes Pagadas:</strong> @ReporteOrdenes.Count() |
+            <strong>Ingresos Totales (Netos):</strong>
+            @IngresosTotales.ToString("C", new CultureInfo("es-AR"))
+        </p>
+    </div>
+
+    <h4>Detalle de Órdenes</h4>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha Creada</th>
+                <th>Cliente</th>
+                <th>Descripción</th>
+                <th class="text-end">Precio Final</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var orden in ReporteOrdenes)
+            {
+                <tr>
+                    <td>@orden.Id</td>
+                    <td>@orden.FechaIngreso.ToShortDateString()</td>
+                    <td>@(orden.Cliente?.NombreCompleto ?? "N/A")</td>
+                    <td>@orden.FallaDeclaradaPorCliente</td>
+
+                    <td class="text-end">
+                        @((orden.PrecioFinal ?? 0).ToString("C", new CultureInfo("es-AR")))
+                    </td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" class="text-end fw-bold">TOTAL NETO</td>
+                <td class="text-end fw-bold">
+                    @IngresosTotales.ToString("C", new CultureInfo("es-AR"))
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+}
+else if (!IsLoading && ReporteOrdenes != null)
+{
+    <div class="alert alert-info mt-3">
+        No se encontraron órdenes de servicio pagadas en el rango de fechas seleccionado.
+    </div>
+}
+else if (IsLoading)
+{
+    <p>Cargando datos del reporte...</p>
+}
+
+@code {
+
+    // 1. Propiedades para el filtro de fechas
+    private DateTime FechaInicio { get; set; } = DateTime.Now.AddDays(-30);
+    private DateTime FechaFin { get; set; } = DateTime.Now.Date; // Hasta el final del día de hoy
+
+    // 2. Propiedades para los datos y el estado
+    private IEnumerable<OrdenDeServicio>? ReporteOrdenes;
+    private bool IsLoading { get; set; } = false;
+    private decimal IngresosTotales => ReporteOrdenes?.Sum(o => o.PrecioFinal) ?? 0; // ✅ Esta línea ya estaba correcta
+
+    // 3. Método para cargar el reporte al iniciar la página
+    protected override async Task OnInitializedAsync()
+    {
+        // Se carga automáticamente el reporte al iniciar (últimos 30 días)
+        await ObtenerReporte();
+    }
+
+    // 4. Lógica para llamar al API y actualizar la interfaz
+    private async Task ObtenerReporte()
+    {
+        IsLoading = true;
+        try
+        {
+            // La fecha final se ajusta al final del día (23:59:59) para incluir las órdenes de ese día
+            DateTime fechaFinAjustada = FechaFin.Date.AddDays(1).AddSeconds(-1);
+
+            // ⚠️ Llamamos al método que ahora espera una lista de OrdenDeServicio
+            ReporteOrdenes = await GananciasApi.GetReporteAsync(FechaInicio.Date, fechaFinAjustada);
+        }
+        catch (Exception ex)
+        {
+            // Manejo básico de errores
+            Console.WriteLine($"Error al obtener el reporte: {ex.Message}");
+            ReporteOrdenes = null;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

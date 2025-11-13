@@ -1,6 +1,8 @@
 ﻿using LoftComputacion.Application; // Necesario para el servicio
+using LoftComputacion.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using LoftComputacion.Domain;
 using System; // Necesario para DateTime
 using System.IO;
 using System.Linq; // Necesario para Sum()
@@ -38,6 +40,18 @@ namespace LoftComputacion.WebAPI.Controllers
             };
 
             return Ok(resultado);
+        }
+
+        [HttpGet("reporte")]
+        [Authorize(Roles = "Administrador")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<OrdenDeServicio>>> GetReporteSimple([FromQuery] DateTime inicio, [FromQuery] DateTime fin)
+        {
+            // Llama al método que ya tienes en tu GananciasService.cs:
+            var ordenes = await _gananciasService.GetGananciasPorFechaAsync(inicio, fin);
+
+            // Devolvemos la lista de órdenes con toda su información relacionada
+            return Ok(ordenes);
         }
 
         [HttpGet("exportar")]

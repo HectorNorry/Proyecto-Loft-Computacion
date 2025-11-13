@@ -1,7 +1,7 @@
 ﻿using BCrypt.Net;
 using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
-using LoftComputacion.WebAPI.DTOs;
+using LoftComputacion.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -12,144 +12,56 @@ using System.Text;
 
 namespace LoftComputacion.WebAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]")] // api/usuarios
     [ApiController]
     public class UsuariosController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly UsuarioService _usuarioService; // Servicio de la capa Application
 
-        public UsuariosController(ApplicationDbContext context, IConfiguration configuration) 
+        // 🚨 Constructor Corregido y Completo 🚨
+        public UsuariosController(ApplicationDbContext context, IConfiguration configuration, UsuarioService usuarioService)
         {
             _context = context;
-            _configuration = configuration; // <-- AHORA 'configuration' SÍ EXISTE
+            _configuration = configuration;
+            this._usuarioService = usuarioService;
         }
 
-        // GET: api/usuarios
+        // ----------------------------------------------------------------------
+        // GET: api/usuarios (Listar todos - DEBE USAR EL SERVICIO)
+        // ----------------------------------------------------------------------
         [HttpGet]
         public async Task<IActionResult> GetUsuarios()
         {
-            var usuarios = await _context.Usuarios.ToListAsync();
+            // Usamos el servicio que tiene IgnoreQueryFilters (más limpio)
+            var usuarios = await _usuarioService.GetAllUsuariosAsync();
             return Ok(usuarios);
         }
-        // POST: api/usuarios
-        // POST: api/usuarios
+
+        // ----------------------------------------------------------------------
+        // POST: api/usuarios (Crear Usuario - DELEGA LA LÓGICA AL SERVICIO)
+        // 🚨 Esto elimina la lógica duplicada y resuelve el conflicto 405 🚨
+        // ----------------------------------------------------------------------
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateUsuario([FromBody] CreateUsuarioDto usuarioDto)
         {
-            // 1. Verificamos que la contraseña no esté vacía
-            if (string.IsNullOrWhiteSpace(usuarioDto.Password))
+            var resultado = await _usuarioService.CreateUsuarioAsync(usuarioDto);
+
+            if (resultado.Succeeded)
             {
-                return BadRequest("La contraseña es requerida.");
+                // Devolvemos CreatedAtAction usando el ID devuelto por el servicio
+                return CreatedAtAction(nameof(GetUsuario), new { id = resultado.UserId }, null);
             }
-
-            // 2. Creamos el hash seguro usando BCrypt
-            // Esto genera automáticamente un "salt" (valor aleatorio) y lo incluye en el hash.
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(usuarioDto.Password);
-
-            var nuevoUsuario = new Usuario
-            {
-                NombreCompleto = usuarioDto.NombreCompleto,
-                Email = usuarioDto.Email,
-                PasswordHash = passwordHash, // Guardamos el hash real, no el texto plano
-                Rol = usuarioDto.Rol
-            };
-
-            await _context.Usuarios.AddAsync(nuevoUsuario);
-            await _context.SaveChangesAsync();
-
-            // 3. Creamos una respuesta segura (NUNCA devolvemos el hash)
-            var respuestaUsuario = new
-            {
-                nuevoUsuario.Id,
-                nuevoUsuario.NombreCompleto,
-                nuevoUsuario.Rol
-            };
-
-            // Usamos nameof(GetUsuario) para que la URL de respuesta sea correcta
-            return CreatedAtAction(nameof(GetUsuario), new { id = nuevoUsuario.Id }, respuestaUsuario);
-        }
-        // PUT: api/usuarios/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUsuario(int id, [FromBody] UpdateUsuarioDto updateDto)
-        {
-            var usuario = await _context.Usuarios.FindAsync(id);
-
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            // Actualizamos los campos que sí pueden cambiar
-            usuario.NombreCompleto = updateDto.NombreCompleto;
-            usuario.Email = updateDto.Email;
-            usuario.Rol = updateDto.Rol;
-
-            // ¡Importante! Solo actualizamos la contraseña SI el usuario escribió una nueva.
-            if (!string.IsNullOrWhiteSpace(updateDto.Password))
-            {
-                // Si se proveyó una nueva contraseña, la hasheamos
-                usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updateDto.Password);
-            }
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Usuarios.Any(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent(); // Código 204: Éxito, sin contenido
-        }
-        // DELETE: api/usuarios/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUsuario(int id)
-        {
-            var usuario = await _context.Usuarios.FindAsync(id);
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            _context.Usuarios.Remove(usuario);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return BadRequest(resultado.Errors);
         }
 
-        // GET: api/usuarios/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUsuario(int id)
-        {
-            var usuario = await _context.Usuarios.FindAsync(id);
-
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            // No devolvemos el hash de la contraseña
-            var respuestaUsuario = new
-            {
-                usuario.Id,
-                usuario.NombreCompleto,
-                usuario.Rol
-            };
-
-            return Ok(respuestaUsuario);
-        }
-
-        // POST: api/usuarios/login
-        [HttpPost("login")]
+        // ----------------------------------------------------------------------
+        // POST: api/usuarios/login (Login - RUTA CORREGIDA)
+        // ----------------------------------------------------------------------
+        [HttpPost("login")] // ⬅️ Usa la ruta más específica para evitar el conflicto 405
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u =>
@@ -157,17 +69,12 @@ namespace LoftComputacion.WebAPI.Controllers
                 u.Email == loginDto.NombreUsuario
             );
 
-            if (usuario == null)
-            {
-                return Unauthorized("Usuario o contraseña incorrectos.");
-            }
+            if (usuario == null) { return Unauthorized("Usuario o contraseña incorrectos."); }
 
+            // ⚠️ La validación de seguridad (BCrypt.Verify) SÍ debe estar aquí ⚠️
             bool esPasswordValida = BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash);
 
-            if (!esPasswordValida)
-            {
-                return Unauthorized("Usuario o contraseña incorrectos.");
-            }
+            if (!esPasswordValida) { return Unauthorized("Usuario o contraseña incorrectos."); }
 
             var token = GenerarJwtToken(usuario);
 
@@ -178,6 +85,57 @@ namespace LoftComputacion.WebAPI.Controllers
                 nombreCompleto = usuario.NombreCompleto,
                 rol = usuario.Rol
             });
+        }
+
+        // ----------------------------------------------------------------------
+        // PUT, DELETE, GET/{id} y GenerarJwtToken (Se mantienen limpios)
+        // ----------------------------------------------------------------------
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUsuario(int id, [FromBody] UpdateUsuarioDto updateDto)
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null) { return NotFound(); }
+
+            usuario.NombreCompleto = updateDto.NombreCompleto;
+            usuario.Email = updateDto.Email;
+            usuario.Rol = updateDto.Rol;
+
+            if (!string.IsNullOrWhiteSpace(updateDto.Password))
+            {
+                usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(updateDto.Password);
+            }
+
+            try { await _context.SaveChangesAsync(); }
+            catch (DbUpdateConcurrencyException) { if (!_context.Usuarios.Any(e => e.Id == id)) { return NotFound(); } else { throw; } }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> ToggleUsuarioStatus(int id)
+        {
+            bool resultado = await _usuarioService.DeactivateUsuarioAsync(id);
+
+            if (resultado) { return NoContent(); }
+            return NotFound();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUsuario(int id)
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+
+            if (usuario == null) { return NotFound(); }
+
+            var respuestaUsuario = new
+            {
+                usuario.Id,
+                usuario.NombreCompleto,
+                usuario.Rol
+            };
+
+            return Ok(respuestaUsuario);
         }
 
         private string GenerarJwtToken(Usuario usuario)
@@ -196,21 +154,20 @@ namespace LoftComputacion.WebAPI.Controllers
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             // 2. Creamos los "Claims" (información que guardamos dentro del token)
-            // Guardamos el ID del usuario, su nombre y su Rol.
             var claims = new[]
             {
-        new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()), // El "Sujeto" del token
-        new Claim(JwtRegisteredClaimNames.Name, usuario.NombreCompleto),
-        new Claim(ClaimTypes.Role, usuario.Rol), // El Rol (importante para permisos)
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) // Un ID único para el token
-    };
+                new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Name, usuario.NombreCompleto),
+                new Claim(ClaimTypes.Role, usuario.Rol),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
             // 3. Creamos el token
             var token = new JwtSecurityToken(
                 issuer: jwtIssuer,
                 audience: jwtAudience,
                 claims: claims,
-                expires: DateTime.Now.AddHours(8), // El token será válido por 8 horas
+                expires: DateTime.Now.AddHours(8),
                 signingCredentials: credentials);
 
             // 4. Lo convertimos a un string y lo devolvemos

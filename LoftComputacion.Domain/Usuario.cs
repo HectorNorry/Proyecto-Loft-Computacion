@@ -13,5 +13,7 @@ namespace LoftComputacion.Domain
         public string? Email { get; set; } 
         public string PasswordHash { get; set; } = string.Empty;
         public string Rol { get; set; } = string.Empty;
+        public bool EstaActivo { get; set; }
+        public DateTime FechaCreacion { get; set; }
     }
 }

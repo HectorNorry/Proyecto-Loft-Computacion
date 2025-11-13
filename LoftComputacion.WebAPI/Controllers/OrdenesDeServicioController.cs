@@ -1,6 +1,6 @@
 ﻿using LoftComputacion.Application;
 using LoftComputacion.Domain;
-using LoftComputacion.WebAPI.DTOs;
+using LoftComputacion.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks; 

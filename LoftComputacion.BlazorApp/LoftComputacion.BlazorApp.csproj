@@ -21,4 +21,8 @@
 	  <ProjectReference Include="..\LoftComputacion.Domain\LoftComputacion.Domain.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="wwwroot\img\" />
+	</ItemGroup>
+
 </Project>

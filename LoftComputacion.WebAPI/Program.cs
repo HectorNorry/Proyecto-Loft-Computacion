@@ -84,6 +84,8 @@ builder.Services.AddScoped<GananciasService>();
 builder.Services.AddScoped<BlobService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<MercadoPagoService>();
+builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<ISecurityService, SecurityService>();
 
 // --- 6. Base de datos ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

@@ -30,14 +30,14 @@ builder.Services.AddScoped(sp =>
     var handler = new AuthorizedHandler(localStorage);
 
     // --- ¡AQUÍ VA LA LÍNEA QUE FALTA! ---
-    // Le decimos al handler que, después de que él termine (de poner el token),
-    // la llamada debe continuar al "manejador base" de HttpClient.
     handler.InnerHandler = new HttpClientHandler();
     // ----------------------------------------
 
+    // 🚨 CORRECCIÓN CLAVE: CAMBIAR LOCALHOST POR LA URL DE NGROK 🚨
     var httpClient = new HttpClient(handler)
     {
-        BaseAddress = new Uri("https://localhost:52004") // URL de tu API
+        // 💡 Usamos la URL pública de Ngrok para las peticiones API
+        BaseAddress = new Uri("https://fay-squirrellike-tamala.ngrok-free.dev/")
     };
     return httpClient;
 });
@@ -45,5 +45,7 @@ builder.Services.AddScoped(sp =>
 // --- Servicio que consume la API de órdenes ---
 builder.Services.AddScoped<OrdenesApiService>();
 builder.Services.AddScoped<ClientesApiService>();
+builder.Services.AddScoped<UsuarioApiService>();
+builder.Services.AddScoped<GananciasApiService>();
 
 await builder.Build().RunAsync();

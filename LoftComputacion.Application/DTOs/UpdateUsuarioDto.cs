@@ -1,4 +1,4 @@
-﻿namespace LoftComputacion.WebAPI.DTOs
+﻿namespace LoftComputacion.Application.DTOs
 {
     public class UpdateUsuarioDto
     {
@@ -7,5 +7,9 @@
         public string Email { get; set; } = string.Empty;
         public string Rol { get; set; } = string.Empty;
         public string? Password { get; set; } // La contraseña es opcional al actualizar
+        public string? NewPassword { get; set; }
+        public bool EstaActivo { get; set; }
+
+       
     }
 }

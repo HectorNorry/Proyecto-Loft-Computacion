@@ -27,6 +27,7 @@ build-results/
 # Secrets
 secrets.json
 appsettings.Development.json
+appsettings.json
 
 # Tooling
 *.exe

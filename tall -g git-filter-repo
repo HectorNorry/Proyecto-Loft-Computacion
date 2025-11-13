@@ -1,0 +1,47 @@
+[33mff16dad[m[33m ([m[1;36mHEAD -> [m[1;32mfeature/blazor-app[m[33m, [m[1;31morigin/feature/blazor-app[m[33m)[m Se agrega la pagina de clientes y se les da diseño a las tablas clientes y odenes
+[33m03cd1fb[m Feat: Implementa App Blazor de consulta (Login, Auth State, Home y Listado de Ordenes)
+[33m0eb0f31[m[33m ([m[1;31morigin/feature/ajustes-finales[m[33m, [m[1;31morigin/develop[m[33m, [m[1;32mfeature/ajustes-finales[m[33m, [m[1;32mdevelop[m[33m)[m Feat: Reorganiza menú Admin a hub y ajusta email (quita precio)
+[33mdae38d2[m[33m ([m[1;32mfeature/integracion-mercadopago[m[33m)[m se intenta implementar mercado pago, queda pendiente
+[33md5564f2[m[33m ([m[1;31morigin/feature/auditoria-nombre-usuario[m[33m, [m[1;32mfeature/auditoria-nombre-usuario[m[33m)[m Fix: Carga historial en frmPrincipal, corrige ID de estado para email y refactoriza prompts de IA
+[33m795fa75[m[33m ([m[1;31morigin/feature/gestion-usuarios[m[33m, [m[1;32mfeature/gestion-usuarios[m[33m)[m feat(winforms): Implementa CRUD completo para frmGestionUsuarios
+[33mb2feb48[m Merge branch 'feature/winforms-inicial' into develop
+[33m6d0b4fd[m[33m ([m[1;31morigin/feature/winforms-inicial[m[33m, [m[1;32mfeature/winforms-inicial[m[33m)[m Se agrega validaciones de token, y validacion de admin para el ingreso a panel administrador
+[33m73bf9d3[m fix(winforms): Arregla la carga de imágenes locales y remotas en el visor de fotos
+[33m84b6463[m feat(api): Implementa generación de token JWT en login y securiza endpoints
+[33m4173a69[m Merge branch 'feature/winforms-inicial' into develop
+[33m8410cfb[m feat(winforms): Implementa gestión completa de fotos (subida y borrado) con Azure Blob Storage
+[33m222df00[m feat(winforms): Implementa reporte de ganancias con descarga en Excel
+[33m8590306[m feat(winforms): Implementa cambio de estado desde FrmPrincipal con confirmacion
+[33m5358fd1[m feat(winforms): Implementa panel de detalles básico en frmPrincipal
+[33mf6bf965[m fix(winforms): Cambia DropDownStyle de cmbUsuarios en frmConfirmarCambio
+[33m64ad42a[m feat(winforms): Implementa lógica para crear/actualizar órdenes con cliente nuev/existente
+[33m8b81b01[m feat(winforms): Completa lógica para crear orden con cliente nuevo o ya existente
+[33mc19afb2[m Se modifica frm gestion orden
+[33mdbf0665[m Agrega campo DNI en cliente
+[33m8649b5a[m feat(winforms): Implementa logica copleta para guardar nueva orden
+[33mf89c2d0[m añadir .gitignore para archivos .net
+[33m9df8ecc[m[33m ([m[1;32mfeature/buscar-cliente[m[33m)[m feat(winforms): Implementa lógica para guardar nueva orden con cliente nuevo
+[33m75f395c[m feat(winforms) : Diseña frmGestionOrden y lo conecta al menú principal
+[33m4d2b670[m feat(winforms): Configura apariencia y carga de datos del DataGridView
+[33m2f66db0[m feat(service): Integra AIService en el flujo de actualizaciones de órdenes
+[33ma9f05e9[m feat(api): Se implementa endpoint para generar resumenes con ia de gemini
+[33m96754da[m feat(api): Se completa CRUD para UsuariosController
+[33m264aca4[m feat(api): Se implementa historial de auditoría al actualizar órdenes
+[33mea24f34[m feat(api): Se refactoriza y completa CRUD para OrdendesDeServicioService
+[33mc6fd596[m feat(api): Se implementa endpoint DELETE y complet CRUD para OrdenesDeServicio
+[33m0336161[m feat (api): Se implementa endpoint PUT para OrdendesDeServicio
+[33ma13f358[m feat(api): Se implementa CRUD para Equipos y POST para OrdendesDeServicio
+[33m8d83b17[m Feat(api): Se implementa endpoints GET para OrdenesDeServicio
+[33m2c0e4c0[m feat(api): Implementa CRUD completo de ClientesController
+[33m58d79a5[m feat(api): Agrega endpoints GET Y POST para Clientes
+[33m3040188[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m Fix(data): Se establece la precisión para decimales
+[33mcd27a25[m feat(data): Genera migraciones y crea el esquema inicial de la BD
+[33m4569aa3[m Merge branch 'feature/crear-modelos-dominio' into develop
+[33m04055ee[m[33m ([m[1;31morigin/feature/crear-modelos-dominio[m[33m, [m[1;32mfeature/crear-modelos-dominio[m[33m)[m feat(domain): Agrega modelos detallados y actualiza la orden
+[33m3a4a0a2[m Merge pull request #2 from HectorNorry/revert-1-feature/crear-modelos-dominio
+[33m84d823f[m[33m ([m[1;31morigin/revert-1-feature/crear-modelos-dominio[m[33m)[m Revert "Feature/crear modelos dominio"
+[33md133b49[m Merge pull request #1 from HectorNorry/feature/crear-modelos-dominio
+[33m3d3ffec[m Se crea proyecto .webapi
+[33m3caa8bd[m feat(domain): Crea todas las entidades del dominio
+[33mecdd021[m Commit iniciar:Se agrega estructura del proyecto y .gitignore
+[33m9b56b98[m Commit iniciar:Se agrega estructura del proyecto y .gitignore

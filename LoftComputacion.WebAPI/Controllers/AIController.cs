@@ -1,5 +1,5 @@
 ﻿using LoftComputacion.Application;
-using LoftComputacion.WebAPI.DTOs;
+using LoftComputacion.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoftComputacion.WebAPI.Controllers

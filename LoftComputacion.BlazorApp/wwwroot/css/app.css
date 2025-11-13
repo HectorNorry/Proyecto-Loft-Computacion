@@ -75,3 +75,41 @@
 code {
     color: #c02d76;
 }
+
+.sidebar {
+    /* 1. Posicionamiento fijo a la izquierda */
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    padding: 70px 0 0; /* Espacio para la barra superior */
+    /* 2. Ancho y Color */
+    width: 250px;
+    background-color: #333d47; /* Color de fondo oscuro (ajusta si quieres otro color) */
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    /* 3. Color de los enlaces */
+    color: #ffffff;
+}
+
+.page main {
+    /* Empuja el contenido principal a la derecha para que no quede debajo del sidebar */
+    padding-left: 250px;
+}
+
+/* --- ASEGURAR VISIBILIDAD DE LOS ENLACES Y ANULAR COLAPSO EN ESCRITORIO --- */
+
+.sidebar .nav-link {
+    /* Asegura que el texto sea visible sobre el fondo oscuro */
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+}
+
+/* Reglas de Responsividad (Anular colapso para monitores grandes) */
+@media (min-width: 641px) {
+
+    /* Esto asegura que los enlaces permanezcan visibles en desktop */
+    .sidebar .nav-scrollable {
+        display: block !important;
+    }
+}

@@ -1,4 +1,4 @@
-﻿namespace LoftComputacion.WebAPI.DTOs
+﻿namespace LoftComputacion.Application.DTOs
 {
     public class GenerarResumenDto
     {
