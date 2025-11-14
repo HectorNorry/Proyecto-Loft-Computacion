@@ -1,34 +1,33 @@
 ﻿@inherits LayoutComponentBase
 
-@* --- USINGS E INJECTS --- *@
 @using Microsoft.AspNetCore.Components.Authorization
 @using LoftComputacion.BlazorApp.Services
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 
 <AuthorizeView Roles="Administrador">
-
     <Authorized>
-        <div class="page">
-            <div class="sidebar">
+        <div class="d-flex flex-column flex-md-row min-vh-100">
+
+            <!-- Sidebar -->
+            <aside class="bg-dark text-white p-2 flex-shrink-0" style="min-width:220px;">
                 <NavMenu />
-            </div>
+            </aside>
 
-            <main>
-                <div class="top-row px-4 d-flex justify-content-between align-items-center">
-                    <h3 class="text-primary">Panel Administrador</h3>
+            <!-- Main content -->
+            <main class="page-main">
+    <div class="top-row px-3 py-2 d-flex justify-content-between align-items-center border-bottom">
+        <h3 class="text-primary mb-0">Panel Administrador</h3>
 
-                    @* 🔘 BOTÓN DE CERRAR SESIÓN *@
-                    <button class="btn btn-outline-danger"
-                            @onclick="CerrarSesion">
-                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
-                    </button>
-                </div>
+        <button class="btn btn-outline-danger btn-sm" @onclick="CerrarSesion">
+            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+        </button>
+    </div>
 
-                <article class="content px-4">
-                    @Body
-                </article>
-            </main>
+    <article class="container-fluid py-3">
+        @Body
+    </article>
+</main>
         </div>
     </Authorized>
 
@@ -37,13 +36,12 @@
             Navigation.NavigateTo("/login");
         }
     </NotAuthorized>
-
 </AuthorizeView>
 
-<div id="blazor-error-ui">
+<div id="blazor-error-ui" class="alert alert-danger alert-dismissible fade show position-fixed bottom-0 start-0 m-3" role="alert">
     Ocurrió un error inesperado.
-    <a href="" class="reload">Recargar</a>
-    <a class="dismiss">🗙</a>
+    <a href="" class="reload alert-link">Recargar</a>
+    <button type="button" class="btn-close dismiss" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
 @code {
@@ -70,7 +68,7 @@
     {
         if (AuthStateProvider is CustomAuthStateProvider customProvider)
         {
-            await customProvider.LogoutAsync(); // limpia token y notifica
+            await customProvider.LogoutAsync();
         }
 
         Navigation.NavigateTo("/login", forceLoad: true);

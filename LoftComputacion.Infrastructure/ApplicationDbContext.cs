@@ -48,6 +48,8 @@ namespace LoftComputacion.Infrastructure
             {
                 // Hacemos que el Email sea único
                 entity.HasIndex(e => e.Email).IsUnique();
+                entity.Property(u => u.PasswordHash)
+              .HasColumnType("varchar(255)");
             });
 
         }

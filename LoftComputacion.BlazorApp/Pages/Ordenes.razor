@@ -12,59 +12,70 @@
 
 <PageTitle>Órdenes de Servicio</PageTitle>
 
-<h1>Órdenes de Servicio</h1>
+<div class="container-fluid py-3">
+    <h4 class="text-primary mb-4">Órdenes de Servicio</h4>
 
-@if (ordenes == null)
-{
-    <p><em>Cargando órdenes...</em></p>
-}
-else
-{
-    <table class="table table-hover table-striped table-sm">
-        <thead>
-            <tr class="table-primary">
-                <th>ID</th>
-                <th>Fecha Ingreso</th>
-                <th>Cliente</th>
-                <th>Equipo</th>
-                <th>Falla Declarada</th>
-                <th>Estado</th>
-                <th class="text-end">Precio Final</th>
-            </tr>
-        </thead>
-        <tbody>
-            @* 3. Bucle limpio usando las propiedades del DTO *@
-            @foreach (var orden in ordenes)
-            {
-                <tr>
-                    <td>@orden.Id</td>
-                    <td>@orden.FechaIngreso.ToShortDateString()</td>
-                    <td>@orden.NombreCliente</td>
-                    <td>@orden.ModeloEquipo</td>
-                    <td>@orden.FallaDeclaradaPorCliente</td>
-                    <td>@orden.NombreEstado</td>
-                    <td class="text-end">@((orden.PrecioFinal ?? 0).ToString("C", new CultureInfo("es-AR")))</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+    @if (ordenes == null)
+    {
+        <div class="alert alert-info">
+            <em>Cargando órdenes...</em>
+        </div>
+    }
+    else if (!ordenes.Any())
+    {
+        <div class="alert alert-warning">
+            No se encontraron órdenes de servicio registradas.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-primary">
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha Ingreso</th>
+                        <th>Cliente</th>
+                        <th>Equipo</th>
+                        <th>Falla Declarada</th>
+                        <th>Estado</th>
+                        <th class="text-end">Precio Final</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var orden in ordenes)
+                    {
+                        <tr>
+                            <td>@orden.Id</td>
+                            <td>@orden.FechaIngreso.ToShortDateString()</td>
+                            <td>@orden.NombreCliente</td>
+                            <td>@orden.ModeloEquipo</td>
+                            <td>@orden.FallaDeclaradaPorCliente</td>
+                            <td>@orden.NombreEstado</td>
+                            <td class="text-end">
+                                @((orden.PrecioFinal ?? 0).ToString("C", new CultureInfo("es-AR")))
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
 
 @code {
-    // 4. Variable que usa el DTO
     private IEnumerable<OrdenListaDto>? ordenes;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // 5. Llama al servicio inyectado (ApiService)
             ordenes = await ApiService.GetOrdenesAsync();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error al cargar órdenes: {ex.Message}");
-            // Aquí podrías asignar un mensaje de error para mostrar en la UI
+            ordenes = Enumerable.Empty<OrdenListaDto>();
         }
     }
 }

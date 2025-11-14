@@ -20,6 +20,9 @@
     <PackageReference Include="mercadopago-sdk" Version="2.10.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.21" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.21" />
+    
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.20" />
+
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.20">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -32,6 +35,8 @@
     <ProjectReference Include="..\LoftComputacion.Application\LoftComputacion.Application.csproj" />
     <ProjectReference Include="..\LoftComputacion.Domain\LoftComputacion.Domain.csproj" />
     <ProjectReference Include="..\LoftComputacion.Infrastructure\LoftComputacion.Infrastructure.csproj" />
-    </ItemGroup>
+    
+    <ProjectReference Include="..\LoftComputacion.BlazorApp\LoftComputacion.BlazorApp.csproj" />
+  </ItemGroup>
 
 </Project>

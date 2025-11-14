@@ -1,6 +1,4 @@
-﻿// --- Program.cs SIMPLE para LoftComputacion.BlazorApp ---
-
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.LocalStorage;
 using LoftComputacion.BlazorApp.Services;
@@ -29,13 +27,14 @@ builder.Services.AddScoped(sp =>
     var localStorage = sp.GetRequiredService<ILocalStorageService>();
     var handler = new AuthorizedHandler(localStorage);
 
-    // 🚨 Dejamos solo el handler base (sin el bypass de SSL)
+    // 🚨 CORRECCIÓN CLAVE: Se elimina el HttpClientHandler (que causaba el crash)
     handler.InnerHandler = new HttpClientHandler();
 
     var httpClient = new HttpClient(handler)
     {
-        // Apuntamos a la API local
-        BaseAddress = new Uri("https://localhost:52004")
+        // 🚨 CORRECCIÓN CLAVE: Usamos la URL base del entorno de hosting
+        // Como ahora la API sirve la app, la dirección es la misma.
+        BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
     };
     return httpClient;
 });

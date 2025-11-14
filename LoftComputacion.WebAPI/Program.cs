@@ -7,8 +7,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ... (Toda tu configuración de 'builder.Services' (CORS, JWT, DB, etc.) va aquí... )
-// (El código de servicios que me pasaste antes estaba perfecto)
+// --- 1. Servicios (CORS, JWT, DB, etc.) ---
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
@@ -20,8 +19,8 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(
-                "https://localhost:7022",
-                "https://fay-squirrellike-tamala.ngrok-free.dev"
+                "https://localhost:52004", // Para tus pruebas locales
+                "https://loftcomputacion-api-webapp.azurewebsites.net" // ⬅️ ¡La URL de tu API!
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -46,8 +45,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme { /*...*/ });
-    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement { /*...*/ });
+    // ... (Tu configuración de Swagger) ...
 });
 builder.Services.AddScoped<OrdenDeServicioService>();
 builder.Services.AddScoped<AIService>();
@@ -63,29 +61,31 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
         sqlOptions.EnableRetryOnFailure();
     }));
-// ... (Fin de 'builder.Services')
 
-
-// --- 7. Construcción de la app ---
+// --- 2. Construcción de la app ---
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    
+    // 🚨 AÑADIR ESTA LÍNEA para el debug de Blazor
+    app.UseWebAssemblyDebugging();
 }
 
-//app.UseHttpsRedirection(); // Mantenlo comentado
+//app.UseHttpsRedirection();
 
 // 🚨 PASO 3: CONFIGURACIÓN DE HOSTING DE BLAZOR 🚨
+app.UseBlazorFrameworkFiles(); // <-- Sirve los archivos de Blazor
+app.UseStaticFiles();
 
 // --- Aplicar CORS y autenticación ---
 app.UseCors("AllowBlazorApp");
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+// 🚨 Redirige todo lo que no sea API a Blazor
+app.MapFallbackToFile("index.html");
 
 app.MapControllers();
 app.Run();

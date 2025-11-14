@@ -12,7 +12,6 @@ using System.Text;
 
 namespace LoftComputacion.WebAPI.Controllers
 {
-    // La nueva ruta para el login es /api/auth
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -26,28 +25,53 @@ namespace LoftComputacion.WebAPI.Controllers
             _configuration = configuration;
         }
 
-        // ---------------------------------------------------------
-        // POST: api/auth/login (El endpoint que Blazor debe usar)
-        // ---------------------------------------------------------
-        [HttpPost("login")] // ⬅️ Usa la sub-ruta 'login'
+        [HttpPost("login")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            // 1. Buscar usuario por NombreUsuario o Email
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u =>
                 u.NombreCompleto == loginDto.NombreUsuario ||
                 u.Email == loginDto.NombreUsuario
             );
 
-            // 2. Verificación de existencia
             if (usuario == null)
             {
                 return Unauthorized("Usuario o contraseña incorrectos.");
             }
 
-            // 3. Verificación de Contraseña (BCrypt)
-            bool esPasswordValida = BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash);
+            // -------------------------
+            // LOGGING TEMPORAL DE DEBUG
+            // -------------------------
+            try
+            {
+                var dbHash = usuario.PasswordHash ?? "<NULL>";
+                var dbHashLen = dbHash == "<NULL>" ? 0 : dbHash.Length;
+                var dbHashBytes = System.Text.Encoding.ASCII.GetBytes(dbHash);
+                var dbHashHex = BitConverter.ToString(dbHashBytes).Replace("-", "");
+
+                Console.WriteLine($"[DEBUG-VERIFY] Email: {usuario.Email}");
+                Console.WriteLine($"[DEBUG-VERIFY] Hash desde DB: [{dbHash}]");
+                Console.WriteLine($"[DEBUG-VERIFY] Hash LEN: {dbHashLen}");
+                Console.WriteLine($"[DEBUG-VERIFY] Hash HEX: {dbHashHex}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG-VERIFY] Error al preparar logging del hash: {ex.Message}");
+            }
+            // -------------------------
+
+            bool esPasswordValida = false;
+            try
+            {
+                esPasswordValida = BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG-VERIFY] BCrypt.Verify lanzó excepción: {ex.Message}");
+            }
+
+            Console.WriteLine($"[DEBUG-VERIFY] Resultado Verify: {esPasswordValida}");
 
             if (!esPasswordValida)
             {
@@ -55,7 +79,16 @@ namespace LoftComputacion.WebAPI.Controllers
             }
 
             // 4. Generación y retorno del token
-            var token = GenerarJwtToken(usuario);
+            string token;
+            try
+            {
+                token = GenerarJwtToken(usuario);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR-JWT] Error generando token: {ex.Message}");
+                throw;
+            }
 
             return Ok(new
             {
@@ -66,21 +99,27 @@ namespace LoftComputacion.WebAPI.Controllers
             });
         }
 
-        // ---------------------------------------------------------
-        // Generación del Token (MOVIDO DE UsuariosController)
-        // ---------------------------------------------------------
         private string GenerarJwtToken(Usuario usuario)
         {
+            // Comprobación robusta de configuración: soporta Jwt:Key y Jwt__Key
             var jwtKey = _configuration["Jwt:Key"];
-            var jwtIssuer = _configuration["Jwt:Issuer"];
-            var jwtAudience = _configuration["Jwt:Audience"];
+            var jwtKeyAlt = _configuration["Jwt__Key"];
+            var chosenKey = !string.IsNullOrEmpty(jwtKeyAlt) ? jwtKeyAlt : jwtKey;
 
-            if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
+            var jwtIssuer = _configuration["Jwt:Issuer"] ?? _configuration["Jwt__Issuer"];
+            var jwtAudience = _configuration["Jwt:Audience"] ?? _configuration["Jwt__Audience"];
+
+            // Logging temporal (no imprimir el valor completo de la clave, sólo existencia/longitud)
+            Console.WriteLine($"[DEBUG-CFG] Jwt:Key pres: {(!string.IsNullOrEmpty(jwtKey) ? "1" : "0")} | Jwt__Key pres: {(!string.IsNullOrEmpty(jwtKeyAlt) ? "1" : "0")}");
+            Console.WriteLine($"[DEBUG-CFG] ChosenKey length: {(string.IsNullOrEmpty(chosenKey) ? 0 : chosenKey.Length)}");
+            Console.WriteLine($"[DEBUG-CFG] JwtIssuer present: {(!string.IsNullOrEmpty(jwtIssuer) ? "1" : "0")} | JwtAudience present: {(!string.IsNullOrEmpty(jwtAudience) ? "1" : "0")}");
+
+            if (string.IsNullOrEmpty(chosenKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
             {
-                throw new InvalidOperationException("Configuración de JWT incompleta en appsettings.json");
+                throw new InvalidOperationException("Configuración de JWT incompleta en appsettings.json o App Settings");
             }
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(chosenKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
