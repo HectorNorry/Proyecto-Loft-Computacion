@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.WebAPI\\LoftComputacion.WebAPI.csproj": {}
+    "G:\\Proyecto\\LoftComputacion\\LoftComputacion.WebAPI\\LoftComputacion.WebAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj": {
+    "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj",
+        "projectUniqueName": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj",
         "projectName": "LoftComputacion.Application",
-        "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj",
+        "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj",
         "packagesPath": "C:\\Users\\pc\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Application\\obj\\",
+        "outputPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -32,11 +32,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
-                "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj"
+              "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
+                "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj"
               },
-              "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj": {
-                "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj"
+              "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj": {
+                "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj"
               }
             }
           }
@@ -102,14 +102,14 @@
         }
       }
     },
-    "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj": {
+    "G:\\Proyecto\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj",
+        "projectUniqueName": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj",
         "projectName": "LoftComputacion.BlazorApp",
-        "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj",
+        "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj",
         "packagesPath": "C:\\Users\\pc\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.BlazorApp\\obj\\",
+        "outputPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.BlazorApp\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -130,8 +130,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
-                "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj"
+              "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
+                "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj"
               }
             }
           }
@@ -221,14 +221,14 @@
         }
       }
     },
-    "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
+    "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj",
+        "projectUniqueName": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj",
         "projectName": "LoftComputacion.Domain",
-        "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj",
+        "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj",
         "packagesPath": "C:\\Users\\pc\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\obj\\",
+        "outputPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -286,14 +286,14 @@
         }
       }
     },
-    "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj": {
+    "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj",
+        "projectUniqueName": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj",
         "projectName": "LoftComputacion.Infrastructure",
-        "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj",
+        "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\pc\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Infrastructure\\obj\\",
+        "outputPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -314,8 +314,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
-                "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj"
+              "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
+                "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj"
               }
             }
           }
@@ -375,14 +375,14 @@
         }
       }
     },
-    "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.WebAPI\\LoftComputacion.WebAPI.csproj": {
+    "G:\\Proyecto\\LoftComputacion\\LoftComputacion.WebAPI\\LoftComputacion.WebAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.WebAPI\\LoftComputacion.WebAPI.csproj",
+        "projectUniqueName": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.WebAPI\\LoftComputacion.WebAPI.csproj",
         "projectName": "LoftComputacion.WebAPI",
-        "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.WebAPI\\LoftComputacion.WebAPI.csproj",
+        "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.WebAPI\\LoftComputacion.WebAPI.csproj",
         "packagesPath": "C:\\Users\\pc\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.WebAPI\\obj\\",
+        "outputPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.WebAPI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -403,17 +403,17 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj": {
-                "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj"
+              "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj": {
+                "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj"
               },
-              "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj": {
-                "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj"
+              "G:\\Proyecto\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj": {
+                "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.BlazorApp\\LoftComputacion.BlazorApp.csproj"
               },
-              "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
-                "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj"
+              "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj": {
+                "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj"
               },
-              "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj": {
-                "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj"
+              "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj": {
+                "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj"
               }
             }
           }

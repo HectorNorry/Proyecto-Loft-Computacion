@@ -230,7 +230,8 @@ namespace LoftComputacion.WinForms
             var json = JsonConvert.SerializeObject(loginRequest);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync($"{_apiUrl}/usuarios/login", content);
+            var response = await _httpClient.PostAsync($"{_apiUrl}/auth/login", content);
+
 
             if (response.IsSuccessStatusCode)
             {

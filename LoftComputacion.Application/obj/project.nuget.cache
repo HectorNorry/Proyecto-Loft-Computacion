@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "yIamtHAbJhQ=",
+  "dgSpecHash": "mBuvxW+A9tk=",
   "success": true,
-  "projectFilePath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj",
+  "projectFilePath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Application\\LoftComputacion.Application.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\pc\\.nuget\\packages\\azure.core\\1.47.3\\azure.core.1.47.3.nupkg.sha512",
     "C:\\Users\\pc\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

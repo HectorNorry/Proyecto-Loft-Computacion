@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj",
+      "projectUniqueName": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj",
       "projectName": "LoftComputacion.Domain",
-      "projectPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj",
+      "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\LoftComputacion.Domain.csproj",
       "packagesPath": "C:\\Users\\pc\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\pc\\OneDrive\\Desktop\\facultad\\LoftComputacion\\LoftComputacion.Domain\\obj\\",
+      "outputPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -72,7 +72,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\program files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "c:\\program files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
