@@ -93,6 +93,7 @@
             // btnSeleccionar
             // 
             btnSeleccionar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnSeleccionar.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             btnSeleccionar.Location = new Point(637, 26);
             btnSeleccionar.Name = "btnSeleccionar";
             btnSeleccionar.Size = new Size(128, 53);

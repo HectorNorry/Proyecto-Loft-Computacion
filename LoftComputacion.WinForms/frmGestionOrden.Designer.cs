@@ -150,6 +150,7 @@
             // btnGuardar
             // 
             btnGuardar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnGuardar.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             btnGuardar.Location = new Point(361, 181);
             btnGuardar.Name = "btnGuardar";
             btnGuardar.Size = new Size(112, 55);
@@ -161,6 +162,7 @@
             // btnCancelar
             // 
             btnCancelar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnCancelar.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             btnCancelar.Location = new Point(206, 184);
             btnCancelar.Name = "btnCancelar";
             btnCancelar.Size = new Size(111, 55);
@@ -579,6 +581,8 @@
             Controls.Add(flowLayoutPanel1);
             Controls.Add(pnlGestionTecnica);
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "frmGestionOrden";
             Text = "Gestion de Ordenes";
             Load += frmGestionOrden_Load;
