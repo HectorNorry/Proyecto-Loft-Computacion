@@ -101,9 +101,9 @@
             pnlGestionTecnica.Controls.Add(label10);
             pnlGestionTecnica.Controls.Add(cmbEstado);
             pnlGestionTecnica.Dock = DockStyle.Bottom;
-            pnlGestionTecnica.Location = new Point(0, 626);
+            pnlGestionTecnica.Location = new Point(3, 690);
             pnlGestionTecnica.Name = "pnlGestionTecnica";
-            pnlGestionTecnica.Size = new Size(1199, 305);
+            pnlGestionTecnica.Size = new Size(1193, 238);
             pnlGestionTecnica.TabIndex = 1;
             // 
             // btnPagarMP
@@ -111,27 +111,27 @@
             btnPagarMP.BackColor = SystemColors.ActiveCaption;
             btnPagarMP.FlatStyle = FlatStyle.Flat;
             btnPagarMP.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            btnPagarMP.Location = new Point(484, 176);
+            btnPagarMP.Location = new Point(138, 91);
             btnPagarMP.Name = "btnPagarMP";
-            btnPagarMP.Size = new Size(148, 108);
+            btnPagarMP.Size = new Size(216, 34);
             btnPagarMP.TabIndex = 14;
-            btnPagarMP.Text = "Cobrar Mercado Pago";
+            btnPagarMP.Text = "Mercado Pago";
             btnPagarMP.UseVisualStyleBackColor = false;
             btnPagarMP.Click += btnPagarMP_Click;
             // 
             // txtResumenTecnico
             // 
-            txtResumenTecnico.Location = new Point(21, 45);
+            txtResumenTecnico.Location = new Point(372, 82);
             txtResumenTecnico.Multiline = true;
             txtResumenTecnico.Name = "txtResumenTecnico";
-            txtResumenTecnico.Size = new Size(395, 111);
+            txtResumenTecnico.Size = new Size(293, 43);
             txtResumenTecnico.TabIndex = 13;
             // 
             // label13
             // 
             label13.AutoSize = true;
             label13.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label13.Location = new Point(21, 12);
+            label13.Location = new Point(372, 49);
             label13.Name = "label13";
             label13.Size = new Size(293, 30);
             label13.TabIndex = 12;
@@ -142,16 +142,16 @@
             pnlBotones.Controls.Add(btnGuardar);
             pnlBotones.Controls.Add(btnCancelar);
             pnlBotones.Dock = DockStyle.Right;
-            pnlBotones.Location = new Point(677, 0);
+            pnlBotones.Location = new Point(671, 0);
             pnlBotones.Name = "pnlBotones";
-            pnlBotones.Size = new Size(522, 305);
+            pnlBotones.Size = new Size(522, 238);
             pnlBotones.TabIndex = 11;
             // 
             // btnGuardar
             // 
             btnGuardar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnGuardar.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            btnGuardar.Location = new Point(361, 181);
+            btnGuardar.Location = new Point(344, 62);
             btnGuardar.Name = "btnGuardar";
             btnGuardar.Size = new Size(112, 55);
             btnGuardar.TabIndex = 3;
@@ -163,7 +163,7 @@
             // 
             btnCancelar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnCancelar.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            btnCancelar.Location = new Point(206, 184);
+            btnCancelar.Location = new Point(189, 65);
             btnCancelar.Name = "btnCancelar";
             btnCancelar.Size = new Size(111, 55);
             btnCancelar.TabIndex = 4;
@@ -175,7 +175,7 @@
             // 
             label12.AutoSize = true;
             label12.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label12.Location = new Point(76, 259);
+            label12.Location = new Point(10, 56);
             label12.Name = "label12";
             label12.Size = new Size(128, 25);
             label12.TabIndex = 10;
@@ -185,7 +185,7 @@
             // 
             label11.AutoSize = true;
             label11.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label11.Location = new Point(76, 220);
+            label11.Location = new Point(10, 17);
             label11.Name = "label11";
             label11.Size = new Size(125, 25);
             label11.TabIndex = 9;
@@ -194,7 +194,7 @@
             // txtPrecioFinal
             // 
             txtPrecioFinal.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
-            txtPrecioFinal.Location = new Point(204, 251);
+            txtPrecioFinal.Location = new Point(138, 48);
             txtPrecioFinal.Name = "txtPrecioFinal";
             txtPrecioFinal.Size = new Size(216, 33);
             txtPrecioFinal.TabIndex = 8;
@@ -202,7 +202,7 @@
             // txtPrecioPresupuesto
             // 
             txtPrecioPresupuesto.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold);
-            txtPrecioPresupuesto.Location = new Point(204, 212);
+            txtPrecioPresupuesto.Location = new Point(138, 14);
             txtPrecioPresupuesto.Name = "txtPrecioPresupuesto";
             txtPrecioPresupuesto.Size = new Size(216, 33);
             txtPrecioPresupuesto.TabIndex = 7;
@@ -211,17 +211,17 @@
             // 
             label10.AutoSize = true;
             label10.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label10.Location = new Point(25, 184);
+            label10.Location = new Point(366, 14);
             label10.Name = "label10";
-            label10.Size = new Size(173, 25);
+            label10.Size = new Size(77, 25);
             label10.TabIndex = 6;
-            label10.Text = "Estado del trabajo :";
+            label10.Text = "Estado :";
             // 
             // cmbEstado
             // 
             cmbEstado.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             cmbEstado.FormattingEnabled = true;
-            cmbEstado.Location = new Point(204, 176);
+            cmbEstado.Location = new Point(449, 6);
             cmbEstado.Name = "cmbEstado";
             cmbEstado.Size = new Size(216, 33);
             cmbEstado.TabIndex = 5;
@@ -494,9 +494,9 @@
             flowLayoutPanel1.Controls.Add(groupBox3);
             flowLayoutPanel1.Dock = DockStyle.Fill;
             flowLayoutPanel1.FlowDirection = FlowDirection.TopDown;
-            flowLayoutPanel1.Location = new Point(0, 0);
+            flowLayoutPanel1.Location = new Point(3, 64);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
-            flowLayoutPanel1.Size = new Size(1199, 626);
+            flowLayoutPanel1.Size = new Size(1193, 626);
             flowLayoutPanel1.TabIndex = 1;
             flowLayoutPanel1.WrapContents = false;
             // 

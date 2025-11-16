@@ -5,11 +5,13 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Threading.Tasks; // Asegúrate de tener este
 using System.Windows.Forms;
+using MaterialSkin;
+using MaterialSkin.Controls;
 
 namespace LoftComputacion.WinForms
 {
     // Solo UNA definición de la clase aquí
-    public partial class frmGestionOrden : Form
+    public partial class frmGestionOrden : MaterialForm
     {
         private readonly ApiClient _apiClient;
         private Cliente? _clienteSeleccionado = null;
@@ -20,6 +22,18 @@ namespace LoftComputacion.WinForms
         {
             InitializeComponent();
             _apiClient = apiClient;
+
+            var skin = MaterialSkinManager.Instance;
+            skin.AddFormToManage(this);
+            skin.Theme = MaterialSkinManager.Themes.LIGHT;
+
+            skin.ColorScheme = new ColorScheme(
+                Primary.Blue600,
+                Primary.Blue700,
+                Primary.Blue200,
+                Accent.LightBlue200,
+                TextShade.WHITE
+            );
         }
 
         // Constructor para EDITAR una orden existente
@@ -182,6 +196,7 @@ namespace LoftComputacion.WinForms
                 // Estado Inicial
                 cmbTipoEquipo.SelectedIndex = 0;
             }
+            this.BackColor = Color.FromArgb(245, 245, 245);
         }
 
         private void btnCancelar_Click(object sender, EventArgs e)

@@ -7,6 +7,8 @@ using System.Linq; // Agregado para OrderByDescending
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Reflection; // Agregado para GetProperty
+using MaterialSkin;
+using MaterialSkin.Controls;
 
 namespace LoftComputacion.WinForms
 {
@@ -14,7 +16,7 @@ namespace LoftComputacion.WinForms
     /// Formulario principal de la aplicación. Muestra la lista de órdenes de servicio
     /// y permite acceder a otras funcionalidades.
     /// </summary>
-    public partial class frmPrincipal : Form
+    public partial class frmPrincipal : MaterialForm
     {
         #region Propiedades Privadas
 
@@ -38,6 +40,18 @@ namespace LoftComputacion.WinForms
         {
             InitializeComponent();
             _apiClient = apiClient; // Asigna el cliente que viene del login.
+
+            var materialSkinManager = MaterialSkinManager.Instance;
+            materialSkinManager.AddFormToManage(this);
+            materialSkinManager.Theme = MaterialSkinManager.Themes.LIGHT;
+
+            materialSkinManager.ColorScheme = new ColorScheme(
+                Primary.Blue600,    // COLOR PRINCIPAL
+                Primary.Blue700,    // COLOR OSCURO
+                Primary.Blue200,    // COLOR CLARO
+                Accent.LightBlue200,// COLOR DE ACENTO
+                TextShade.WHITE     // COLOR DEL TEXTO
+            );
         }
 
         /// <summary>
