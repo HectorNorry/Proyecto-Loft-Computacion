@@ -16,20 +16,16 @@ namespace LoftComputacion.WinForms
 
         private void btnGestionarUsuarios_Click(object sender, EventArgs e)
         {
-            // Abrimos el formulario de usuarios
-            using (var formUsuarios = new frmGestionUsuarios(_apiClient))
-            {
-                formUsuarios.ShowDialog();
-            }
+            var formUsuarios = new frmGestionUsuarios(_apiClient);
+            formUsuarios.Show();   // ANTES: ShowDialog()
         }
 
         private void btnVerGanancias_Click(object sender, EventArgs e)
         {
-            // Abrimos el formulario de ganancias
-            using (var formGanancias = new frmGanancias(_apiClient))
-            {
-                formGanancias.ShowDialog();
-            }
+            var formGanancias = new frmGanancias(_apiClient);
+            formGanancias.Show();  // ANTES: ShowDialog()
         }
+
+
     }
 }

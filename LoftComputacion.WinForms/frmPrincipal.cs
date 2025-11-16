@@ -45,7 +45,9 @@ namespace LoftComputacion.WinForms
         /// Configura las grillas y carga los datos iniciales.
         /// </summary>
         private async void frmPrincipal_Load(object sender, EventArgs e)
+
         {
+            
             await CargarOrdenesDeServicio(); // Carga la grilla principal
 
             // --- Configuración Inicial del dgvHistorial (se hace una sola vez) ---

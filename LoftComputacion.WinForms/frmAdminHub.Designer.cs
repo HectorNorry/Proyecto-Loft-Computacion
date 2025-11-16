@@ -42,6 +42,8 @@
             btnGestionarUsuarios.TabIndex = 0;
             btnGestionarUsuarios.Text = "Gestionar Usuarios";
             btnGestionarUsuarios.UseVisualStyleBackColor = true;
+            btnGestionarUsuarios.Click += btnGestionarUsuarios_Click;
+
             // 
             // btnVerGanancias
             // 
@@ -52,6 +54,7 @@
             btnVerGanancias.TabIndex = 1;
             btnVerGanancias.Text = "Ver Ganancias";
             btnVerGanancias.UseVisualStyleBackColor = true;
+            btnVerGanancias.Click += btnVerGanancias_Click;
             // 
             // frmAdminHub
             // 

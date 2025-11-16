@@ -19,6 +19,11 @@ namespace LoftComputacion.WinForms
         {
             InitializeComponent();
             _apiClient = apiClient;
+
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.TopMost = true;
+            this.BringToFront();
+            this.Activate();
         }
 
         private void frmGanancias_Load(object sender, EventArgs e)

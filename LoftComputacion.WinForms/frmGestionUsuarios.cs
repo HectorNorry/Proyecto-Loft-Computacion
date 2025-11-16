@@ -19,6 +19,11 @@ namespace LoftComputacion.WinForms
         {
             InitializeComponent();
             _apiClient = apiClient;
+
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.TopMost = true;           // Forzar que aparezca arriba de todo
+            this.BringToFront();
+            this.Activate();
         }
 
         private async void frmGestionUsuarios_Load(object sender, EventArgs e)

@@ -26,9 +26,37 @@ namespace LoftComputacion.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetOrdenesDeServicio([FromQuery] string? filtro = null)
         {
-            var ordenes = await _ordenDeServicioService.GetAllOrdenesAsync(filtro);
+            var ordenesDTO = await _ordenDeServicioService.GetAllOrdenesAsync(filtro);
+
+            var ordenes = ordenesDTO.Select(o => new OrdenDeServicio
+            {
+                Id = o.Id,
+                FechaIngreso = o.FechaIngreso,
+                FallaDeclaradaPorCliente = o.FallaDeclaradaPorCliente,
+                PrecioFinal = o.PrecioFinal,
+
+                Cliente = new Cliente
+                {
+                    NombreCompleto = o.NombreCliente
+                },
+
+                Equipo = new Equipo
+                {
+                    Modelo = o.ModeloEquipo
+                },
+
+                Estado = new Estado
+                {
+                    Nombre = o.NombreEstado
+                }
+            });
+
             return Ok(ordenes);
         }
+
+
+
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrdenDeServicio(int id)
@@ -113,12 +141,11 @@ namespace LoftComputacion.WebAPI.Controllers
         public async Task<IActionResult> GetHistorialDeOrden(int id)
         {
             var historial = await _ordenDeServicioService.GetHistorialByOrdenIdAsync(id);
-            if (historial == null)
-            {
-                return NotFound();
-            }
+
+            // Si no hay historial devolvemos lista vacía pero NO es error
             return Ok(historial);
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrdenDeServicio(int id)

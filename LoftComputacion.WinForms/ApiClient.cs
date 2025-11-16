@@ -1,11 +1,12 @@
 ﻿using LoftComputacion.Domain;
 using Newtonsoft.Json;
-using System; // Agregado para Uri
+using System;
 using System.Collections.Generic;
-using System.Drawing; // Para Image
-using System.IO; // Para MemoryStream
+using System.Drawing;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace LoftComputacion.WinForms
@@ -13,24 +14,37 @@ namespace LoftComputacion.WinForms
     public class ApiClient
     {
         private readonly HttpClient _httpClient;
-
-        // Esta es la URL correcta que ya tenías
         private const string _apiUrl = "https://localhost:52004/api";
 
-        private static string? _jwtToken;
-
+        public string? Token { get; private set; }
 
         public ApiClient()
         {
             _httpClient = new HttpClient();
         }
 
+        // ============================================================
+        // TOKEN
+        // ============================================================
         public void SetToken(string token)
         {
-            _jwtToken = token; 
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            token = token?.Trim('"');
+
+            Token = token;
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                if (_httpClient.DefaultRequestHeaders.Contains("Authorization"))
+                    _httpClient.DefaultRequestHeaders.Remove("Authorization");
+
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            }
         }
 
+        // ============================================================
+        // LOGIN
+        // ============================================================
         public class LoginResponseDto
         {
             public string Token { get; set; } = string.Empty;
@@ -39,331 +53,263 @@ namespace LoftComputacion.WinForms
             public string Rol { get; set; } = string.Empty;
         }
 
+        public async Task<LoginResponseDto?> LoginAsync(string nombreUsuario, string password)
+        {
+            var loginRequest = new { NombreUsuario = nombreUsuario, Password = password };
+            var json = JsonConvert.SerializeObject(loginRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync($"{_apiUrl}/auth/login", content);
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var json_response = await response.Content.ReadAsStringAsync();
+            var loginResp = JsonConvert.DeserializeObject<LoginResponseDto>(json_response);
+
+            if (loginResp == null || string.IsNullOrEmpty(loginResp.Token))
+                return null;
+
+            SetToken(loginResp.Token);
+            return loginResp;
+        }
+
+        // ============================================================
+        // CLIENTES
+        // ============================================================
         public async Task<List<Cliente>> GetClientesAsync()
         {
             var response = await _httpClient.GetAsync($"{_apiUrl}/clientes");
-            if (response.IsSuccessStatusCode)
-            {
-                var json_response = await response.Content.ReadAsStringAsync();
-                var clientes = JsonConvert.DeserializeObject<List<Cliente>>(json_response);
-                return clientes ?? new List<Cliente>();
-            }
-            return new List<Cliente>();
-        }
 
-        public async Task<List<OrdenDeServicio>> GetOrdenesDeServicioAsync(string? filtro = null)
-        {
-            string url = $"{_apiUrl}/ordenesdeservicio";
-            if (!string.IsNullOrEmpty(filtro))
-            {
-                url += $"?filtro={Uri.EscapeDataString(filtro)}";
-            }
+            if (!response.IsSuccessStatusCode)
+                return new List<Cliente>();
 
-            var response = await _httpClient.GetAsync(url);
-            if (response.IsSuccessStatusCode)
-            {
-                var json_response = await response.Content.ReadAsStringAsync();
-                var ordenes = JsonConvert.DeserializeObject<List<OrdenDeServicio>>(json_response);
-                return ordenes ?? new List<OrdenDeServicio>();
-            }
-            return new List<OrdenDeServicio>();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<Cliente>>(json) ?? new List<Cliente>();
         }
 
         public async Task<Cliente> CreateClienteAsync(Cliente nuevoCliente)
         {
             var json = JsonConvert.SerializeObject(nuevoCliente);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync($"{_apiUrl}/clientes", content);
-            response.EnsureSuccessStatusCode();
+            var resp = await _httpClient.PostAsync($"{_apiUrl}/clientes", content);
+            resp.EnsureSuccessStatusCode();
 
-            var json_response = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<Cliente>(json_response);
+            var jsonResp = await resp.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<Cliente>(jsonResp);
         }
 
-        public async Task<Equipo> CreateEquipoAsync(Equipo nuevoEquipo)
+        // ============================================================
+        // EQUIPOS
+        // ============================================================
+        public async Task<Equipo> CreateEquipoAsync(Equipo eq)
         {
-            var json = JsonConvert.SerializeObject(nuevoEquipo);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var json = JsonConvert.SerializeObject(eq);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync($"{_apiUrl}/equipos", content);
-            response.EnsureSuccessStatusCode();
+            var resp = await _httpClient.PostAsync($"{_apiUrl}/equipos", content);
+            resp.EnsureSuccessStatusCode();
 
-            var json_response = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<Equipo>(json_response);
+            var jsonResp = await resp.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<Equipo>(jsonResp);
         }
 
-        public async Task<OrdenDeServicio> CreateOrdenDeServicioAsync(OrdenDeServicio nuevaOrden)
+        // ============================================================
+        // ÓRDENES DE SERVICIO
+        // ============================================================
+        public async Task<List<OrdenDeServicio>> GetOrdenesDeServicioAsync(string? filtro = null)
         {
-            var createDto = new { nuevaOrden.ClienteId, nuevaOrden.EquipoId, nuevaOrden.FallaDeclaradaPorCliente };
-            var dto_json = JsonConvert.SerializeObject(createDto);
-            var dto_content = new StringContent(dto_json, System.Text.Encoding.UTF8, "application/json");
+            string url = $"{_apiUrl}/ordenesdeservicio";
 
-            var response = await _httpClient.PostAsync($"{_apiUrl}/ordenesdeservicio", dto_content);
-            response.EnsureSuccessStatusCode();
+            if (!string.IsNullOrEmpty(filtro))
+                url += $"?filtro={Uri.EscapeDataString(filtro)}";
 
-            var json_response = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<OrdenDeServicio>(json_response);
+            var resp = await _httpClient.GetAsync(url);
+
+            if (!resp.IsSuccessStatusCode)
+                return new List<OrdenDeServicio>();
+
+            var json = await resp.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<OrdenDeServicio>>(json)
+                   ?? new List<OrdenDeServicio>();
         }
 
-        public async Task UpdateOrdenDeServicioAsync(int id, OrdenDeServicio ordenActualizada, int usuarioId)
+        public async Task<OrdenDeServicio> CreateOrdenDeServicioAsync(OrdenDeServicio o)
         {
-            var updateDto = new
+            var dto = new { o.ClienteId, o.EquipoId, o.FallaDeclaradaPorCliente };
+            var json = JsonConvert.SerializeObject(dto);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var resp = await _httpClient.PostAsync($"{_apiUrl}/ordenesdeservicio", content);
+            resp.EnsureSuccessStatusCode();
+
+            var jsonResp = await resp.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<OrdenDeServicio>(jsonResp);
+        }
+
+        public async Task UpdateOrdenDeServicioAsync(int id, OrdenDeServicio o, int usuarioId)
+        {
+            var dto = new
             {
-                ordenActualizada.EstadoId,
-                ordenActualizada.PrecioPresupuestado,
-                ordenActualizada.PrecioFinal,
-                ordenActualizada.ResumenTecnico,
+                o.EstadoId,
+                o.PrecioPresupuestado,
+                o.PrecioFinal,
+                o.ResumenTecnico,
                 UsuarioId = usuarioId
             };
-            var dto_json = JsonConvert.SerializeObject(updateDto);
-            var dto_content = new StringContent(dto_json, System.Text.Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PutAsync($"{_apiUrl}/ordenesdeservicio/{id}", dto_content);
-            response.EnsureSuccessStatusCode();
+            var json = JsonConvert.SerializeObject(dto);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var resp = await _httpClient.PutAsync($"{_apiUrl}/ordenesdeservicio/{id}", content);
+            resp.EnsureSuccessStatusCode();
         }
 
+        // ============================================================
+        // HISTORIAL
+        // ============================================================
+        public async Task<List<HistorialOrden>> GetHistorialDeOrdenAsync(int id)
+        {
+            var resp = await _httpClient.GetAsync($"{_apiUrl}/ordenesdeservicio/{id}/historial");
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                var err = await resp.Content.ReadAsStringAsync();
+                throw new Exception($"Error ({resp.StatusCode}): {err}");
+            }
+
+            var json = await resp.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<HistorialOrden>>(json)
+                   ?? new List<HistorialOrden>();
+        }
+
+        // ============================================================
+        // ESTADOS
+        // ============================================================
         public async Task<List<Estado>> GetEstadosAsync()
         {
-            var response = await _httpClient.GetAsync($"{_apiUrl}/estados");
-            if (response.IsSuccessStatusCode)
-            {
-                var json_response = await response.Content.ReadAsStringAsync();
-                var estados = JsonConvert.DeserializeObject<List<Estado>>(json_response);
-                return estados ?? new List<Estado>();
-            }
-            return new List<Estado>();
+            var resp = await _httpClient.GetAsync($"{_apiUrl}/estados");
+
+            if (!resp.IsSuccessStatusCode)
+                return new List<Estado>();
+
+            var json = await resp.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<Estado>>(json) ?? new List<Estado>();
         }
 
+        // ============================================================
+        // USUARIOS
+        // ============================================================
         public async Task<List<Usuario>> GetUsuariosAsync()
         {
-            var response = await _httpClient.GetAsync($"{_apiUrl}/usuarios");
-            response.EnsureSuccessStatusCode();
-            var json_response = await response.Content.ReadAsStringAsync();
-            var usuarios = JsonConvert.DeserializeObject<List<Usuario>>(json_response);
-            return usuarios ?? new List<Usuario>();
+            var resp = await _httpClient.GetAsync($"{_apiUrl}/usuarios");
+            resp.EnsureSuccessStatusCode();
+
+            var json = await resp.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<Usuario>>(json) ?? new List<Usuario>();
         }
 
-        public async Task<GananciasDto> GetGananciasAsync(DateTime fechaDesde, DateTime fechaHasta)
+        public async Task<Usuario> CreateUsuarioAsync(string nombre, string email, string pass, string rol)
         {
-            string fechaDesdeStr = fechaDesde.ToString("yyyy-MM-dd");
-            string fechaHastaStr = fechaHasta.ToString("yyyy-MM-dd");
+            var dto = new { NombreCompleto = nombre, Email = email, Password = pass, Rol = rol };
+            var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
 
-            string url = $"{_apiUrl}/ganancias?fechaDesde={fechaDesdeStr}&fechaHasta={fechaHastaStr}";
+            var resp = await _httpClient.PostAsync($"{_apiUrl}/usuarios", content);
+            resp.EnsureSuccessStatusCode();
 
-            var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-
-            var json_response = await response.Content.ReadAsStringAsync();
-            var resultado = JsonConvert.DeserializeObject<GananciasDto>(json_response);
-
-            return resultado ?? new GananciasDto();
+            return JsonConvert.DeserializeObject<Usuario>(await resp.Content.ReadAsStringAsync());
         }
 
+        public async Task UpdateUsuarioAsync(int id, string nombre, string email, string rol, string? password)
+        {
+            var dto = new { NombreCompleto = nombre, Email = email, Rol = rol, Password = password };
+            var content = new StringContent(JsonConvert.SerializeObject(dto), Encoding.UTF8, "application/json");
+
+            var resp = await _httpClient.PutAsync($"{_apiUrl}/usuarios/{id}", content);
+            resp.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteUsuarioAsync(int id)
+        {
+            var resp = await _httpClient.DeleteAsync($"{_apiUrl}/usuarios/{id}");
+            resp.EnsureSuccessStatusCode();
+        }
+
+        // ============================================================
+        // FOTOS
+        // ============================================================
+        public async Task<List<Foto>> GetFotosAsync(int ordenId)
+        {
+            var resp = await _httpClient.GetAsync($"{_apiUrl}/ordenes/{ordenId}/fotos");
+            resp.EnsureSuccessStatusCode();
+
+            var json = await resp.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<Foto>>(json) ?? new List<Foto>();
+        }
+
+        public async Task<Foto> UploadFotoAsync(int ordenId, Stream image, string fileName)
+        {
+            using var content = new MultipartFormDataContent();
+            content.Add(new StreamContent(image), "file", fileName);
+
+            var resp = await _httpClient.PostAsync($"{_apiUrl}/ordenes/{ordenId}/fotos", content);
+            resp.EnsureSuccessStatusCode();
+
+            return JsonConvert.DeserializeObject<Foto>(await resp.Content.ReadAsStringAsync());
+        }
+
+        public async Task DeleteFotoAsync(int fotoId)
+        {
+            var resp = await _httpClient.DeleteAsync($"{_apiUrl}/fotos/{fotoId}");
+            resp.EnsureSuccessStatusCode();
+        }
+
+        // ============================================================
+        // GANANCIAS
+        // ============================================================
         public class GananciasDto
         {
-            public List<OrdenDeServicio> Ordenes { get; set; } = new List<OrdenDeServicio>();
+            public List<OrdenDeServicio> Ordenes { get; set; } = new();
             public decimal Total { get; set; }
         }
 
-        public async Task<byte[]> DownloadGananciasExcelAsync(DateTime fechaDesde, DateTime fechaHasta)
+        public async Task<GananciasDto> GetGananciasAsync(DateTime desde, DateTime hasta)
         {
-            string fechaDesdeStr = fechaDesde.ToString("yyyy-MM-dd");
-            string fechaHastaStr = fechaHasta.ToString("yyyy-MM-dd");
+            var url = $"{_apiUrl}/ganancias?fechaDesde={desde:yyyy-MM-dd}&fechaHasta={hasta:yyyy-MM-dd}";
+            var resp = await _httpClient.GetAsync(url);
+            resp.EnsureSuccessStatusCode();
 
-            string url = $"{_apiUrl}/ganancias/exportar?fechaDesde={fechaDesdeStr}&fechaHasta={fechaHastaStr}";
-
-            var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-
-            var fileBytes = await response.Content.ReadAsByteArrayAsync();
-            return fileBytes;
+            return JsonConvert.DeserializeObject<GananciasDto>(await resp.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<Foto>> GetFotosAsync(int ordenId)
+        public async Task<byte[]> DownloadGananciasExcelAsync(DateTime desde, DateTime hasta)
         {
-            var response = await _httpClient.GetAsync($"{_apiUrl}/ordenes/{ordenId}/fotos");
-            response.EnsureSuccessStatusCode();
-            var json_response = await response.Content.ReadAsStringAsync();
-            var fotos = JsonConvert.DeserializeObject<List<Foto>>(json_response);
-            return fotos ?? new List<Foto>();
+            var url = $"{_apiUrl}/ganancias/exportar?fechaDesde={desde:yyyy-MM-dd}&fechaHasta={hasta:yyyy-MM-dd}";
+            var resp = await _httpClient.GetAsync(url);
+
+            resp.EnsureSuccessStatusCode();
+            return await resp.Content.ReadAsByteArrayAsync();
         }
 
-        public async Task<Foto> UploadFotoAsync(int ordenId, Stream imageStream, string fileName)
+        // ============================================================
+        // MERCADO PAGO
+        // ============================================================
+        public class PagoResponseDto
         {
-            using (var content = new MultipartFormDataContent())
-            {
-                content.Add(new StreamContent(imageStream), "file", fileName);
-
-                var response = await _httpClient.PostAsync($"{_apiUrl}/ordenes/{ordenId}/fotos", content);
-                response.EnsureSuccessStatusCode();
-
-                var json_response = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<Foto>(json_response);
-            }
+            [JsonProperty("urlDePago")]
+            public string UrlDePago { get; set; }
         }
 
-        public async Task<Image?> DownloadImageAsync(string url)
-        {
-            try
-            {
-                byte[] imageData = await _httpClient.GetByteArrayAsync(url);
-                using (var ms = new MemoryStream(imageData))
-                {
-                    return Image.FromStream(ms);
-                }
-            }
-            catch
-            {
-                return null;
-            }
-        }
-        public async Task DeleteFotoAsync(int fotoId)
-        {
-            var response = await _httpClient.DeleteAsync($"{_apiUrl}/fotos/{fotoId}");
-            response.EnsureSuccessStatusCode();
-        }
-
-        public async Task<LoginResponseDto?> LoginAsync(string nombreUsuario, string password)
-        {
-            var loginRequest = new { NombreUsuario = nombreUsuario, Password = password };
-            var json = JsonConvert.SerializeObject(loginRequest);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync($"{_apiUrl}/auth/login", content);
-
-
-            if (response.IsSuccessStatusCode)
-            {
-                var json_response = await response.Content.ReadAsStringAsync();
-                var loginResponse = JsonConvert.DeserializeObject<LoginResponseDto>(json_response);
-
-                if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
-                {
-                    SetToken(loginResponse.Token);
-                    return loginResponse;
-                }
-                return null;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        private class TokenDto { public string Token { get; set; } = string.Empty; }
-
-        public async Task DeleteUsuarioAsync(int usuarioId)
-        {
-            var response = await _httpClient.DeleteAsync($"{_apiUrl}/usuarios/{usuarioId}");
-            response.EnsureSuccessStatusCode();
-        }
-
-        public async Task<Usuario> CreateUsuarioAsync(string nombreCompleto, string email, string password, string rol)
-        {
-            var nuevoUsuarioDto = new
-            {
-                NombreCompleto = nombreCompleto,
-                Email = email,
-                Password = password,
-                Rol = rol
-            };
-            var json = JsonConvert.SerializeObject(nuevoUsuarioDto);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"{_apiUrl}/usuarios", content);
-            response.EnsureSuccessStatusCode();
-
-            var json_response = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<Usuario>(json_response);
-        }
-
-        public async Task UpdateUsuarioAsync(int usuarioId, string nombre, string email, string rol, string? password)
-        {
-            var updateDto = new
-            {
-                NombreCompleto = nombre,
-                Email = email,
-                Rol = rol,
-                Password = password
-            };
-
-            var json = JsonConvert.SerializeObject(updateDto);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PutAsync($"{_apiUrl}/usuarios/{usuarioId}", content);
-            response.EnsureSuccessStatusCode();
-        }
-
-        // --- MÉTODO DEL HISTORIAL CORREGIDO ---
-        public async Task<List<HistorialOrden>> GetHistorialDeOrdenAsync(int ordenId)
-        {
-            SetToken(_jwtToken); // Nos aseguramos que el token esté
-
-            // --- 1. CORRECCIÓN DE URL ---
-            // Añadimos la variable _apiUrl como en el resto de tus métodos
-            // y usamos el endpoint correcto de la API (ordenesdeservicio)
-            var response = await _httpClient.GetAsync($"{_apiUrl}/ordenesdeservicio/{ordenId}/historial");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Error al obtener el historial ({response.StatusCode}): {errorContent}");
-            }
-
-            var jsonResponse = await response.Content.ReadAsStringAsync();
-
-            // --- 2. CORRECCIÓN DE JSON ---
-            // Usamos Newtonsoft (JsonConvert) para ser consistentes con el resto del archivo
-            var historial = JsonConvert.DeserializeObject<List<HistorialOrden>>(jsonResponse);
-            return historial ?? new List<HistorialOrden>();
-        }
-
-        // --- AGREGAR ESTE MÉTODO NUEVO DENTRO DE ApiClient.cs ---
-
-        /// <summary>
-        /// Llama a la API para crear una preferencia de pago en Mercado Pago.
-        /// </summary>
-        /// <param name="ordenId">El ID de la orden a pagar</param>
-        /// <returns>La URL del checkout de Mercado Pago para abrir en el navegador.</returns>
         public async Task<string> CrearLinkDePagoAsync(int ordenId)
         {
-            SetToken(_jwtToken); // Nos aseguramos que el token esté
+            var resp = await _httpClient.PostAsync($"{_apiUrl}/ordenesdeservicio/{ordenId}/crear-pago", null);
 
-            // 1. Llamamos al nuevo endpoint. Usamos un 'HttpContent' vacío
-            //    porque el ID va en la URL y no enviamos datos en el body.
-            var response = await _httpClient.PostAsync($"{_apiUrl}/ordenesdeservicio/{ordenId}/crear-pago", null);
+            if (!resp.IsSuccessStatusCode)
+                throw new Exception(await resp.Content.ReadAsStringAsync());
 
-            if (!response.IsSuccessStatusCode)
-            {
-                // Si la API da un error (ej: 400 "No hay precio"), lo leemos y lo mostramos
-                var errorContent = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Error al crear el link de pago: {errorContent}");
-            }
-
-            var jsonResponse = await response.Content.ReadAsStringAsync();
-
-            // 2. Leemos el JSON anónimo que nos devuelve el controlador
-            //    (Necesitamos una clase helper para leer la 'urlDePago')
-            var resultado = JsonConvert.DeserializeObject<PagoResponseDto>(jsonResponse);
-
-            if (resultado == null || string.IsNullOrEmpty(resultado.UrlDePago))
-            {
-                throw new Exception("La API no devolvió una URL de pago válida.");
-            }
-
-            return resultado.UrlDePago;
+            return JsonConvert.DeserializeObject<PagoResponseDto>(
+                await resp.Content.ReadAsStringAsync())?.UrlDePago!;
         }
-
-        
-    }
-    /// <summary>
-    /// Clase helper para leer la respuesta de la API al crear un link de pago.
-    /// </summary>
-    public class PagoResponseDto
-    {
-        // Le decimos a Newtonsoft que busque "urlDePago" (con minúscula) en el JSON
-        // para que coincida con el 'return Ok(new { urlDePago = ... })' del controlador.
-        [JsonProperty("urlDePago")]
-        public string UrlDePago { get; set; }
     }
 }

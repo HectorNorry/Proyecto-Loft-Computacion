@@ -139,16 +139,15 @@ namespace LoftComputacion.Application
 
         public async Task<OrdenDeServicio> CreateOrdenAsync(OrdenDeServicio orden)
         {
-            // ... (Tu código de Create)
-            // Asignar estado inicial (Ej: "Recibido")
-            orden.EstadoId = 1; // Asumo 1 = Recibido
+            // Estado inicial "Recibido"
+            orden.EstadoId = 1;
 
-            // --- ¡CORRECCIÓN! ---
-            // Se elimina la siguiente línea porque la propiedad "FechaCreacion" no existe
-            // orden.FechaCreacion = DateTime.UtcNow;
+            // ✅ ASIGNAR FECHA DE INGRESO
+            orden.FechaIngreso = DateTime.UtcNow;  // 🔥 ESTA ES LA LÍNEA QUE FALTABA
 
             _context.OrdenesDeServicio.Add(orden);
             await _context.SaveChangesAsync();
+
             return orden;
         }
 
@@ -156,73 +155,86 @@ namespace LoftComputacion.Application
         // --- ¡AQUÍ ESTÁ TODA LA LÓGICA NUEVA! ---
         public async Task<bool> UpdateOrdenAsync(int id, OrdenDeServicio ordenConNuevosDatos, int usuarioId)
         {
+            // 1. Cargamos la orden existente con Cliente (para email)
             var ordenExistente = await _context.OrdenesDeServicio
-                .Include(o => o.Cliente) // ¡Importante incluir al Cliente para saber su email!
+                .Include(o => o.Cliente)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (ordenExistente == null)
-            {
-                return false; // No se encontró la orden
-            }
+                return false;
 
-            // Guardamos el estado anterior para compararlo
-            int estadoAnterior = ordenExistente.EstadoId;
-            int estadoNuevo = ordenConNuevosDatos.EstadoId;
+            // 2. Guardamos los IDs del estado anterior y nuevo
+            int estadoAnteriorId = ordenExistente.EstadoId;
+            int estadoNuevoId = ordenConNuevosDatos.EstadoId;
 
-            // Actualizamos la orden en la base de datos
-            ordenExistente.EstadoId = estadoNuevo;
+            // 3. CARGAMOS LOS NOMBRES DE LOS ESTADOS
+            var estadoAnterior = await _context.Estados
+                .FirstOrDefaultAsync(e => e.Id == estadoAnteriorId);
+
+            var estadoNuevo = await _context.Estados
+                .FirstOrDefaultAsync(e => e.Id == estadoNuevoId);
+
+            string nombreEstadoAnterior = estadoAnterior?.Nombre ?? "(desconocido)";
+            string nombreEstadoNuevo = estadoNuevo?.Nombre ?? "(desconocido)";
+
+            // 4. Actualizamos datos
+            ordenExistente.EstadoId = estadoNuevoId;
             ordenExistente.PrecioPresupuestado = ordenConNuevosDatos.PrecioPresupuestado;
             ordenExistente.PrecioFinal = ordenConNuevosDatos.PrecioFinal;
-            ordenExistente.ResumenTecnico = ordenConNuevosDatos.ResumenTecnico; // ¡Guardamos el resumen!
+            ordenExistente.ResumenTecnico = ordenConNuevosDatos.ResumenTecnico;
 
-            // (Aquí puedes agregar la lógica del historial de cambios si la tienes)
-
+            // 5. Guardamos la orden
             await _context.SaveChangesAsync();
 
-            // --- LÓGICA DE NOTIFICACIÓN POR IA ---
-            // Comprobamos si el estado cambió a uno "Finalizado"
-            // (¡AJUSTA EL ID_ESTADO_FINALIZADO_ESPERA_PAGO!)
-            if (estadoNuevo == ID_ESTADO_FINALIZADO_ESPERA_PAGO && estadoAnterior != ID_ESTADO_FINALIZADO_ESPERA_PAGO)
+            // 6. AGREGAMOS HISTORIAL (CORRECCIÓN FINAL)
+            var historial = new HistorialOrden
+            {
+                OrdenDeServicioId = ordenExistente.Id,
+                UsuarioId = usuarioId,
+                FechaHora = DateTime.UtcNow,
+                DescripcionDelCambio =
+                    $"Estado cambiado de {nombreEstadoAnterior} a {nombreEstadoNuevo}"
+            };
+
+            await _context.HistorialOrdenes.AddAsync(historial);
+            await _context.SaveChangesAsync();
+
+            // 7. Lógica de IA y email (NO SE TOCA)
+            if (estadoNuevoId == ID_ESTADO_FINALIZADO_ESPERA_PAGO &&
+                estadoAnteriorId != ID_ESTADO_FINALIZADO_ESPERA_PAGO)
             {
                 string resumenParaEmail = "";
 
-                // Verificamos si el técnico escribió un resumen
                 if (!string.IsNullOrWhiteSpace(ordenExistente.ResumenTecnico))
-                {
-                    // CASO 1: Usamos el método de "traducción"
-                    resumenParaEmail = await _aiService.GenerarResumenDesdeTecnicoAsync(ordenExistente.ResumenTecnico);
-                }
+                    resumenParaEmail = await _aiService.GenerarResumenDesdeTecnicoAsync(
+                        ordenExistente.ResumenTecnico);
                 else
-                {
-                    // CASO 2: Usamos el método "genérico"
-                    resumenParaEmail = await _aiService.GenerarResumenDesdeFallaAsync(ordenExistente.FallaDeclaradaPorCliente);
-                }
+                    resumenParaEmail = await _aiService.GenerarResumenDesdeFallaAsync(
+                        ordenExistente.FallaDeclaradaPorCliente);
 
-                // Si la IA falló o devolvió null, ponemos un mensaje por defecto
                 if (string.IsNullOrEmpty(resumenParaEmail))
                 {
-                    resumenParaEmail = "¡Tu equipo está listo y funcionando correctamente! Ya puedes pasar a retirarlo.\n\nSaludos,\nEl equipo de LOFT COMPUTACIÓN";
+                    resumenParaEmail =
+                        "¡Tu equipo está listo y funcionando correctamente! " +
+                        "Ya puedes pasar a retirarlo.\n\nSaludos,\nEl equipo de LOFT COMPUTACIÓN";
                 }
 
-                // Enviamos el email
-                // (La variable 'asuntoEmail' se elimina, ya que EmailService define su propio asunto)
-
-                // Nos aseguramos de que el cliente y su email existan
-                if (ordenExistente.Cliente != null && !string.IsNullOrEmpty(ordenExistente.Cliente.Email))
+                if (ordenExistente.Cliente != null &&
+                    !string.IsNullOrEmpty(ordenExistente.Cliente.Email))
                 {
-
-                    // --- ¡CORRECCIÓN 3: Añadir el 'ordenExistente.Id' al final! ---
                     await _emailService.EnviarEmailNotificacion(
-                        ordenExistente.Cliente.Email,                  // 1. emailCliente
-                        ordenExistente.Cliente.NombreCompleto,         // 2. nombreCliente
-                        resumenParaEmail,                              // 3. resumenIA
-                        ordenExistente.Id                              // 5. ordenId (¡NUEVO!)
+                        ordenExistente.Cliente.Email,
+                        ordenExistente.Cliente.NombreCompleto,
+                        resumenParaEmail,
+                        ordenExistente.Id
                     );
                 }
             }
 
             return true;
         }
+
+
 
         public async Task<bool> DeleteOrdenAsync(int id)
         {
