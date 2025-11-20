@@ -1,0 +1,429 @@
+﻿@page "/ordenes/editar/{id:int}"
+
+@using System.Net.Http
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using MudBlazor
+@using LoftComputacion.Application.DTOs
+@using LoftComputacion.BlazorApp.Services.Ordenes
+@using LoftComputacion.BlazorApp.Services.Auth
+
+@inject OrdenesApiService OrdenesService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject CustomAuthStateProvider AuthProvider
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-6">
+
+    @if (Cargando)
+    {
+        <div class="d-flex justify-center mt-6">
+            <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else if (Orden is null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-4">
+            No se encontró la orden.
+        </MudAlert>
+    }
+    else
+    {
+        <MudGrid GutterSize="3">
+            <!-- Datos de la orden -->
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4">
+
+                    <MudText Typo="Typo.h5" Class="mb-3 fw-bold">
+                        Editar Orden #@Orden.Id
+                    </MudText>
+
+                    <MudText Typo="Typo.subtitle2"><b>Cliente:</b> @Orden.ClienteNombre (@Orden.EmailCliente)</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Fecha ingreso:</b> @Orden.FechaIngreso.ToString("dd/MM/yyyy HH:mm")</MudText>
+
+                    <MudDivider Class="my-2" />
+
+                    <MudText Typo="Typo.subtitle2"><b>Estado actual:</b> @Orden.Estado</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Equipo:</b> @Orden.EquipoTipo @Orden.EquipoModelo</MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(Orden.EquipoDescripcion))
+                    {
+                        <MudText Typo="Typo.subtitle2"><b>Descripción equipo:</b> @Orden.EquipoDescripcion</MudText>
+                    }
+
+                    <MudDivider Class="my-2" />
+
+                    <MudText Typo="Typo.subtitle2"><b>Falla declarada:</b> @Orden.FallaDeclarada</MudText>
+
+                </MudPaper>
+            </MudItem>
+
+            <!-- Cambiar estado -->
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4">
+
+                    <MudText Typo="Typo.h6" Class="mb-2">Cambiar estado</MudText>
+
+                    <MudSelect T="int"
+                               Label="Estado"
+                               @bind-Value="EstadoId"
+                               Required="true">
+                        @foreach (var e in Estados)
+                        {
+                            <MudSelectItem Value="@e.Id">@e.Nombre</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudNumericField T="decimal?"
+                                     Label="Precio presupuestado"
+                                     @bind-Value="PrecioPresupuestado"
+                                     Class="mt-3" />
+
+                    <MudNumericField T="decimal?"
+                                     Label="Precio final"
+                                     @bind-Value="PrecioFinal"
+                                     Class="mt-3" />
+
+                    <MudTextField Label="Resumen técnico"
+                                  Lines="4"
+                                  TextFieldStyle="TextFieldStyle.Filled"
+                                  @bind-Value="ResumenTecnico"
+                                  Class="mt-3" />
+
+                    <MudStack Row="true" Spacing="2" Class="mt-4">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   OnClick="GuardarCambios"
+                                   Disabled="@Guardando">
+                            @if (Guardando)
+                            {
+                                <MudProgressCircular Indeterminate="true" Size="@Size.Small" />
+                            }
+                            else
+                            {
+                                <span>Guardar cambios</span>
+                            }
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Error"
+                                   OnClick="@(() => Nav.NavigateTo("/ordenes"))">
+                            Cancelar
+                        </MudButton>
+                    </MudStack>
+
+                </MudPaper>
+            </MudItem>
+
+            <!-- Historial -->
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4">
+
+                    <MudText Typo="Typo.h6" Class="mb-2">Historial</MudText>
+
+                    @if (Orden.Historial is null || Orden.Historial.Count == 0)
+                    {
+                        <MudText Color="Color.Secondary">
+                            Esta orden no tiene historial.
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudList T="HistorialLineaDto" Dense="true">
+                            @foreach (var h in Orden.Historial)
+                            {
+                                <MudListItem T="HistorialLineaDto">
+                                    <MudListItemText>
+                                        <b>@h.FechaHora.ToShortDateString() @h.FechaHora.ToShortTimeString()</b><br />
+                                        <i>@h.Usuario</i><br />
+                                        @h.Descripcion
+                                    </MudListItemText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+
+                </MudPaper>
+            </MudItem>
+
+            <!-- FOTOS -->
+            <MudItem xs="12">
+                <MudPaper Class="pa-4 mt-4">
+
+                    <MudText Typo="Typo.h6" Class="mb-2">Fotos del equipo</MudText>
+
+                    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+
+                        @if (Orden.Fotos is not null)
+                        {
+                            @foreach (var foto in Orden.Fotos)
+                            {
+                                <div style="position:relative; width:120px; height:120px; border-radius:6px; overflow:hidden; pointer-events:none;">
+
+    <!-- Imagen -->
+    <img src="@foto.Url"
+         style="width:100%; height:100%; object-fit:cover; pointer-events:none;" />
+
+                                    <!-- BOTÓN DE BORRAR -->
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   Style="position:absolute; top:4px; right:4px; background:white; pointer-events:auto;"
+                                                   OnClick="@(() => EliminarFoto(foto))" />
+
+                                    <!-- BOTÓN DE ZOOM -->
+                                    <MudIconButton Icon="@Icons.Material.Filled.ZoomIn"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   Style="position:absolute; bottom:4px; right:4px; background:white; pointer-events:auto;"
+                                                   OnClick="@(() => VerFoto(foto.Url))" />
+
+
+</div>
+
+                            }
+                        }
+
+                        <!-- Botón subir -->
+                        <label style="width:120px; height:120px; border:2px dashed #bbb; display:flex; justify-content:center; align-items:center; cursor:pointer; border-radius:6px;">
+                            <InputFile OnChange="SubirFoto"
+                                       accept="image/*"
+                                       style="opacity:0; width:100%; height:100%; position:absolute;" />
+                            <div style="text-align:center; pointer-events:none;">
+                                <MudIcon Icon="@Icons.Material.Filled.AddAPhoto" />
+                                <div style="font-size:12px;">Agregar foto</div>
+                            </div>
+                        </label>
+
+                    </div>
+
+                </MudPaper>
+            </MudItem>
+
+        </MudGrid>
+    }
+
+</MudContainer>
+
+@code {
+
+    [Parameter] public int id { get; set; }
+
+    private OrdenDetalleDto? Orden;
+    private bool Cargando = true;
+    private bool Guardando = false;
+
+    private int EstadoId;
+    private decimal? PrecioPresupuestado;
+    private decimal? PrecioFinal;
+    private string? ResumenTecnico;
+
+    // Estados posibles
+    private readonly List<(int Id, string Nombre)> Estados = new()
+    {
+        (1, "Recibido"),
+        (2, "Esperando Aprobación"),
+        (3, "En Proceso"),
+        (4, "Finalizado, a espera de pago"),
+        (5, "Entregado"),
+        (6, "Cancelado"),
+        (7, "Pagado")
+    };
+
+    // Clase auxiliar para leer la respuesta del POST de fotos
+    private class FotoUploadResponse
+    {
+        public string Url { get; set; } = string.Empty;
+        public int FotoId { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Orden = await OrdenesService.GetDetalleAsync(id);
+
+            if (Orden != null)
+            {
+                EstadoId = EstadoNombreToId(Orden.Estado);
+                PrecioPresupuestado = Orden.PrecioPresupuestado;
+                PrecioFinal = Orden.PrecioFinal;
+                ResumenTecnico = Orden.ResumenTecnico;
+
+                Orden.Fotos ??= new List<FotoDto>();
+                Orden.Historial ??= new List<HistorialLineaDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al cargar la orden: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            Cargando = false;
+        }
+    }
+
+    private int EstadoNombreToId(string nombre)
+    {
+        var match = Estados.FirstOrDefault(e => e.Nombre == nombre);
+        return match.Id == 0 ? 1 : match.Id;
+    }
+
+    private async Task GuardarCambios()
+    {
+        Guardando = true;
+
+        try
+        {
+            var usuarioId = await AuthProvider.GetUserIdAsync();
+
+            var dto = new UpdateOrdenDto
+            {
+                EstadoId = EstadoId,
+                PrecioPresupuestado = PrecioPresupuestado,
+                PrecioFinal = PrecioFinal,
+                ResumenTecnico = ResumenTecnico,
+                UsuarioId = usuarioId
+            };
+
+            var request = new HttpRequestMessage(HttpMethod.Put, $"api/OrdenesDeServicio/{id}")
+            {
+                Content = JsonContent.Create(dto)
+            };
+
+            var response = await OrdenesService.SendAuthorizedRequestAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error al guardar cambios: {body}", Severity.Error);
+                return;
+            }
+
+            Snackbar.Add("Cambios guardados correctamente.", Severity.Success);
+            Nav.NavigateTo("/ordenes");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            Guardando = false;
+        }
+    }
+
+    private async Task SubirFoto(InputFileChangeEventArgs e)
+    {
+        if (Orden is null)
+            return;
+
+        var file = e.File;
+
+        if (file is null || file.Size == 0)
+        {
+            Snackbar.Add("No se seleccionó archivo.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var content = new MultipartFormDataContent();
+
+            var streamContent = new StreamContent(file.OpenReadStream(20_000_000)); // 20MB máx
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+
+            content.Add(streamContent, "archivo", file.Name);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/OrdenesDeServicio/{id}/fotos")
+            {
+                Content = content
+            };
+
+            var response = await OrdenesService.SendAuthorizedRequestAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error al subir la foto: {body}", Severity.Error);
+                return;
+            }
+
+            var data = await response.Content.ReadFromJsonAsync<FotoUploadResponse>();
+
+            if (data == null || string.IsNullOrWhiteSpace(data.Url))
+            {
+                Snackbar.Add("La API devolvió datos inválidos al subir la foto.", Severity.Error);
+                return;
+            }
+
+            Orden.Fotos.Add(new FotoDto
+            {
+                Id = data.FotoId,
+                Url = data.Url
+            });
+
+            Snackbar.Add("Foto subida correctamente.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al subir la foto: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task EliminarFoto(FotoDto foto)
+    {
+        bool? confirmar = await DialogService.ShowMessageBox(
+            "Eliminar foto",
+            "¿Seguro que querés eliminar esta foto?",
+            yesText: "Eliminar",
+            cancelText: "Cancelar"
+        );
+
+        if (confirmar != true)
+            return;
+
+        try
+        {
+            var request = new HttpRequestMessage(
+                HttpMethod.Delete,
+                $"api/OrdenesDeServicio/fotos/{foto.Id}");
+
+            var response = await OrdenesService.SendAuthorizedRequestAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error al eliminar foto: {body}", Severity.Error);
+                return;
+            }
+
+            Orden.Fotos.Remove(foto);
+            Snackbar.Add("Foto eliminada.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al eliminar foto: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void VerFoto(string url)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Url"] = url
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        DialogService.Show<DialogoFoto>("Foto del equipo", parameters, options);
+    }
+}

@@ -1,65 +1,205 @@
 ﻿@page "/clientes"
 
-@* --- 1. Imports y Seguridad --- *@
-@using LoftComputacion.Domain
-@using LoftComputacion.BlazorApp.Services
+@using MudBlazor
+@using LoftComputacion.BlazorApp.Services.Clientes
+@using LoftComputacion.Application.DTOs
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize(Roles = "Administrador")]
-@inject ClientesApiService ApiService
 
-<PageTitle>Clientes Registrados</PageTitle>
 
-<div class="container-fluid py-3">
-    <h4 class="text-primary mb-4">Clientes Registrados</h4>
+@inject ClientesApiService ClientesService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
-    @if (clientes == null)
-    {
-        <div class="alert alert-info">
-            <em>Cargando clientes...</em>
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover align-middle">
-                <thead class="table-success">
-                    <tr>
-                        <th scope="col">N° Cliente</th>
-                        <th scope="col">Nombre Completo</th>
-                        <th scope="col">DNI</th>
-                        <th scope="col">Teléfono</th>
-                        <th scope="col">Email</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var cliente in clientes)
-                    {
-                        <tr>
-                            <td>@cliente.Id</td>
-                            <td>@cliente.NombreCompleto</td>
-                            <td>@cliente.DNI</td>
-                            <td>@cliente.Telefono</td>
-                            <td>@cliente.Email</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</div>
+@attribute [Authorize]
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
+
+    <!-- TÍTULO + BOTÓN NUEVO -->
+    <MudStack Direction="Row"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Class="mb-4">
+        <MudText Typo="Typo.h4" Class="fw-bold">
+            Clientes
+        </MudText>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PersonAdd"
+                   OnClick="AbrirDialogNuevoCliente">
+            Nuevo Cliente
+        </MudButton>
+    </MudStack>
+
+    <!-- BUSCADOR -->
+    <MudTextField @bind-Value="Filtro"
+                  Placeholder="Buscar cliente por nombre, teléfono, email..."
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Class="mb-4"
+                  Immediate="true"
+                  OnKeyUp="Buscar" />
+
+    <!-- TABLA -->
+    <MudTable T="ClienteDto"
+              Items="@ListaClientes"
+              Hover="true"
+              Dense="true"
+              Sortable="true">
+
+        <HeaderContent>
+            <MudTh SortLabel="NombreCompleto">Nombre</MudTh>
+            <MudTh SortLabel="Telefono">Teléfono</MudTh>
+            <MudTh SortLabel="Email">Email</MudTh>
+            <MudTh SortLabel="DNI">DNI</MudTh>
+            <MudTh>Acciones</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd>@context.NombreCompleto</MudTd>
+            <MudTd>@context.Telefono</MudTd>
+            <MudTd>@context.Email</MudTd>
+            <MudTd>@context.DNI</MudTd>
+            <MudTd>
+                <MudStack Row="true" Spacing="1">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               OnClick="@(() => AbrirDialogEditarCliente(context))">
+                        Editar
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               Size="Size.Small"
+                               OnClick="@(() => EliminarClienteAsync(context))">
+                        Eliminar
+                    </MudButton>
+                </MudStack>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsContent>
+            <MudText Color="Color.Secondary">No se encontraron clientes.</MudText>
+        </NoRecordsContent>
+
+    </MudTable>
+
+</MudContainer>
 
 @code {
-    private List<Cliente>? clientes;
+    private List<ClienteDto> ListaClientes = new();
+    private string Filtro = string.Empty;
+
+    // para edición
+    private ClienteEditarDto ClienteEditando = new();
+    private int _clienteIdEditando;
 
     protected override async Task OnInitializedAsync()
     {
+        await CargarClientes();
+    }
+
+    private async Task CargarClientes()
+    {
         try
         {
-            clientes = await ApiService.GetClientesAsync();
+            ListaClientes = await ClientesService.GetClientesAsync();
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Error al cargar clientes: {ex.Message}");
+            Snackbar.Add("No se pudieron cargar los clientes.", Severity.Error);
         }
+    }
+
+
+
+    private async Task Buscar()
+    {
+        await CargarClientes();
+    }
+
+    /* ------------------- NUEVO CLIENTE ------------------- */
+
+    private async Task AbrirDialogNuevoCliente()
+    {
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = DialogService.Show<DialogNuevoCliente>("Nuevo cliente", options);
+        var result = await dialog.Result;
+
+        // OJO: la propiedad se llama Canceled (una sola L)
+        if (result.Canceled)
+            return;
+
+        var dto = (ClienteCrearDto)result.Data!;
+        await ClientesService.CrearClienteAsync(dto);
+
+        Snackbar.Add("Cliente creado correctamente.", Severity.Success);
+        await CargarClientes();
+    }
+
+    /* ------------------- EDITAR CLIENTE ------------------- */
+
+    private async Task AbrirDialogEditarCliente(ClienteDto cliente)
+    {
+        _clienteIdEditando = cliente.Id;
+
+        var model = new ClienteEditarDto
+        {
+            Id = cliente.Id,
+            NombreCompleto = cliente.NombreCompleto,
+            Telefono = cliente.Telefono,
+            Email = cliente.Email,
+            DNI = cliente.DNI
+        };
+
+        var parameters = new DialogParameters
+    {
+        { "Cliente", model }
+    };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = DialogService.Show<DialogEditarCliente>("Editar cliente", parameters, options);
+        var result = await dialog.Result;
+
+        if (result.Canceled)
+            return;
+
+        var dto = (ClienteEditarDto)result.Data!;
+        await ClientesService.EditarClienteAsync(_clienteIdEditando, dto);
+
+        Snackbar.Add("Cliente actualizado correctamente.", Severity.Success);
+        await CargarClientes();
+    }
+
+
+    /* ------------------- ELIMINAR CLIENTE ------------------- */
+
+    private async Task EliminarClienteAsync(ClienteDto cliente)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Eliminar cliente",
+            $"¿Seguro que deseas eliminar a {cliente.NombreCompleto}?",
+            yesText: "Eliminar",
+            cancelText: "Cancelar");
+
+        if (confirm != true)
+            return;
+
+        await ClientesService.EliminarClienteAsync(cliente.Id);
+        Snackbar.Add("Cliente eliminado.", Severity.Success);
+        await CargarClientes();
     }
 }

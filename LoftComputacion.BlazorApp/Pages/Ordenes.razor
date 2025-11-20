@@ -1,81 +1,250 @@
 ﻿@page "/ordenes"
-
-@* --- 1. Imports y Seguridad --- *@
-@using LoftComputacion.BlazorApp.DTOs
-@using LoftComputacion.BlazorApp.Services
+@using MudBlazor
+@using LoftComputacion.BlazorApp.Services.Ordenes
+@using LoftComputacion.Application.DTOs
 @using Microsoft.AspNetCore.Authorization
-@using System.Globalization
-@attribute [Authorize(Roles = "Administrador")]
 
-@* 2. Inyección del servicio *@
-@inject OrdenesApiService ApiService
+@inject NavigationManager Nav
+@inject OrdenesApiService OrdenesService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
-<PageTitle>Órdenes de Servicio</PageTitle>
+@attribute [Authorize]
 
-<div class="container-fluid py-3">
-    <h4 class="text-primary mb-4">Órdenes de Servicio</h4>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
 
-    @if (ordenes == null)
-    {
-        <div class="alert alert-info">
-            <em>Cargando órdenes...</em>
-        </div>
-    }
-    else if (!ordenes.Any())
-    {
-        <div class="alert alert-warning">
-            No se encontraron órdenes de servicio registradas.
-        </div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover align-middle">
-                <thead class="table-primary">
-                    <tr>
-                        <th>ID</th>
-                        <th>Fecha Ingreso</th>
-                        <th>Cliente</th>
-                        <th>Equipo</th>
-                        <th>Falla Declarada</th>
-                        <th>Estado</th>
-                        <th class="text-end">Precio Final</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var orden in ordenes)
-                    {
-                        <tr>
-                            <td>@orden.Id</td>
-                            <td>@orden.FechaIngreso.ToShortDateString()</td>
-                            <td>@orden.NombreCliente</td>
-                            <td>@orden.ModeloEquipo</td>
-                            <td>@orden.FallaDeclaradaPorCliente</td>
-                            <td>@orden.NombreEstado</td>
-                            <td class="text-end">
-                                @((orden.PrecioFinal ?? 0).ToString("C", new CultureInfo("es-AR")))
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</div>
+    <MudStack Direction="Row"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center"
+              Class="mb-4">
+
+        <MudText Typo="Typo.h4">Órdenes</MudText>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@(() => Navigation.NavigateTo("/ordenes/nueva"))">
+            Nueva Orden
+        </MudButton>
+
+    </MudStack>
+
+    <MudGrid>
+
+        <!-- LISTADO -->
+        <MudItem xs="12" md="8">
+
+            <MudTextField @bind-Value="Filtro"
+                          Placeholder="Buscar..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Class="mb-4"
+                          Immediate="true"
+                          OnKeyUp="Buscar" />
+
+            <MudTable T="OrdenSimpleDto"
+                      Items="@ListaOrdenes"
+                      Hover="true"
+                      Dense="true"
+                      Clickable="true"
+                      SelectedItem="_ordenSeleccionada"
+                      SelectedItemChanged="OnSelectedItemChanged"
+                      RowStyleFunc="EstiloFila">
+
+                <HeaderContent>
+                    <MudTh>Fecha</MudTh>
+                    <MudTh>Cliente</MudTh>
+                    <MudTh>Estado</MudTh>
+                    <MudTh>Total</MudTh>
+                    <MudTh>Acción</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>@context.Fecha.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.ClienteNombre</MudTd>
+
+                    <MudTd>
+                        <MudChip T="string"
+                                 Color="@GetChipColor(context.Estado)"
+                                 Variant="Variant.Filled"
+                                 Size="Size.Small">
+                            @context.Estado
+                        </MudChip>
+                    </MudTd>
+
+                    <MudTd>
+                        @(context.Total.HasValue? context.Total.Value.ToString("C") : "-")
+                    </MudTd>
+
+                    <MudTd>
+                        <div @onclick:stopPropagation="true">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       OnClick="@(() => EditarOrden(context.Id))">
+                                Editar
+                            </MudButton>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+
+                <NoRecordsContent>
+                    <MudText>No se encontraron órdenes.</MudText>
+                </NoRecordsContent>
+
+            </MudTable>
+        </MudItem>
+
+        <!-- PANEL DETALLE -->
+        <MudItem xs="12" md="4">
+
+            <MudPaper Class="pa-4" Elevation="1">
+
+                @if (OrdenSeleccionadaDetalle is null)
+                {
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-2">Detalle</MudText>
+                    <MudDivider Class="mb-3" />
+                    <MudText Class="text-secondary">Selecciona una orden para ver el detalle.</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-2">Detalle</MudText>
+                    <MudDivider Class="mb-3" />
+
+                    <MudText Typo="Typo.body2" Class="text-secondary">Cliente</MudText>
+                    <MudText Class="mb-2">@OrdenSeleccionadaDetalle.ClienteNombre</MudText>
+
+                    <MudText Typo="Typo.body2" Class="text-secondary">Equipo</MudText>
+                    <MudText Class="mb-2">@OrdenSeleccionadaDetalle.EquipoDescripcion</MudText>
+
+                    <MudText Typo="Typo.body2" Class="text-secondary">Falla declarada</MudText>
+                    <MudText Class="mb-3">@OrdenSeleccionadaDetalle.FallaDeclarada</MudText>
+
+                    <MudText Typo="Typo.body2" Class="text-secondary">Resumen técnico</MudText>
+                    <MudText Class="mb-3">
+                        @(string.IsNullOrWhiteSpace(OrdenSeleccionadaDetalle.ResumenTecnico)
+                                            ? "Sin resumen por el momento."
+                                            : OrdenSeleccionadaDetalle.ResumenTecnico)
+                </MudText>
+
+                    <MudDivider Class="my-3" />
+
+                    <MudExpansionPanels>
+                        <MudExpansionPanel Text="Historial" Expanded="true">
+
+                        @if (OrdenSeleccionadaDetalle.Historial?.Any() == true)
+                            {
+                                <MudList T="HistorialLineaDto" Dense="false">
+                                    @foreach (var h in OrdenSeleccionadaDetalle.Historial)
+                                    {
+                                        <MudListItem>
+                                            <MudPaper Class="pa-2 mb-2" Elevation="0">
+                                                <MudText Typo="Typo.subtitle2" Class="fw-bold">
+                                                    @h.FechaHora.ToString("dd/MM/yyyy HH:mm")
+                                                </MudText>
+                                                <MudText Typo="Typo.body2">@h.Descripcion (@h.Usuario)</MudText>
+                                            </MudPaper>
+                                        </MudListItem>
+                                    }
+                                </MudList>
+                            }
+                            else
+                            {
+                                <MudText>No hay historial.</MudText>
+                            }
+
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+                }
+
+            </MudPaper>
+
+        </MudItem>
+
+    </MudGrid>
+
+</MudContainer>
 
 @code {
-    private IEnumerable<OrdenListaDto>? ordenes;
+
+    private List<OrdenSimpleDto> ListaOrdenes = new();
+    private string Filtro = "";
+
+    private OrdenDetalleDto? OrdenSeleccionadaDetalle;
+    private bool _isLoadingDetalle;
+    private OrdenSimpleDto? _ordenSeleccionada;
+
 
     protected override async Task OnInitializedAsync()
     {
+        await CargarOrdenes();
+    }
+
+    private async Task CargarOrdenes()
+    {
+        ListaOrdenes = await OrdenesService.GetUltimasOrdenesAsync(Filtro);
+    }
+
+    private async Task Buscar()
+    {
+        await CargarOrdenes();
+    }
+
+    private async Task OnRowClick(OrdenSimpleDto item)
+    {
+        await CargarDetalleOrdenAsync(item.Id);
+    }
+
+    private async Task CargarDetalleOrdenAsync(int id)
+    {
         try
         {
-            ordenes = await ApiService.GetOrdenesAsync();
+            _isLoadingDetalle = true;
+            OrdenSeleccionadaDetalle = await OrdenesService.GetDetalleAsync(id);
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Error al cargar órdenes: {ex.Message}");
-            ordenes = Enumerable.Empty<OrdenListaDto>();
+            Snackbar.Add("Error cargando detalle");
+        }
+        finally
+        {
+            _isLoadingDetalle = false;
         }
     }
+
+    void EditarOrden(int id)
+    {
+        Nav.NavigateTo($"/ordenes/editar/{id}");
+    }
+
+    private string EstiloFila(OrdenSimpleDto orden, int index)
+    {
+        return "cursor: pointer;";
+    }
+
+    private Color GetChipColor(string estado)
+    {
+        return estado switch
+        {
+            "Recibido" => Color.Info,
+            "En Proceso" => Color.Warning,
+            "Finalizado, a espera de pago" => Color.Success,
+            "Cancelado" => Color.Error,
+            "Esperando Aprobación" => Color.Secondary,
+            "Entregado" => Color.Tertiary,
+            _ => Color.Primary
+        };
+    }
+
+    private async Task OnSelectedItemChanged(OrdenSimpleDto? item)
+    {
+        _ordenSeleccionada = item;
+
+        if (item is null)
+            return;
+
+        await CargarDetalleOrdenAsync(item.Id);
+    }
+
 }

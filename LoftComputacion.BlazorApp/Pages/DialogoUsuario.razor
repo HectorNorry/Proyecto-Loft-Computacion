@@ -1,0 +1,131 @@
+﻿@using MudBlazor
+@using LoftComputacion.Application.DTOs
+
+@inject UsuariosApiService UsuariosService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+
+    <MudDialogTitle>
+        @(EsNuevo ? "Nuevo usuario" : "Editar usuario")
+    </MudDialogTitle>
+
+    <MudDialogContent>
+
+        <MudTextField Label="Nombre completo"
+                      @bind-Value="_nombre"
+                      Required="true" />
+
+        <MudTextField Label="Email"
+                      @bind-Value="_email"
+                      Required="true" />
+
+        <MudSelect Label="Rol"
+                   @bind-Value="_rol"
+                   Required="true">
+
+            <MudSelectItem Value="@RolAdministrador">@RolAdministrador</MudSelectItem>
+            <MudSelectItem Value="@RolTecnico">@RolTecnico</MudSelectItem>
+        </MudSelect>
+
+        @if (EsNuevo)
+        {
+            <MudTextField Label="Contraseña"
+                          @bind-Value="_password"
+                          InputType="InputType.Password"
+                          Required="true" />
+        }
+        else
+        {
+            <MudTextField Label="Nueva contraseña"
+                          @bind-Value="_newPassword"
+                          InputType="InputType.Password"
+                          HelperText="Dejar vacío si no se desea cambiar." />
+        }
+
+        <MudSwitch @bind-Value="_activo"
+                   Color="Color.Primary"
+                   Class="mt-3">
+            Activo
+        </MudSwitch>
+
+    </MudDialogContent>
+
+    <MudDialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cerrar">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="Guardar">
+            Guardar
+        </MudButton>
+    </MudDialogActions>
+
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    public IDialogReference DialogReference { get; set; } = default!;
+
+    [Parameter] public UsuarioDto? Usuario { get; set; }
+
+    private bool EsNuevo => Usuario == null;
+
+    private const string RolAdministrador = "Administrador";
+    private const string RolTecnico       = "Tecnico";
+
+    private string _nombre      = string.Empty;
+    private string _email       = string.Empty;
+    private string _rol         = RolTecnico;
+    private string _password    = string.Empty;
+    private string _newPassword = string.Empty;
+    private bool   _activo      = true;
+
+    protected override void OnInitialized()
+    {
+        if (Usuario != null)
+        {
+            _nombre = Usuario.NombreCompleto;
+            _email  = Usuario.Email;
+            _rol    = Usuario.Rol;
+            _activo = Usuario.EstaActivo;
+        }
+    }
+
+    void Cerrar() => DialogReference.Close();
+
+    private async Task Guardar()
+    {
+        HttpResponseMessage resp;
+
+        if (EsNuevo)
+        {
+            resp = await UsuariosService.Crear(new CreateUsuarioDto
+            {
+                NombreCompleto = _nombre,
+                Email          = _email,
+                Password       = _password,
+                Rol            = _rol
+            });
+        }
+        else
+        {
+            resp = await UsuariosService.Editar(Usuario!.Id, new UpdateUsuarioDto
+            {
+                NombreCompleto = _nombre,
+                Email          = _email,
+                Rol            = _rol,
+                EstaActivo     = _activo,
+                NewPassword    = string.IsNullOrWhiteSpace(_newPassword) ? null : _newPassword
+            });
+        }
+
+        if (!resp.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Error al guardar usuario.", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Usuario guardado correctamente.", Severity.Success);
+        DialogReference.Close(DialogResult.Ok(true));
+    }
+}

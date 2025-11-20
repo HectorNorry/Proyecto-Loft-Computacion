@@ -1,14 +1,9 @@
-﻿@inject NavigationManager Navigation
+﻿@inject NavigationManager Nav
 
 @code {
     protected override void OnInitialized()
     {
-        // Si ya estamos en /login, no hagas nada para evitar el bucle infinito
-        var current = Navigation.Uri.ToLowerInvariant();
-        if (!current.Contains("/login"))
-        {
-            var returnUrl = Uri.EscapeDataString(current);
-            Navigation.NavigateTo($"/login?returnUrl={returnUrl}", forceLoad: true);
-        }
+        // true = recarga forzada
+        Nav.NavigateTo("/login", true);
     }
 }

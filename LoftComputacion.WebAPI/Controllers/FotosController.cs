@@ -104,25 +104,27 @@ namespace LoftComputacion.WebAPI.Controllers
             return Ok(fotos);
         }
 
-        [HttpDelete("fotos/{fotoId}")]
-        public async Task<IActionResult> DeleteFoto(int fotoId)
+        [HttpDelete("fotos")]
+        public async Task<IActionResult> DeleteFoto([FromQuery] string url)
         {
-            var foto = await _context.Fotos.FindAsync(fotoId);
-            if (foto == null) return NotFound();
+            if (string.IsNullOrEmpty(url))
+                return BadRequest("URL inválida.");
+
+            // Buscar la foto por URL exacta
+            var foto = await _context.Fotos.FirstOrDefaultAsync(f => f.RutaArchivo == url);
+            if (foto == null)
+                return NotFound("No existe la foto.");
 
             try
             {
-                // 1. Extraer el nombre del archivo de la URL
                 var fileName = new Uri(foto.RutaArchivo).Segments.Last();
 
-                // 2. Borrar de Azure Blob Storage
                 await _blobService.DeleteFileAsync(fileName, "fotos");
 
-                // 3. Borrar de la base de datos SQL
                 _context.Fotos.Remove(foto);
                 await _context.SaveChangesAsync();
 
-                return NoContent(); // Éxito (Sin Contenido)
+                return NoContent();
             }
             catch (Exception ex)
             {

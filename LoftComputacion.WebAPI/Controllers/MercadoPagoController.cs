@@ -81,7 +81,6 @@ namespace LoftComputacion.WebAPI.Controllers
                         }
 
                         string nota = $"Pago confirmado vía Mercado Pago (ID: {pago.Id}). Monto: {pago.TransactionAmount:C}";
-                        await _ordenDeServicioService.ActualizarEstadoOrdenAsync(ordenId, 7, nota); // ID 7 = Pagado
                     }
                 }
 

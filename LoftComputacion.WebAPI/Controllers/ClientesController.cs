@@ -19,15 +19,31 @@ namespace LoftComputacion.WebAPI.Controllers
             _context = context;
         }
 
-        // GET: api/clientes
         [HttpGet]
-        public async Task<IActionResult> GetClientes()
+        public async Task<IActionResult> GetClientes([FromQuery] string? filtro = null)
         {
-            var clientes = await _context.Clientes.ToListAsync();
+            var query = _context.Clientes.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(filtro))
+            {
+                filtro = filtro.ToLower();
+
+                query = query.Where(c =>
+                    c.NombreCompleto.ToLower().Contains(filtro) ||
+                    c.Telefono.ToLower().Contains(filtro) ||
+                    (c.Email != null && c.Email.ToLower().Contains(filtro)) ||
+                    (c.DNI != null && c.DNI.ToLower().Contains(filtro))
+                );
+            }
+
+            var clientes = await query
+                .OrderBy(c => c.NombreCompleto)   // Orden default
+                .ToListAsync();
+
             return Ok(clientes);
         }
 
-        
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCliente(int id)
         {
@@ -43,18 +59,24 @@ namespace LoftComputacion.WebAPI.Controllers
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
+        public async Task<IActionResult> UpdateCliente(int id, [FromBody] ClienteEditarDto dto)
         {
-            if (id != cliente.Id)
-            {
-                return BadRequest();
-            }
+            var cliente = await _context.Clientes.FindAsync(id);
 
-            _context.Entry(cliente).State = EntityState.Modified;
+            if (cliente == null)
+                return NotFound();
+
+            // actualizar SOLO los campos editables
+            cliente.NombreCompleto = dto.NombreCompleto;
+            cliente.Telefono = dto.Telefono;
+            cliente.Email = dto.Email;
+            cliente.DNI = dto.DNI;
+
             await _context.SaveChangesAsync();
 
-            return NoContent(); // Devuelve 204 sin contenido, indicando éxito
+            return NoContent();
         }
+
 
 
         // POST: api/clientes

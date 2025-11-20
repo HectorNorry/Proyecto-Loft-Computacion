@@ -1,0 +1,179 @@
+﻿@page "/ordenes/nueva"
+
+@using MudBlazor
+@using LoftComputacion.Application.DTOs
+@using LoftComputacion.BlazorApp.Services.Ordenes
+@using LoftComputacion.BlazorApp.Services.Clientes
+@using LoftComputacion.Domain
+
+@inject OrdenesApiService OrdenesService
+@inject ClientesApiService ClientesService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-6">
+
+    <MudPaper Class="pa-6">
+
+        <MudText Typo="Typo.h4" Class="mb-4 fw-bold">Crear Orden</MudText>
+
+        <MudGrid>
+
+            <!-- CLIENTE -->
+            <MudItem xs="12">
+                <MudSelect T="int" Label="Cliente" @bind-Value="ClienteId" Required="true">
+                    @foreach (var c in Clientes)
+                    {
+                        <MudSelectItem T="int" Value="@c.Id">@c.NombreCompleto (@c.Telefono)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <!-- TIPO EQUIPO -->
+            <MudItem xs="12">
+                <MudSelect T="TipoDeEquipo" Label="Tipo de Equipo" @bind-Value="EquipoTipo" Required="true">
+
+                    <MudSelectItem T="TipoDeEquipo" Value="@TipoDeEquipo.Notebook">Notebook</MudSelectItem>
+                    <MudSelectItem T="TipoDeEquipo" Value="@TipoDeEquipo.PC_Escritorio">PC de Escritorio</MudSelectItem>
+                    <MudSelectItem T="TipoDeEquipo" Value="@TipoDeEquipo.Impresora">Impresora</MudSelectItem>
+
+                </MudSelect>
+            </MudItem>
+
+            <!-- MARCA -->
+            <MudItem xs="12">
+                <MudTextField Label="Marca"
+                              @bind-Value="EquipoMarca"
+                              Required="true"
+                              Class="mb-3" />
+            </MudItem>
+
+            <!-- MODELO -->
+            <MudItem xs="12">
+                <MudTextField Label="Modelo"
+                              @bind-Value="EquipoModelo"
+                              Required="true"
+                              Class="mb-3" />
+            </MudItem>
+
+            <!-- N° SERIE -->
+            <MudItem xs="12">
+                <MudTextField Label="Número de serie"
+                              @bind-Value="EquipoSerie"
+                              Class="mb-3" />
+            </MudItem>
+
+            <!-- FALLA -->
+            <MudItem xs="12">
+                <MudTextField Label="Falla declarada por el cliente"
+                              @bind-Value="Falla"
+                              Lines="4"
+                              Required="true"
+                              TextFieldStyle="TextFieldStyle.Filled"
+                              Class="mb-3" />
+            </MudItem>
+
+            <!-- PRECIO ESTIMADO -->
+            <MudItem xs="12" sm="6">
+                <MudNumericField T="decimal?"
+                                 Label="Precio presupuestado"
+                                 @bind-Value="PrecioEstimado"
+                                 Min="0"
+                                 Class="mb-3" />
+            </MudItem>
+
+            <!-- MÉTODO DE PAGO -->
+            <MudItem xs="12" sm="6">
+                <MudSelect T="int?" Label="Método de pago" @bind-Value="MetodoPagoId" Class="mb-3">
+                    <MudSelectItem T="int?" Value="@((int?)null)">Sin especificar</MudSelectItem>
+                    <MudSelectItem T="int?" Value="1">Efectivo</MudSelectItem>
+                    <MudSelectItem T="int?" Value="2">Transferencia</MudSelectItem>
+                    <MudSelectItem T="int?" Value="3">Débito</MudSelectItem>
+                    <MudSelectItem T="int?" Value="4">Crédito</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+
+            <!-- BOTÓN CREAR -->
+            <MudItem xs="12" Class="mt-4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Disabled="@Cargando"
+                           OnClick="CrearOrdenAsync">
+
+                    @if (Cargando)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                    }
+                    else
+                    {
+                        <span>Crear Orden</span>
+                    }
+
+                </MudButton>
+            </MudItem>
+
+        </MudGrid>
+
+    </MudPaper>
+
+</MudContainer>
+
+@code {
+    private List<ClienteDto> Clientes = new();
+    private int ClienteId { get; set; } = 0;
+
+    private TipoDeEquipo EquipoTipo { get; set; } = TipoDeEquipo.Notebook;
+    private string EquipoMarca { get; set; } = string.Empty;
+    private string EquipoModelo { get; set; } = string.Empty;
+    private string EquipoSerie { get; set; } = string.Empty;
+
+    private string Falla { get; set; } = string.Empty;
+    private decimal? PrecioEstimado { get; set; }
+    private int? MetodoPagoId { get; set; }
+
+    private bool Cargando { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Clientes = await ClientesService.GetClientesAsync();
+    }
+
+    private async Task CrearOrdenAsync()
+    {
+        if (ClienteId <= 0)
+        {
+            Snackbar.Add("Debes seleccionar un cliente.", Severity.Warning);
+            return;
+        }
+
+        Cargando = true;
+
+        try
+        {
+            var dto = new CreateOrdenDto
+            {
+                ClienteId = ClienteId,
+                TipoEquipo = EquipoTipo,
+                Marca = EquipoMarca,
+                Modelo = EquipoModelo,
+                NumeroSerie = EquipoSerie,
+                FallaDeclaradaPorCliente = Falla,
+                PrecioPresupuestado = PrecioEstimado,
+                MetodoDePagoId = MetodoPagoId
+            };
+
+            await OrdenesService.CrearOrdenAsync(dto);
+
+            Snackbar.Add("Orden creada correctamente.", Severity.Success);
+            Nav.NavigateTo("/ordenes");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al crear la orden: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            Cargando = false;
+        }
+    }
+}

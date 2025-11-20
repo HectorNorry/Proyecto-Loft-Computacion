@@ -1,29 +1,21 @@
-﻿@using LoftComputacion.BlazorApp.Services
-@using Microsoft.AspNetCore.Components.Authorization
-
-<CascadingAuthenticationState>
+﻿<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            <AuthorizeRouteView RouteData="@routeData"
+                                DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+            </AuthorizeRouteView>
         </Found>
+
         <NotFound>
-            <PageTitle>No encontrado</PageTitle>
-            <LayoutView Layout="@typeof(Layout.AnonymousLayout)">
-                <p role="alert">Lo sentimos, no hay nada en esta dirección.</p>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p>Página no encontrada.</p>
             </LayoutView>
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
 
 @code {
-    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (AuthStateProvider is CustomAuthStateProvider customProvider)
-        {
-            await customProvider.InitializeAsync();
-        }
-    }
 }

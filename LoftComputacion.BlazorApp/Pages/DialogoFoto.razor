@@ -1,0 +1,26 @@
+﻿@using MudBlazor
+
+<MudDialog>
+    <MudDialogContent>
+        <img src="@Url"
+             style="width:100%; max-height:85vh; object-fit:contain; border-radius:8px;" />
+    </MudDialogContent>
+
+    <MudDialogActions>
+        <MudButton Color="Color.Primary" OnClick="Cerrar">Cerrar</MudButton>
+    </MudDialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    public IDialogReference DialogReference { get; set; } = default!;
+
+    [Parameter]
+    public string Url { get; set; } = "";
+
+    void Cerrar()
+    {
+        DialogReference.Close();
+    }
+}

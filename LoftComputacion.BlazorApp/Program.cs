@@ -1,48 +1,53 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.AspNetCore.Components.Authorization;
-using Blazored.LocalStorage;
-using LoftComputacion.BlazorApp.Services;
-using Microsoft.AspNetCore.Components.Web;
+﻿using Blazored.LocalStorage;
 using LoftComputacion.BlazorApp;
-using System;
-using System.Net.Http;
+using LoftComputacion.BlazorApp.Services.Auth;
+using LoftComputacion.BlazorApp.Services.Clientes;
+using LoftComputacion.BlazorApp.Services.Ordenes;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
+using System.Globalization;
+
+// ============================================
+// 1) Creamos cultura ES-AR para usar el $
+// ============================================
+var culture = new CultureInfo("es-AR");
+culture.NumberFormat.CurrencySymbol = "$";  // fuerza símbolo de $
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-
-// --- Componentes raíz ---
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// --- Servicios base ---
-builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
-
-// --- Handler que agrega el token JWT automáticamente ---
-builder.Services.AddTransient<AuthorizedHandler>();
-
-// --- HttpClient que usa el AuthorizedHandler ---
+// ============================================
+// 2) HttpClient simple apuntando a la API
+// ============================================
 builder.Services.AddScoped(sp =>
-{
-    var localStorage = sp.GetRequiredService<ILocalStorageService>();
-    var handler = new AuthorizedHandler(localStorage);
+    new HttpClient { BaseAddress = new Uri("https://loftcomputacion-api-webapp-ceeyjhrb9fvbj.brazilsouth-01.azurewebsites.net/") });
 
-    // 🚨 CORRECCIÓN CLAVE: Se elimina el HttpClientHandler (que causaba el crash)
-    handler.InnerHandler = new HttpClientHandler();
+// ============================================
+// 3) Auth + LocalStorage
+// ============================================
+builder.Services.AddAuthorizationCore();
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<CustomAuthStateProvider>();
 
-    var httpClient = new HttpClient(handler)
-    {
-        // 🚨 CORRECCIÓN CLAVE: Usamos la URL base del entorno de hosting
-        // Como ahora la API sirve la app, la dirección es la misma.
-        BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
-    };
-    return httpClient;
-});
-
-// --- Servicios que consumen la API ---
+// ============================================
+// 4) Servicios propios
+// ============================================
+builder.Services.AddScoped<AuthApiService>();
 builder.Services.AddScoped<OrdenesApiService>();
 builder.Services.AddScoped<ClientesApiService>();
-builder.Services.AddScoped<UsuarioApiService>();
-builder.Services.AddScoped<GananciasApiService>();
+builder.Services.AddScoped<UsuariosApiService>();
+
+
+
+// ============================================
+// 5) MudBlazor
+// ============================================
+builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

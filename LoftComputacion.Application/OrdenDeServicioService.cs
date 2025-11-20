@@ -1,106 +1,60 @@
 ﻿using LoftComputacion.Application.DTOs;
 using LoftComputacion.Domain;
-using LoftComputacion.Infrastructure; // Asumo que aquí está tu DbContext
+using LoftComputacion.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.IO;                  // ← Necesario para Stream
+using Microsoft.AspNetCore.Http;
 
 namespace LoftComputacion.Application
 {
     public class OrdenDeServicioService
     {
-        private readonly ApplicationDbContext _context; // O tu Repositorio
+        private readonly ApplicationDbContext _context;
         private readonly AIService _aiService;
-
-        // --- CORRECCIÓN ---
-        // Cambiado de IEmailService a EmailService (basado en tu confirmación)
         private readonly EmailService _emailService;
+        private readonly BlobService _blobService;
 
-        // IDs de Estado (¡AJUSTA ESTOS VALORES!)
         private const int ID_ESTADO_FINALIZADO_ESPERA_PAGO = 4;
-        private const int ID_ESTADO_FINALIZADO_ENTREGADO = 5; // (Ejemplo, si tienes otro)
+        private const int ID_ESTADO_FINALIZADO_ENTREGADO = 5;
 
-
-        // --- ¡CORRECCIÓN EN EL CONSTRUCTOR! ---
         public OrdenDeServicioService(
             ApplicationDbContext context,
             AIService aiService,
-            EmailService emailService) // Cambiado a EmailService
+            BlobService blobService,
+            EmailService emailService)
         {
             _context = context;
             _aiService = aiService;
             _emailService = emailService;
+            _blobService = blobService;
         }
 
-        /// <summary>
-        /// Método interno para actualizar el estado de una orden y
-        /// generar un registro de historial (ej: para Webhooks).
-        /// </summary>
-        /// <param name="ordenId">ID de la orden a cambiar</param>
-        /// <param name="nuevoEstadoId">El ID del nuevo estado (ej: 7 para "Pagado")</param>
-        /// <param name="notaDeHistorial">El texto que se guardará en el historial</param>
-        public async Task ActualizarEstadoOrdenAsync(int ordenId, int nuevoEstadoId, string notaDeHistorial)
-        {
-            // 1. Buscamos la orden
-            var ordenExistente = await _context.OrdenesDeServicio.FindAsync(ordenId);
-
-            if (ordenExistente == null)
-            {
-                // Si la orden no existe, no podemos hacer nada.
-                // (En un sistema real, aquí se "loguearía" este error)
-                return;
-            }
-
-            // 2. Verificamos si el estado ya está aplicado
-            //    (Esto evita duplicados si MP manda el webhook varias veces)
-            if (ordenExistente.EstadoId == nuevoEstadoId)
-            {
-                return; // Ya está en este estado, no hacemos nada.
-            }
-
-            // 3. Actualizamos el estado de la orden
-            ordenExistente.EstadoId = nuevoEstadoId;
-
-            // 4. Creamos la nueva entrada de historial
-            var historialEntry = new HistorialOrden
-            {
-                OrdenDeServicioId = ordenId,
-                DescripcionDelCambio = notaDeHistorial,
-                FechaHora = DateTime.UtcNow,
-
-                // ¡IMPORTANTE! El webhook se ejecuta sin un usuario logueado.
-                // Debemos asignar un ID de usuario "Sistema" o "Admin".
-                // Usaremos '1' asumiendo que es el ID de tu usuario Admin principal.
-                // TODO: En el futuro, idealmente crear un usuario "Sistema" con ID fijo.
-                UsuarioId = 1
-            };
-
-            // 5. Agregamos el historial al contexto
-            await _context.HistorialOrdenes.AddAsync(historialEntry);
-
-            // 6. Guardamos ambos cambios (la orden y el historial) en la DB
-            await _context.SaveChangesAsync();
-        }
-
+        // ================== CRUD BÁSICO ==================
 
         public async Task<IEnumerable<OrdenListaDto>> GetAllOrdenesAsync(string? filtro)
         {
             var query = _context.OrdenesDeServicio
-                                .Include(o => o.Cliente)
-                                .Include(o => o.Equipo)
-                                .Include(o => o.Estado)
-                                .AsQueryable();
+                .Include(o => o.Cliente)
+                .Include(o => o.Equipo)
+                .Include(o => o.Estado)
+                .AsQueryable();
 
-            if (!string.IsNullOrEmpty(filtro))
+            if (!string.IsNullOrWhiteSpace(filtro))
             {
-                // Aplicamos el filtro seguro que ya tenías
                 query = query.Where(o =>
-                    (o.Id.ToString() == filtro) ||
-                    (o.Cliente != null && o.Cliente.NombreCompleto != null && o.Cliente.NombreCompleto.Contains(filtro)) ||
-                    (o.Equipo != null && o.Equipo.Modelo != null && o.Equipo.Modelo.Contains(filtro))
-                );
+                    o.Id.ToString() == filtro ||
+                    (o.Cliente != null &&
+                     o.Cliente.NombreCompleto != null &&
+                     o.Cliente.NombreCompleto.Contains(filtro)) ||
+                    (o.Equipo != null &&
+                     o.Equipo.Modelo != null &&
+                     o.Equipo.Modelo.Contains(filtro)));
             }
 
-            // Proyectamos (aplanamos) al DTO simple
             var resultado = await query
                 .OrderByDescending(o => o.FechaIngreso)
                 .Select(o => new OrdenListaDto
@@ -108,9 +62,9 @@ namespace LoftComputacion.Application
                     Id = o.Id,
                     FechaIngreso = o.FechaIngreso,
                     FallaDeclaradaPorCliente = o.FallaDeclaradaPorCliente,
-                    NombreCliente = (o.Cliente != null) ? o.Cliente.NombreCompleto : "N/A",
-                    NombreEstado = (o.Estado != null) ? o.Estado.Nombre : "N/A", // Asegúrate que tu entidad Estado tenga 'Nombre'
-                    ModeloEquipo = (o.Equipo != null) ? o.Equipo.Modelo : "N/A", // Asegúrate que tu entidad Equipo tenga 'Modelo'
+                    NombreCliente = o.Cliente != null ? o.Cliente.NombreCompleto : "N/A",
+                    NombreEstado = o.Estado != null ? o.Estado.Nombre : "N/A",
+                    ModeloEquipo = o.Equipo != null ? o.Equipo.Modelo : "N/A",
                     PrecioFinal = o.PrecioFinal
                 })
                 .ToListAsync();
@@ -118,32 +72,25 @@ namespace LoftComputacion.Application
             return resultado;
         }
 
-        // --- AGREGAR ESTE MÉTODO NUEVO ---
-        public async Task<IEnumerable<HistorialOrden>> GetHistorialByOrdenIdAsync(int ordenId)
-        {
-            return await _context.HistorialOrdenes
-                .Where(h => h.OrdenDeServicioId == ordenId)
-                .Include(h => h.Usuario) // ¡Importante para mostrar el nombre del usuario!
-                .OrderByDescending(h => h.FechaHora)
-                .ToListAsync();
-        }
         public async Task<OrdenDeServicio?> GetOrdenByIdAsync(int id)
         {
-            // ... (Tu código de GetById)
             return await _context.OrdenesDeServicio
-                               .Include(o => o.Cliente)
-                               .Include(o => o.Equipo)
-                               .Include(o => o.Estado)
-                               .FirstOrDefaultAsync(o => o.Id == id);
+                .Include(o => o.Cliente)
+                .Include(o => o.Equipo)
+                .Include(o => o.Estado)
+                .Include(o => o.Fotos)
+                .Include(o => o.Historial).ThenInclude(h => h.Usuario)
+                .FirstOrDefaultAsync(o => o.Id == id);
         }
 
+        /// <summary>
+        /// Método "viejo" que crea una orden recibiendo directamente la entidad.
+        /// Lo dejo por compatibilidad con lo que ya tenías.
+        /// </summary>
         public async Task<OrdenDeServicio> CreateOrdenAsync(OrdenDeServicio orden)
         {
-            // Estado inicial "Recibido"
-            orden.EstadoId = 1;
-
-            // ✅ ASIGNAR FECHA DE INGRESO
-            orden.FechaIngreso = DateTime.UtcNow;  // 🔥 ESTA ES LA LÍNEA QUE FALTABA
+            orden.EstadoId = 1; // Recibido
+            orden.FechaIngreso = DateTime.UtcNow;
 
             _context.OrdenesDeServicio.Add(orden);
             await _context.SaveChangesAsync();
@@ -151,11 +98,51 @@ namespace LoftComputacion.Application
             return orden;
         }
 
+        /// <summary>
+        /// NUEVO: crear orden desde CreateOrdenDto (lo que usa Blazor).
+        /// </summary>
+        public async Task<int> CrearOrdenAsync(CreateOrdenDto dto)
+        {
+            var cliente = await _context.Clientes.FindAsync(dto.ClienteId);
+            if (cliente == null)
+                throw new Exception("El cliente no existe.");
 
-        // --- ¡AQUÍ ESTÁ TODA LA LÓGICA NUEVA! ---
+            // === CREAR EQUIPO ===
+            var equipo = new Equipo
+            {
+                Tipo = dto.TipoEquipo,
+                Marca = dto.Marca,
+                Modelo = dto.Modelo,
+                NumeroDeSerie = dto.NumeroSerie,
+                // Si querés guardar una descripción extra, la ponemos en Componentes:
+                Componentes = dto.DescripcionCompleta
+            };
+
+            // === CREAR ORDEN ===
+            var orden = new OrdenDeServicio
+            {
+                ClienteId = dto.ClienteId,
+                Cliente = cliente,
+                Equipo = equipo,
+                EquipoId = equipo.Id, // EF lo completa, pero lo dejamos por claridad
+
+                FechaIngreso = DateTime.UtcNow,
+                EstadoId = 1, // RECIBIDO
+
+                FallaDeclaradaPorCliente = dto.FallaDeclaradaPorCliente,
+                PrecioPresupuestado = dto.PrecioPresupuestado,
+                MetodoDePagoId = dto.MetodoDePagoId
+            };
+
+            _context.Equipos.Add(equipo);
+            _context.OrdenesDeServicio.Add(orden);
+            await _context.SaveChangesAsync();
+
+            return orden.Id;
+        }
+
         public async Task<bool> UpdateOrdenAsync(int id, OrdenDeServicio ordenConNuevosDatos, int usuarioId)
         {
-            // 1. Cargamos la orden existente con Cliente (para email)
             var ordenExistente = await _context.OrdenesDeServicio
                 .Include(o => o.Cliente)
                 .FirstOrDefaultAsync(o => o.Id == id);
@@ -163,11 +150,9 @@ namespace LoftComputacion.Application
             if (ordenExistente == null)
                 return false;
 
-            // 2. Guardamos los IDs del estado anterior y nuevo
             int estadoAnteriorId = ordenExistente.EstadoId;
             int estadoNuevoId = ordenConNuevosDatos.EstadoId;
 
-            // 3. CARGAMOS LOS NOMBRES DE LOS ESTADOS
             var estadoAnterior = await _context.Estados
                 .FirstOrDefaultAsync(e => e.Id == estadoAnteriorId);
 
@@ -177,33 +162,28 @@ namespace LoftComputacion.Application
             string nombreEstadoAnterior = estadoAnterior?.Nombre ?? "(desconocido)";
             string nombreEstadoNuevo = estadoNuevo?.Nombre ?? "(desconocido)";
 
-            // 4. Actualizamos datos
             ordenExistente.EstadoId = estadoNuevoId;
             ordenExistente.PrecioPresupuestado = ordenConNuevosDatos.PrecioPresupuestado;
             ordenExistente.PrecioFinal = ordenConNuevosDatos.PrecioFinal;
             ordenExistente.ResumenTecnico = ordenConNuevosDatos.ResumenTecnico;
 
-            // 5. Guardamos la orden
             await _context.SaveChangesAsync();
 
-            // 6. AGREGAMOS HISTORIAL (CORRECCIÓN FINAL)
             var historial = new HistorialOrden
             {
                 OrdenDeServicioId = ordenExistente.Id,
                 UsuarioId = usuarioId,
                 FechaHora = DateTime.UtcNow,
-                DescripcionDelCambio =
-                    $"Estado cambiado de {nombreEstadoAnterior} a {nombreEstadoNuevo}"
+                DescripcionDelCambio = $"Estado cambiado de {nombreEstadoAnterior} a {nombreEstadoNuevo}"
             };
 
             await _context.HistorialOrdenes.AddAsync(historial);
             await _context.SaveChangesAsync();
 
-            // 7. Lógica de IA y email (NO SE TOCA)
             if (estadoNuevoId == ID_ESTADO_FINALIZADO_ESPERA_PAGO &&
                 estadoAnteriorId != ID_ESTADO_FINALIZADO_ESPERA_PAGO)
             {
-                string resumenParaEmail = "";
+                string resumenParaEmail;
 
                 if (!string.IsNullOrWhiteSpace(ordenExistente.ResumenTecnico))
                     resumenParaEmail = await _aiService.GenerarResumenDesdeTecnicoAsync(
@@ -226,28 +206,205 @@ namespace LoftComputacion.Application
                         ordenExistente.Cliente.Email,
                         ordenExistente.Cliente.NombreCompleto,
                         resumenParaEmail,
-                        ordenExistente.Id
-                    );
+                        ordenExistente.Id);
                 }
             }
 
             return true;
         }
 
-
-
         public async Task<bool> DeleteOrdenAsync(int id)
         {
-            // ... (Tu código de Delete)
             var orden = await _context.OrdenesDeServicio.FindAsync(id);
             if (orden == null)
-            {
                 return false;
-            }
 
             _context.OrdenesDeServicio.Remove(orden);
             await _context.SaveChangesAsync();
             return true;
         }
+
+        // ================== DASHBOARD ==================
+
+        public async Task<DashboardDto> GetDashboardDataAsync()
+        {
+            var hoy = DateTime.Today;
+            var inicioMes = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+            var ordenesHoy = await _context.OrdenesDeServicio
+                .CountAsync(o => o.FechaIngreso.Date == hoy);
+
+            var enTaller = await _context.OrdenesDeServicio
+                .CountAsync(o => o.Estado.Nombre != "Cancelado" &&
+                                 o.Estado.Nombre != "Entregado");
+
+            var finalizadas = await _context.OrdenesDeServicio
+                .CountAsync(o => o.Estado.Nombre == "Finalizado, a espera de pago");
+
+            var ingresos = await _context.OrdenesDeServicio
+                .Where(o => o.PrecioFinal.HasValue && o.FechaIngreso >= inicioMes)
+                .SumAsync(o => o.PrecioFinal ?? 0);
+
+            var estados = await _context.OrdenesDeServicio
+                .GroupBy(o => o.Estado.Nombre)
+                .Select(g => new { Estado = g.Key, Cant = g.Count() })
+                .ToDictionaryAsync(e => e.Estado, e => e.Cant);
+
+            var colores = new Dictionary<string, string>
+            {
+                { "Recibido", "#2196F3" },
+                { "Finalizado, a espera de pago", "#9C27B0" },
+                { "Cancelado", "#E53935" },
+                { "En Proceso", "#FB8C00" },
+                { "Esperando Aprobación", "#EC407A" },
+                { "Entregado", "#43A047" }
+            };
+
+            var hace7Dias = DateTime.Today.AddDays(-7);
+
+            var alertas = new DashboardAlertas
+            {
+                EsperandoAprobacion = estados.ContainsKey("Esperando Aprobación")
+                    ? estados["Esperando Aprobación"]
+                    : 0,
+
+                MasDe7Dias = await _context.OrdenesDeServicio
+                    .CountAsync(o => o.FechaIngreso < hace7Dias &&
+                                     o.Estado.Nombre != "Entregado" &&
+                                     o.Estado.Nombre != "Cancelado"),
+
+                ListasParaEntregar = finalizadas
+            };
+
+            var topClientes = await _context.OrdenesDeServicio
+                .Where(o => o.FechaIngreso >= inicioMes)
+                .GroupBy(o => o.Cliente.NombreCompleto)
+                .Select(g => new TopClienteDto
+                {
+                    Nombre = g.Key,
+                    TotalGenerado = g.Sum(o => o.PrecioFinal ?? 0),
+                    CantidadOrdenes = g.Count()
+                })
+                .OrderByDescending(x => x.TotalGenerado)
+                .Take(5)
+                .ToListAsync();
+
+            var ultimas = await _context.OrdenesDeServicio
+                .OrderByDescending(o => o.FechaIngreso)
+                .Take(10)
+                .Select(o => new OrdenSimpleDto
+                {
+                    Id = o.Id,
+                    Fecha = o.FechaIngreso,
+                    ClienteNombre = o.Cliente.NombreCompleto,
+                    Estado = o.Estado.Nombre,
+                    Total = o.PrecioFinal
+                })
+                .ToListAsync();
+
+            return new DashboardDto
+            {
+                OrdenesHoy = ordenesHoy,
+                EnTaller = enTaller,
+                Finalizadas = finalizadas,
+                Ingresos = ingresos,
+                Estados = estados,
+                EstadoColores = colores,
+                UltimasOrdenes = ultimas,
+                Alertas = alertas,
+                TopClientes = topClientes
+            };
+        }
+
+        public async Task<IEnumerable<HistorialOrden>> GetHistorialByOrdenIdAsync(int ordenId)
+        {
+            return await _context.HistorialOrdenes
+                .Where(h => h.OrdenDeServicioId == ordenId)
+                .Include(h => h.Usuario)
+                .OrderByDescending(h => h.FechaHora)
+                .ToListAsync();
+        }
+
+        public async Task<OrdenDetalleDto?> GetOrdenDetalleAsync(int id)
+        {
+            var orden = await _context.OrdenesDeServicio
+                .Include(o => o.Cliente)
+                .Include(o => o.Equipo)
+                .Include(o => o.Estado)
+                .Include(o => o.Fotos)
+                .Include(o => o.Historial).ThenInclude(h => h.Usuario)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (orden == null)
+                return null;
+
+            return new OrdenDetalleDto
+            {
+                Id = orden.Id,
+                FechaIngreso = orden.FechaIngreso,
+                ClienteNombre = orden.Cliente.NombreCompleto,
+                EmailCliente = orden.Cliente.Email,
+                Estado = orden.Estado.Nombre,
+                PrecioPresupuestado = orden.PrecioPresupuestado,
+                PrecioFinal = orden.PrecioFinal,
+
+                EquipoModelo = orden.Equipo.Modelo,
+                EquipoTipo = orden.Equipo.Tipo.ToString().Replace("_", " "),
+                EquipoDescripcion = orden.Equipo.DescripcionCompleta,
+
+                FallaDeclarada = orden.FallaDeclaradaPorCliente,
+                ResumenTecnico = orden.ResumenTecnico,
+
+                Fotos = orden.Fotos
+    .Select(f => new FotoDto
+    {
+        Id = f.Id,
+        Url = f.RutaArchivo
+    })
+    .ToList(),
+
+                Historial = orden.Historial
+                    .OrderByDescending(h => h.FechaHora)
+                    .Select(h => new HistorialLineaDto
+                    {
+                        FechaHora = h.FechaHora,
+                        Usuario = h.Usuario.NombreCompleto,
+                        Descripcion = h.DescripcionDelCambio
+                    })
+                    .ToList()
+            };
+        }
+
+        public async Task<Foto> SubirFotoAsync(IFormFile archivo, int ordenId)
+        {
+            var orden = await _context.OrdenesDeServicio
+                .Include(o => o.Fotos)
+                .FirstOrDefaultAsync(o => o.Id == ordenId);
+
+            if (orden == null)
+                throw new Exception("La orden no existe.");
+
+            var extension = Path.GetExtension(archivo.FileName);
+            var nombreArchivo = $"orden-{ordenId}-{Guid.NewGuid()}{extension}";
+
+            using var stream = archivo.OpenReadStream();
+
+            var url = await _blobService.UploadFileAsync(stream, nombreArchivo, "fotos");
+
+            // Insertar en SQL
+            var foto = new Foto
+            {
+                RutaArchivo = url,
+                OrdenDeServicioId = ordenId
+            };
+
+            _context.Fotos.Add(foto);
+            await _context.SaveChangesAsync();
+
+            return foto;
+        }
+
+
+
     }
 }

@@ -1,34 +1,58 @@
 ﻿using LoftComputacion.Application;
 using LoftComputacion.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Servicios (CORS, JWT, DB, etc.) ---
-builder.Services.AddControllers().AddNewtonsoftJson(options =>
-{
-    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-    options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
-});
+// ===============================================
+// 1) CORS para Blazor
+// ===============================================
+var MyCors = "AllowBlazor";
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorApp", policy =>
-    {
-        policy
-            .WithOrigins(
-                "https://localhost:52004", // Para tus pruebas locales
-                "https://loftcomputacion-api-webapp.azurewebsites.net" // ⬅️ ¡La URL de tu API!
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
+    options.AddPolicy(name: MyCors,
+        policy =>
+        {
+            policy.WithOrigins("https://localhost:7127")   // Blazor WASM
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
 });
+
+// ===============================================
+// 2) DbContext
+// ===============================================
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddHttpClient();
-builder.Services.AddEndpointsApiExplorer();
+
+// ===============================================
+// 3) Servicios de aplicación
+// ===============================================
+builder.Services.AddScoped<OrdenDeServicioService>();
+builder.Services.AddScoped<MercadoPagoService>();
+builder.Services.AddSingleton<BlobService>();
+builder.Services.AddScoped<ISecurityService, SecurityService>();
+builder.Services.AddScoped<UsuarioService>();
+
+
+// 👇 AÑADIR ESTOS SI NO ESTABAN REGISTRADOS
+builder.Services.AddScoped<AIService>();
+builder.Services.AddScoped<EmailService>();
+
+// ===============================================
+// 4) JWT Authentication
+// ===============================================
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -38,54 +62,74 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
-builder.Services.AddSwaggerGen(options =>
-{
-    // ... (Tu configuración de Swagger) ...
-});
-builder.Services.AddScoped<OrdenDeServicioService>();
-builder.Services.AddScoped<AIService>();
-builder.Services.AddScoped<GananciasService>();
-builder.Services.AddScoped<BlobService>();
-builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<MercadoPagoService>();
-builder.Services.AddScoped<UsuarioService>();
-builder.Services.AddScoped<ISecurityService, SecurityService>();
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlOptions =>
-    {
-        sqlOptions.EnableRetryOnFailure();
-    }));
 
-// --- 2. Construcción de la app ---
+builder.Services.AddAuthorization();
+
+// ===============================================
+// 5) Controllers
+// ===============================================
+builder.Services.AddControllers();
+
+// ===============================================
+// 6) Swagger con soporte JWT
+// ===============================================
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "LoftComputacion API", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header usando Bearer. Ej: \"Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+        {
+            new OpenApiSecurityScheme {
+                Reference = new OpenApiReference {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
+// ===============================================
+// 7) Build
+// ===============================================
 var app = builder.Build();
 
+// ===============================================
+// 8) Pipeline
+// ===============================================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    // 🚨 AÑADIR ESTA LÍNEA para el debug de Blazor
-    app.UseWebAssemblyDebugging();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
-// 🚨 PASO 3: CONFIGURACIÓN DE HOSTING DE BLAZOR 🚨
-app.UseBlazorFrameworkFiles(); // <-- Sirve los archivos de Blazor
+// CORS antes de Auth
+app.UseCors(MyCors);
+
+app.UseDefaultFiles();
 app.UseStaticFiles();
-
-// --- Aplicar CORS y autenticación ---
-app.UseCors("AllowBlazorApp");
+app.MapFallbackToFile("index.html");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 🚨 Redirige todo lo que no sea API a Blazor
-app.MapFallbackToFile("index.html");
-
 app.MapControllers();
+
 app.Run();

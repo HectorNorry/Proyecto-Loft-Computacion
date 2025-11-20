@@ -33,7 +33,7 @@ namespace LoftComputacion.Application
             {
                 // En un entorno de producción, esto debería lanzar una excepción,
                 // pero en desarrollo, usamos localhost:52004 como URL de notificación temporal.
-                _ngrokPublicUrl = "https://localhost:52004";
+                _ngrokPublicUrl = "https://loftcomputacion-api-webapp-ceeyjhrb9fvbj.brazilsouth-01.azurewebsites.net4";
             }
             else
             {

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -8,19 +8,17 @@
 
 	<ItemGroup>
 		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.20" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.22" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.20" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.20" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.20" />
+		<PackageReference Include="MudBlazor" Version="8.14.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		  <ProjectReference Include="..\LoftComputacion.Domain\LoftComputacion.Domain.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		  <Folder Include="wwwroot\img\" />
+	  <ProjectReference Include="..\LoftComputacion.Application\LoftComputacion.Application.csproj" />
+	  <ProjectReference Include="..\LoftComputacion.Domain\LoftComputacion.Domain.csproj" />
+	  <ProjectReference Include="..\LoftComputacion.Infrastructure\LoftComputacion.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

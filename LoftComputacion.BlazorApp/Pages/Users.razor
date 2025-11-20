@@ -1,0 +1,165 @@
+﻿@page "/usuarios"
+@inject UsuariosApiService UsuariosService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h5">Usuarios</MudText>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="NuevoUsuario">
+            Nuevo Usuario
+        </MudButton>
+    </div>
+
+    <MudTextField @bind-Value="_busqueda"
+                  Placeholder="Buscar..."
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Class="mb-4" />
+
+      <MudTable Items="_usuariosFiltrados"
+              Dense="true"
+              Hover="true"
+              Bordered="true">
+
+        <HeaderContent>
+            <MudTh>Nombre</MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Rol</MudTh>
+            <MudTh>Activo</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd>@context.NombreCompleto</MudTd>
+            <MudTd>@context.Email</MudTd>
+            <MudTd>@context.Rol</MudTd>
+
+            <MudTd>
+                @if (context.EstaActivo)
+                {
+                    <MudChip T="string"
+                             Color="Color.Success"
+                             Variant="Variant.Filled"
+                             Size="Size.Small">
+                        Sí
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string"
+                             Color="Color.Error"
+                             Variant="Variant.Filled"
+                             Size="Size.Small">
+                        No
+                    </MudChip>
+                }
+            </MudTd>
+
+            <MudTd Class="d-flex gap-2">
+
+                <MudIconButton Color="Color.Primary"
+                               Icon="@Icons.Material.Filled.Edit"
+                               OnClick="@(() => EditarUsuario(context))" />
+
+                <MudIconButton Color="Color.Warning"
+                               Icon="@Icons.Material.Filled.Sync"
+                               OnClick="@(() => CambiarEstado(context))" />
+
+                <MudIconButton Color="Color.Error"
+                               Icon="@Icons.Material.Filled.Delete"
+                               OnClick="@(() => EliminarUsuario(context))" />
+            </MudTd>
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code {
+    private List<UsuarioDto> _usuarios = new();
+    private List<UsuarioDto> _usuariosFiltrados = new();
+    private string _busqueda = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        var data = await UsuariosService.GetUsuarios();
+        if (data != null)
+        {
+            _usuarios = data;
+            Filtrar();
+        }
+    }
+
+    private void Filtrar()
+    {
+        if (string.IsNullOrWhiteSpace(_busqueda))
+            _usuariosFiltrados = _usuarios;
+        else
+            _usuariosFiltrados = _usuarios
+                .Where(u => u.NombreCompleto.Contains(_busqueda, StringComparison.OrdinalIgnoreCase)
+                         || u.Email.Contains(_busqueda, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+    }
+
+    private void NuevoUsuario() => AbrirDialogoUsuario(null);
+
+    private void EditarUsuario(UsuarioDto usuario) => AbrirDialogoUsuario(usuario);
+
+    private async Task CambiarEstado(UsuarioDto usuario)
+    {
+        var confirmar = await DialogService.ShowMessageBox(
+            "Cambiar estado",
+            $"¿Cambiar estado del usuario {usuario.NombreCompleto}?",
+            yesText: "Cambiar",
+            cancelText: "Cancelar");
+
+        if (confirmar != true)
+            return;
+
+        var resp = await UsuariosService.CambiarEstado(usuario.Id);
+        Snackbar.Add(resp.IsSuccessStatusCode ? "Estado actualizado" : "Error al cambiar estado",
+                     resp.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+
+        await Cargar();
+    }
+
+    private async Task EliminarUsuario(UsuarioDto usuario)
+    {
+        var confirmar = await DialogService.ShowMessageBox(
+            "Eliminar usuario",
+            $"¿Eliminar a {usuario.NombreCompleto}?",
+            yesText: "Eliminar",
+            cancelText: "Cancelar");
+
+        if (confirmar != true)
+            return;
+
+        var resp = await UsuariosService.Eliminar(usuario.Id);
+        Snackbar.Add(resp.IsSuccessStatusCode ? "Usuario eliminado" : "Error al eliminar el usuario",
+                     resp.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+
+        await Cargar();
+    }
+
+    private async void AbrirDialogoUsuario(UsuarioDto? usuario)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Usuario"] = usuario
+        };
+
+        var dialog = DialogService.Show<DialogoUsuario>("Usuario", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+            await Cargar();
+    }
+}

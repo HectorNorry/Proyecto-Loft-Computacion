@@ -7,7 +7,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://*:52004;http://*:52005;https://fay-squirrellike-tamala.ngrok-free.dev"
+      "applicationUrl": "https://*:52004;http://*:52005;"
     }
   }
 }

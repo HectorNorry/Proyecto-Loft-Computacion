@@ -1,9 +1,16 @@
-﻿using LoftComputacion.Application;
-using LoftComputacion.Domain;
+﻿using DocumentFormat.OpenXml.InkML;
+using LoftComputacion.Application;
 using LoftComputacion.Application.DTOs;
+using LoftComputacion.Domain;
+using LoftComputacion.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks; 
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.IO;
 
 namespace LoftComputacion.WebAPI.Controllers
 {
@@ -12,150 +19,141 @@ namespace LoftComputacion.WebAPI.Controllers
     [ApiController]
     public class OrdenesDeServicioController : ControllerBase
     {
-        private readonly OrdenDeServicioService _ordenDeServicioService;
-        private readonly MercadoPagoService _mercadoPagoService; 
+        private readonly OrdenDeServicioService _service;
+        private readonly ApplicationDbContext _context;
+        private readonly OrdenDeServicioService _ordenService;
+        private readonly MercadoPagoService _mp;
+        private readonly BlobService _blobService;
 
         public OrdenesDeServicioController(
-            OrdenDeServicioService ordenDeServicioService,
-            MercadoPagoService mercadoPagoService)
+            OrdenDeServicioService ordenService,
+            MercadoPagoService mp,
+            BlobService blobService)
         {
-            _ordenDeServicioService = ordenDeServicioService;
-            _mercadoPagoService = mercadoPagoService;
+            _ordenService = ordenService;
+            _mp = mp;
+            _blobService = blobService;
+            _ordenService = ordenService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetOrdenesDeServicio([FromQuery] string? filtro = null)
+        [HttpGet("lista")]
+        public async Task<ActionResult<IEnumerable<OrdenSimpleDto>>> GetLista([FromQuery] string? filtro)
         {
-            var ordenesDTO = await _ordenDeServicioService.GetAllOrdenesAsync(filtro);
+            var lista = await _ordenService.GetAllOrdenesAsync(filtro);
 
-            var ordenes = ordenesDTO.Select(o => new OrdenDeServicio
+            return Ok(lista.Select(o => new OrdenSimpleDto
             {
                 Id = o.Id,
-                FechaIngreso = o.FechaIngreso,
-                FallaDeclaradaPorCliente = o.FallaDeclaradaPorCliente,
-                PrecioFinal = o.PrecioFinal,
-
-                Cliente = new Cliente
-                {
-                    NombreCompleto = o.NombreCliente
-                },
-
-                Equipo = new Equipo
-                {
-                    Modelo = o.ModeloEquipo
-                },
-
-                Estado = new Estado
-                {
-                    Nombre = o.NombreEstado
-                }
-            });
-
-            return Ok(ordenes);
+                Fecha = o.FechaIngreso,
+                ClienteNombre = o.NombreCliente,
+                Estado = o.NombreEstado,
+                Total = o.PrecioFinal
+            }));
         }
 
-
-
-
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetOrdenDeServicio(int id)
+        [HttpGet("detalle/{id}")]
+        public async Task<ActionResult<OrdenDetalleDto>> GetDetalle(int id)
         {
-            var orden = await _ordenDeServicioService.GetOrdenByIdAsync(id);
-            if (orden == null)
-            {
-                return NotFound();
-            }
-            return Ok(orden);
+            var detalle = await _ordenService.GetOrdenDetalleAsync(id);
+            if (detalle == null) return NotFound();
+
+            return Ok(detalle);
         }
 
-        // --- ¡NUESTRO NUEVO ENDPOINT PARA MERCADO PAGO! ---
+        [HttpGet("dashboard")]
+        public async Task<ActionResult<DashboardDto>> Dashboard()
+        {
+            return Ok(await _ordenService.GetDashboardDataAsync());
+        }
+
         [HttpPost("{id}/crear-pago")]
-        public async Task<IActionResult> CrearPreferenciaDePago(int id)
+        public async Task<IActionResult> CrearPago(int id)
         {
-            try
-            {
-                // 1. Buscamos la orden completa para obtener el precio y los datos del cliente
-                var orden = await _ordenDeServicioService.GetOrdenByIdAsync(id);
-                if (orden == null)
-                {
-                    return NotFound("No se encontró la orden de servicio.");
-                }
+            var orden = await _ordenService.GetOrdenByIdAsync(id);
+            if (orden == null) return NotFound();
 
-                // 2. Validamos que la orden tenga un precio final asignado
-                if (orden.PrecioFinal == null || orden.PrecioFinal <= 0)
-                {
-                    return BadRequest("La orden no tiene un precio final válido para generar el pago.");
-                }
+            if (orden.PrecioFinal == null || orden.PrecioFinal <= 0)
+                return BadRequest("La orden no tiene precio final.");
 
-                // 3. Llamamos a nuestro servicio para crear el link de pago
-                string urlPreferencia = await _mercadoPagoService.CrearPreferenciaDePagoAsync(orden);
-
-                // 4. Devolvemos el link de pago al frontend (WinForms)
-                //    Devolvemos un objeto anónimo para que sea un JSON limpio
-                return Ok(new { urlDePago = urlPreferencia });
-            }
-            catch (System.Exception ex)
-            {
-                // Manejamos cualquier error que ocurra al hablar con Mercado Pago
-                return StatusCode(500, $"Error al crear la preferencia de pago: {ex.Message}");
-            }
+            var url = await _mp.CrearPreferenciaDePagoAsync(orden);
+            return Ok(new { urlDePago = url });
         }
-        // --- FIN DEL NUEVO ENDPOINT ---
-
 
         [HttpPost]
-        public async Task<IActionResult> CreateOrdenDeServicio([FromBody] CreateOrdenDto ordenDto)
+        public async Task<IActionResult> CrearOrden([FromBody] CreateOrdenDto dto)
         {
-            var nuevaOrden = new OrdenDeServicio
-            {
-                ClienteId = ordenDto.ClienteId,
-                EquipoId = ordenDto.EquipoId,
-                FallaDeclaradaPorCliente = ordenDto.FallaDeclaradaPorCliente
-            };
-
-            var ordenCreada = await _ordenDeServicioService.CreateOrdenAsync(nuevaOrden);
-            return CreatedAtAction(nameof(GetOrdenDeServicio), new { id = ordenCreada.Id }, ordenCreada);
+            var id = await _ordenService.CrearOrdenAsync(dto);
+            return Ok(new { id });
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOrdenDeServicio(int id, [FromBody] UpdateOrdenDto ordenDto)
+        public async Task<IActionResult> ActualizarOrden(int id, [FromBody] UpdateOrdenDto dto)
         {
-            var ordenActualizada = new OrdenDeServicio
+            Console.WriteLine($"📌 LLEGO UsuarioId = {dto.UsuarioId}");
+
+            var orden = new OrdenDeServicio
             {
-                EstadoId = ordenDto.EstadoId,
-                PrecioPresupuestado = ordenDto.PrecioPresupuestado,
-                PrecioFinal = ordenDto.PrecioFinal,
-                ResumenTecnico = ordenDto.ResumenTecnico
+                EstadoId = dto.EstadoId,
+                PrecioPresupuestado = dto.PrecioPresupuestado,
+                PrecioFinal = dto.PrecioFinal,
+                ResumenTecnico = dto.ResumenTecnico
             };
 
-            var resultado = await _ordenDeServicioService.UpdateOrdenAsync(id, ordenActualizada, ordenDto.UsuarioId);
-            if (!resultado)
-            {
-                return NotFound();
-            }
-            return NoContent();
+            var ok = await _ordenService.UpdateOrdenAsync(id, orden, dto.UsuarioId);
+
+            if (!ok)
+                return NotFound("La orden no existe.");
+
+            return Ok();
         }
 
-        [HttpGet("{id}/historial")]
-        public async Task<IActionResult> GetHistorialDeOrden(int id)
+        [HttpPost("{id}/fotos")]
+        public async Task<IActionResult> SubirFoto(int id, IFormFile archivo)
         {
-            var historial = await _ordenDeServicioService.GetHistorialByOrdenIdAsync(id);
+            if (archivo == null)
+                return BadRequest("El archivo es obligatorio.");
 
-            // Si no hay historial devolvemos lista vacía pero NO es error
-            return Ok(historial);
-        }
+            var foto = await _ordenService.SubirFotoAsync(archivo, id);
 
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteOrdenDeServicio(int id)
-        {
-            var resultado = await _ordenDeServicioService.DeleteOrdenAsync(id);
-            if (!resultado)
+            return Ok(new
             {
-                return NotFound();
-            }
-            return NoContent();
+                id = foto.Id,
+                url = foto.RutaArchivo
+            });
         }
+
+        // ==============================================
+        // NUEVO ENDPOINT: Obtener TODAS las órdenes 
+        // ==============================================
+        // ============================================================
+        // NUEVO ENDPOINT PARA GANANCIAS — Usa OrdenSimpleDto (válido)
+        // ============================================================
+        [HttpGet("todas-simples")]
+        public async Task<IActionResult> GetTodasSimples()
+        {
+            var ordenes = await _service.GetAllOrdenesAsync(null);
+
+            if (ordenes == null)
+                return Ok(new List<object>());
+
+            var lista = ordenes.Select(o => new
+            {
+                Id = o.Id,
+                FechaIngreso = o.FechaIngreso,
+                ClienteNombre = o.NombreCliente,
+                Total = o.PrecioFinal ?? 0,
+                Estado = o.NombreEstado
+            });
+
+            return Ok(lista);
+        }
+
+
+
+
+
+
+
+
     }
 }
