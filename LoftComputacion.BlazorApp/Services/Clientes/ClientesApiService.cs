@@ -2,7 +2,7 @@
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using Blazored.LocalStorage;
-using LoftComputacion.Application.DTOs;
+using LoftComputacion.Shared.DTOs;
 
 namespace LoftComputacion.BlazorApp.Services.Clientes
 {

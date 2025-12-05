@@ -1,11 +1,11 @@
 ﻿// LoftComputacion.Application/UsuarioService.cs
 // ¡Nota! Tu proyecto WebAPI debe referenciar a este proyecto Application.
 
+using LoftComputacion.Application;
 using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
-using LoftComputacion.Application;
 using Microsoft.EntityFrameworkCore; // Necesario para Async y EF Core
-using LoftComputacion.Application.DTOs;
+using LoftComputacion.Shared.DTOs;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -53,7 +53,6 @@ public class UsuarioService // Sin interfaz, implementamos la clase concreta
             Email = dto.Email,
             PasswordHash = passwordHash, // Guardar el hash
             Rol = dto.Rol,
-            EstaActivo = true,
             FechaCreacion = DateTime.UtcNow
         };
 
@@ -92,7 +91,6 @@ public class UsuarioService // Sin interfaz, implementamos la clase concreta
         usuario.NombreCompleto = dto.NombreCompleto;
         usuario.Email = dto.Email;
         usuario.Rol = dto.Rol;
-        usuario.EstaActivo = dto.EstaActivo; // Ahora existe en el DTO
 
         // Si se incluye una nueva contraseña en el DTO (opcional), hashearla
         if (!string.IsNullOrEmpty(dto.NewPassword)) // Ahora existe en el DTO
@@ -107,17 +105,5 @@ public class UsuarioService // Sin interfaz, implementamos la clase concreta
     // -----------------------------------------------------
     // D - Desactivar/Activar (Eliminación Lógica)
     // -----------------------------------------------------
-    public async Task<bool> DeactivateUsuarioAsync(int id)
-    {
-        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Id == id);
-        if (usuario == null) return false;
-
-        usuario.EstaActivo = !usuario.EstaActivo; // Cambia el estado
-
-        // 🚨 PASO CRÍTICO: FORZAR el estado para evitar el DELETE 🚨
-        _context.Entry(usuario).State = EntityState.Modified;
-
-        await _context.SaveChangesAsync();
-        return true;
-    }
+    
 }

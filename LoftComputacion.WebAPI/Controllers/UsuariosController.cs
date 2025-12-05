@@ -1,62 +1,78 @@
-﻿using LoftComputacion.Application.DTOs;
+﻿using LoftComputacion.Application;    // Aquí vive UsuarioService
+using LoftComputacion.Domain;
+using LoftComputacion.Infrastructure;
+using LoftComputacion.Shared.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-[ApiController]
-[Route("api/[controller]")]
-public class UsuariosController : ControllerBase
+namespace LoftComputacion.WebAPI.Controllers
 {
-    private readonly UsuarioService _usuarioService;
-
-    public UsuariosController(UsuarioService usuarioService)
+    [Authorize]
+    [Route("api/[controller]")]
+    [ApiController]
+    public class UsuariosController : ControllerBase
     {
-        _usuarioService = usuarioService;
-    }
+        // CORRECCIÓN: Usamos UsuarioService (Singular)
+        private readonly UsuarioService _usuarioService;
+        private readonly ApplicationDbContext _context;
 
-    [HttpGet]
-    public async Task<IActionResult> GetUsuarios()
-    {
-        var list = await _usuarioService.GetAllUsuariosAsync();
-        return Ok(list);
-    }
+        // Constructor corregido
+        public UsuariosController(UsuarioService usuarioService, ApplicationDbContext context)
+        {
+            _usuarioService = usuarioService;
+            _context = context;
+        }
 
-    [HttpPost]
-    public async Task<IActionResult> CrearUsuario(CreateUsuarioDto dto)
-    {
-        var result = await _usuarioService.CreateUsuarioAsync(dto);
+        [HttpGet]
+        public async Task<IActionResult> Get()
+        {
+            var usuarios = await _usuarioService.GetAllUsuariosAsync();
 
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
+            // Proyección segura para asegurar que los nombres viajan bien
+            var resultado = usuarios.Select(u => new
+            {
+                id = u.Id,
+                nombreCompleto = u.NombreCompleto,
+                email = u.Email,
+                rol = u.Rol,
+                estaActivo = true // Hardcodeado en true porque ya borramos la columna y todos son activos por defecto
+            });
 
-        return Ok(new { result.UserId });
-    }
+            return Ok(resultado);
+        }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> EditarUsuario(int id, UpdateUsuarioDto dto)
-    {
-        var ok = await _usuarioService.UpdateUsuarioAsync(id, dto);
-        if (!ok)
-            return NotFound("Usuario no encontrado");
+        [HttpPost("crear")]
+        public async Task<IActionResult> Crear(CreateUsuarioDto dto)
+        {
+            var result = await _usuarioService.CreateUsuarioAsync(dto); // Tu método se llama CreateUsuarioAsync
+            if (!result.Succeeded) return BadRequest(result.Errors);
+            return Ok();
+        }
 
-        return Ok();
-    }
+        [HttpPut("editar/{id}")]
+        public async Task<IActionResult> Editar(int id, UpdateUsuarioDto dto)
+        {
+            var result = await _usuarioService.UpdateUsuarioAsync(id, dto); // Tu método se llama UpdateUsuarioAsync
+            if (!result) return NotFound();
+            return Ok();
+        }
 
-    [HttpPut("estado/{id}")]
-    public async Task<IActionResult> CambiarEstado(int id)
-    {
-        var ok = await _usuarioService.DeactivateUsuarioAsync(id);
-        if (!ok)
-            return NotFound();
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarUsuario(int id)
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
 
-        return Ok();
-    }
+            if (usuario == null)
+                return NotFound("El usuario no existe.");
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> EliminarUsuario(int id)
-    {
-        var ok = await _usuarioService.DeactivateUsuarioAsync(id);
-        if (!ok)
-            return NotFound();
+            if (usuario.Email == "admin@admin.com")
+                return BadRequest("No se puede eliminar al Super Admin.");
 
-        return Ok();
+            _context.Usuarios.Remove(usuario);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
     }
 }

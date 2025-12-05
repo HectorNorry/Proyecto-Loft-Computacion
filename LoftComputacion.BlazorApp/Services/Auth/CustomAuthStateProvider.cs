@@ -1,7 +1,8 @@
-﻿using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using Blazored.LocalStorage;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Diagnostics;
 
 namespace LoftComputacion.BlazorApp.Services.Auth
 {
@@ -20,34 +21,68 @@ namespace LoftComputacion.BlazorApp.Services.Auth
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var token = await _localStorage.GetItemAsync<string>("authToken");
+            string token = "";
 
-            if (string.IsNullOrWhiteSpace(token))
-                return _anonymous;
-
-            JwtSecurityToken jwt;
             try
             {
-                var handler = new JwtSecurityTokenHandler();
-                jwt = handler.ReadJwtToken(token);
+                // INTENTO 1: Lectura normal
+                token = await _localStorage.GetItemAsync<string>("authToken");
             }
             catch
             {
-                // Token inválido → lo borro y vuelvo a anónimo
-                await _localStorage.RemoveItemAsync("authToken");
+                // Si falla (error de JS interop o timing), esperamos 100ms y reintentamos
+                // Esto soluciona problemas de arranque en frío
+                await Task.Delay(100);
+                try
+                {
+                    token = await _localStorage.GetItemAsync<string>("authToken");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($">>> AUTH ERROR: No se pudo leer del LocalStorage: {ex.Message}");
+                }
+            }
+
+            // Si después del reintento sigue vacío, devolvemos anónimo
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                // Console.WriteLine(">>> AUTH: Token vacío o nulo. Usuario anónimo.");
                 return _anonymous;
             }
 
-            var identity = new ClaimsIdentity(jwt.Claims, "jwt");
-            var user = new ClaimsPrincipal(identity);
+            // LIMPIEZA: Quitamos comillas extras si existen
+            token = token.Trim('"');
 
-            return new AuthenticationState(user);
+            // VALIDACIÓN DEL JWT
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+
+                // Si llegamos aquí, el token tiene formato válido
+                var identity = new ClaimsIdentity(jwt.Claims, "jwt");
+                var user = new ClaimsPrincipal(identity);
+
+                // Console.WriteLine(">>> AUTH: ¡Usuario autenticado correctamente!");
+                return new AuthenticationState(user);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($">>> AUTH FATAL: El token existe pero es inválido. Error: {ex.Message}");
+                Console.WriteLine($">>> TOKEN DEFECTUOSO: {token}");
+
+                // Si el token es basura, lo borramos para no quedar en bucle
+                await _localStorage.RemoveItemAsync("authToken");
+                return _anonymous;
+            }
         }
 
         public async Task MarkUserAsAuthenticated(string token)
         {
-            await _localStorage.SetItemAsync("authToken", token);
+            // Guardamos el token limpio
+            await _localStorage.SetItemAsync("authToken", token.Trim('"'));
 
+            // Notificamos a la app que el estado cambió
             var authState = await GetAuthenticationStateAsync();
             NotifyAuthenticationStateChanged(Task.FromResult(authState));
         }
@@ -55,8 +90,6 @@ namespace LoftComputacion.BlazorApp.Services.Auth
         public async Task MarkUserAsLoggedOut()
         {
             await _localStorage.RemoveItemAsync("authToken");
-
-            // Volvemos al estado anónimo
             NotifyAuthenticationStateChanged(Task.FromResult(_anonymous));
         }
 
@@ -65,12 +98,13 @@ namespace LoftComputacion.BlazorApp.Services.Auth
             var authState = await GetAuthenticationStateAsync();
             var user = authState.User;
 
-            var idClaim = user.FindFirst("sub")?.Value;
+            var idClaim = user.FindFirst("sub")?.Value ??
+                          user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (int.TryParse(idClaim, out int userId))
                 return userId;
 
-            return -1; // nunca devolver 0
+            return -1;
         }
     }
 }

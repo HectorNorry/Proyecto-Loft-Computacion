@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\LoftComputacion.Domain\LoftComputacion.Domain.csproj" />
     <ProjectReference Include="..\LoftComputacion.Infrastructure\LoftComputacion.Infrastructure.csproj" />
+    <ProjectReference Include="..\LoftComputacion.Shared\LoftComputacion.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1494,6 +1494,9 @@
       "LoftComputacion.Domain/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "LoftComputacion.Shared": "1.0.0"
+        },
         "compile": {
           "bin/placeholder/LoftComputacion.Domain.dll": {}
         },
@@ -1515,6 +1518,16 @@
         },
         "runtime": {
           "bin/placeholder/LoftComputacion.Infrastructure.dll": {}
+        }
+      },
+      "LoftComputacion.Shared/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/LoftComputacion.Shared.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LoftComputacion.Shared.dll": {}
         }
       }
     }
@@ -4013,6 +4026,11 @@
       "type": "project",
       "path": "../LoftComputacion.Infrastructure/LoftComputacion.Infrastructure.csproj",
       "msbuildProject": "../LoftComputacion.Infrastructure/LoftComputacion.Infrastructure.csproj"
+    },
+    "LoftComputacion.Shared/1.0.0": {
+      "type": "project",
+      "path": "../LoftComputacion.Shared/LoftComputacion.Shared.csproj",
+      "msbuildProject": "../LoftComputacion.Shared/LoftComputacion.Shared.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -4022,6 +4040,7 @@
       "ClosedXML >= 0.105.0",
       "LoftComputacion.Domain >= 1.0.0",
       "LoftComputacion.Infrastructure >= 1.0.0",
+      "LoftComputacion.Shared >= 1.0.0",
       "Microsoft.AspNetCore.Http.Abstractions >= 2.3.0",
       "Microsoft.AspNetCore.Http.Features >= 6.0.0-preview.4.21253.5",
       "Microsoft.Extensions.Http >= 8.0.1",
@@ -4066,6 +4085,9 @@
             },
             "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj": {
               "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Infrastructure\\LoftComputacion.Infrastructure.csproj"
+            },
+            "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Shared\\LoftComputacion.Shared.csproj": {
+              "projectPath": "G:\\Proyecto\\LoftComputacion\\LoftComputacion.Shared\\LoftComputacion.Shared.csproj"
             }
           }
         }

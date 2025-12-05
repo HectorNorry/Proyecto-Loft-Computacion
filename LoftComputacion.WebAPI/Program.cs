@@ -9,16 +9,28 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===============================================
-// 1) CORS para Blazor
+// 1) CORS para Blazor Y Webhooks
 // ===============================================
-var MyCors = "AllowBlazor";
+// Declaramos las variables aquí para usarlas más abajo en app.UseCors
+var MyBlazorCors = "AllowBlazor";
+var MyWebhookCors = "AllowWebhooks";
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyCors,
+    // Política 1: Frontend (Blazor)
+    options.AddPolicy(name: MyBlazorCors,
         policy =>
         {
-            policy.WithOrigins("https://localhost:7127")   // Blazor WASM
+            policy.AllowAnyOrigin() // <--- CAMBIO CLAVE: Permitir todo origen (Temporalmente para que ande el túnel)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+
+    // Política 2: Webhooks (Ya estaba abierta)
+    options.AddPolicy(name: MyWebhookCors,
+        policy =>
+        {
+            policy.AllowAnyOrigin()
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -41,8 +53,6 @@ builder.Services.AddSingleton<BlobService>();
 builder.Services.AddScoped<ISecurityService, SecurityService>();
 builder.Services.AddScoped<UsuarioService>();
 
-
-// 👇 AÑADIR ESTOS SI NO ESTABAN REGISTRADOS
 builder.Services.AddScoped<AIService>();
 builder.Services.AddScoped<EmailService>();
 
@@ -121,8 +131,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// CORS antes de Auth
-app.UseCors(MyCors);
+// CORS antes de Auth: Aplicamos la política estricta por defecto
+app.UseCors(MyBlazorCors);
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

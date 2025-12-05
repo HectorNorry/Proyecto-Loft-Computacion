@@ -1,0 +1,51 @@
+﻿@using MudBlazor
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Link de Pago Generado (MP)</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body1">
+            Monto a pagar para la Orden #@OrdenId: <b>@Monto</b>
+        </MudText>
+
+        <MudDivider Class="my-3" />
+
+        <MudTextField Label="URL de Pago"
+                      @bind-Value="Url"
+                      ReadOnly="true"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                      OnAdornmentClick="CopiarLink"
+                      FullWidth="true" />
+
+        <MudText Typo="Typo.body2" Class="mt-2" Color="Color.Secondary">
+            Haga clic en el ícono de copia para enviarlo al cliente.
+        </MudText>
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cerrar" Color="Color.Primary" Variant="Variant.Filled">Aceptar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string Url { get; set; } = "";
+    [Parameter] public string Monto { get; set; } = "";
+    [Parameter] public int OrdenId { get; set; }
+
+    // Inyectamos el JS Runtime para copiar al portapapeles
+    [Inject] IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    private void Cerrar() => MudDialog.Close(DialogResult.Ok(true));
+
+    private async Task CopiarLink()
+    {
+        // Copia el texto al portapapeles del navegador
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Url);
+        Snackbar.Add("Link copiado al portapapeles.", Severity.Info);
+    }
+}

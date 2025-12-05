@@ -1,9 +1,10 @@
 ﻿using Blazored.LocalStorage;
-using LoftComputacion.Application.DTOs;
 using LoftComputacion.BlazorApp.Services.Auth;
+using LoftComputacion.Shared.DTOs;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace LoftComputacion.BlazorApp.Services.Ordenes
 {
@@ -205,8 +206,60 @@ namespace LoftComputacion.BlazorApp.Services.Ordenes
             return await response.Content.ReadFromJsonAsync<List<dynamic>>() ?? new();
         }
 
+        // ============================
+        // GENERAR LINK DE PAGO MP
+        // ============================
+        public async Task<string?> GenerarLinkDePagoAsync(int id)
+        {
+            // Usamos el endpoint que ya existe en el controlador (HttpPost("{id}/crear-pago"))
+            var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                $"api/OrdenesDeServicio/{id}/crear-pago");
+
+            var response = await SendAuthorizedRequestAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Error al generar link de pago: {body}");
+            }
+
+            // La respuesta del backend es un objeto anónimo { urlDePago: '...' }
+            var jsonBody = await response.Content.ReadAsStringAsync();
+
+            try
+            {
+                // NOTA: Usaremos System.Text.Json para manejar la respuesta simple
+                using var document = JsonDocument.Parse(jsonBody);
+                var url = document.RootElement.GetProperty("urlDePago").GetString();
+                return url;
+            }
+            catch
+            {
+                throw new Exception("Error al procesar la URL de pago recibida.");
+            }
+        }
 
 
+
+        // Nota: Tu método SendAuthorizedRequestAsync ya se encarga de adjuntar el token, ¡es genial!
+        // La definición de SendAuthorizedRequestAsync es:
+        // public async Task<HttpResponseMessage> SendAuthorizedRequestAsync(HttpRequestMessage request) { ... }
+
+        //METRICAS
+
+        public async Task<MetricasDto?> GetMetricasAsync()
+        {
+            // Usamos SendAuthorizedRequestAsync para asegurar que lleve el token si el controller lo pide
+            var request = new HttpRequestMessage(HttpMethod.Get, "api/OrdenesDeServicio/metricas-operativas");
+            var response = await SendAuthorizedRequestAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<MetricasDto>();
+            }
+            return new MetricasDto(); // Retornamos vacío si falla para no romper la UI
+        }
 
 
     }

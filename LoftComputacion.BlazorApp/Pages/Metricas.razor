@@ -1,0 +1,153 @@
+﻿@page "/metricas"
+@using MudBlazor
+@using LoftComputacion.Shared.DTOs
+@using LoftComputacion.BlazorApp.Services.Ordenes
+@inject OrdenesApiService OrdenesService
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
+    <MudText Typo="Typo.h4" Class="mb-4 fw-bold">Métricas Operativas (Últimos 30 días)</MudText>
+
+    @if (_metricas == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <MudGrid Class="mb-6">
+            <MudItem xs="12" sm="4">
+                <MudPaper Class="pa-4 d-flex flex-column align-center justify-center mud-theme-primary" Elevation="3">
+                    <MudText Typo="Typo.h3">@_metricas.TotalOrdenesMes</MudText>
+                    <MudText Typo="Typo.subtitle1">Equipos Ingresados</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudPaper Class="pa-4 d-flex flex-column align-center justify-center" Style="background-color: #4caf50; color: white;" Elevation="3">
+                    <MudText Typo="Typo.h3">@_metricas.CantidadFinalizadas</MudText>
+                    <MudText Typo="Typo.subtitle1">Reparaciones Exitosas</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudPaper Class="pa-4 d-flex flex-column align-center justify-center" Style="background-color: #ff9800; color: white;" Elevation="3">
+                    <MudText Typo="Typo.h3">@_metricas.TasaRebote%</MudText>
+                    <MudText Typo="Typo.subtitle1">Tasa de Rechazo</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4 d-flex flex-column align-center" Elevation="2" Style="height: 100%;">
+                    <MudText Typo="Typo.h6" Class="mb-4 align-self-start">Tipos de Equipos</MudText>
+
+                    @if (_dataHardware.Length > 0)
+                    {
+                        <MudChart ChartType="ChartType.Donut"
+                                  Width="300px"
+                                  Height="300px"
+                                  InputData="@_dataHardware"
+                                  InputLabels="@_labelsHardware"
+                                  LegendPosition="Position.Right">
+                        </MudChart>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">No hay suficientes datos aún.</MudAlert>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-4">Órdenes Finalizadas por Técnico</MudText>
+
+                    @if (_seriesTecnicos.Count > 0)
+                    {
+                                                <MudChart ChartType="ChartType.Bar" 
+                                              ChartSeries="@_seriesTecnicos" 
+                                              XAxisLabels="@_labelsTecnicos" 
+                                              Width="100%" 
+                                              Height="350px"
+                                              ChartOptions="@(new ChartOptions { 
+                                                  YAxisLines = true, 
+                                                  // BarWidth = 0.5,  <--- BORRAR ESTA LÍNEA QUE DA ERROR
+                                                  ChartPalette = new[] { "#594AE2", "#00C853", "#FFC107" } 
+                                              })">
+                                              
+                                        <CustomGraphics>
+                                            <style>
+                                                /* Texto más grande */
+                                                .mud-charts-xaxis text {
+                                                    font-size: 14px !important;
+                                                    font-weight: bold;
+                                                }
+                                                .mud-charts-yaxis text {
+                                                    font-size: 12px !important;
+                                                }
+                                                
+                                                /* TRUCO CSS: Hacer las barras más anchas */
+                                                .mud-chart-bar {
+                                                    stroke-width: 40px !important; /* Ajusta este número para el grosor */
+                                                }
+                                            </style>
+                                        </CustomGraphics>
+                                        
+                                    </MudChart>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">No hay reparaciones finalizadas este mes.</MudAlert>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private MetricasDto? _metricas;
+
+    // Datos para gráficos
+    private double[] _dataHardware = Array.Empty<double>();
+    private string[] _labelsHardware = Array.Empty<string>();
+
+    private List<ChartSeries> _seriesTecnicos = new();
+    private string[] _labelsTecnicos = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _metricas = await OrdenesService.GetMetricasAsync();
+
+        if (_metricas != null)
+        {
+            // 1. Preparar datos Hardware (Con Porcentajes)
+            _dataHardware = _metricas.OrdenesPorTipo.Select(x => x.Valor).ToArray();
+
+            // Calculamos el total para sacar el %
+            double totalEquipos = _dataHardware.Sum();
+
+            if (totalEquipos > 0)
+            {
+                _labelsHardware = _metricas.OrdenesPorTipo.Select(x =>
+                {
+                    double porcentaje = (x.Valor / totalEquipos) * 100;
+                    // Formato: "Notebook: 5 (50.0%)"
+                    return $"{x.Etiqueta}: {x.Valor} ({porcentaje.ToString("0.0")}%)";
+                }).ToArray();
+            }
+
+            // 2. Preparar datos Técnicos (Igual que antes)
+            var valoresTecnicos = _metricas.RendimientoTecnicos.Select(x => x.Valor).ToArray();
+            _labelsTecnicos = _metricas.RendimientoTecnicos.Select(x => x.Etiqueta).ToArray();
+
+            if (valoresTecnicos.Length > 0)
+            {
+                _seriesTecnicos.Add(new ChartSeries
+                {
+                    Name = "Reparaciones",
+                    Data = valoresTecnicos
+                });
+            }
+        }
+    }
+}

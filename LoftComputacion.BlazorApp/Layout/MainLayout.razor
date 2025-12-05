@@ -1,80 +1,85 @@
 ﻿@inherits LayoutComponentBase
+@using MudBlazor
+@using LoftComputacion.BlazorApp.Services.Auth
+@using LoftComputacion.BlazorApp.Pages
 
-<AuthorizeView>
-    <Authorized>
+@* Inyecciones limpias en líneas separadas *@
+@inject NavigationManager Nav
+@inject CustomAuthStateProvider Auth
+@inject IDialogService DialogService
 
-        <MudThemeProvider />
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
 
-        <!-- PROVEEDORES NECESARIOS -->
-        <MudDialogProvider />
-        <MudSnackbarProvider />
-        <MudPopoverProvider />   @* ← FALTABA ESTE *@
+<MudLayout>
+    <MudAppBar Color="Color.Primary" Elevation="4">
+        <MudText Typo="Typo.h6">Panel LOFT</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="Logout" Title="Cerrar Sesión" />
+    </MudAppBar>
 
-        <MudLayout>
+    <MudDrawer Open="true" ClipMode="DrawerClipMode.Never" Variant="DrawerVariant.Mini" Width="260px">
+        <div class="d-flex justify-center align-center py-6">
+            <img src="images/Log.png" style="width: 140px; height: auto;" />
+        </div>
+        <MudDivider Class="mb-2" />
 
-            <MudAppBar Color="Color.Primary" Elevation="4">
-                <MudText Typo="Typo.h6">Panel LOFT</MudText>
+        <MudNavMenu>
+            <style>
+                .mud-nav-link, .mud-list-item {
+                    font-size: 1.1rem !important;
+                    padding: 12px 16px !important;
+                    margin-bottom: 4px;
+                }
 
-                <MudSpacer />
+                    .mud-nav-link .mud-icon-root, .mud-list-item-icon {
+                        font-size: 1.5rem !important;
+                    }
+            </style>
 
-                <MudIconButton Icon="@Icons.Material.Filled.Logout"
-                               Color="Color.Inherit"
-                               OnClick="Logout" />
-            </MudAppBar>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Inicio</MudNavLink>
+            <MudNavLink Href="/ordenes" Icon="@Icons.Material.Filled.List">Órdenes</MudNavLink>
+            <MudNavLink Href="/clientes" Icon="@Icons.Material.Filled.People">Clientes</MudNavLink>
+            <MudNavLink Href="/metricas" Icon="@Icons.Material.Filled.BarChart">Métricas</MudNavLink>
+            <MudNavLink Href="/administracion" Icon="@Icons.Material.Filled.Security">Administración</MudNavLink>
+        </MudNavMenu>
 
+        <MudList T="string" Clickable="true">
+            <MudListItem OnClick="AbrirChat" Icon="@Icons.Material.Filled.SmartToy" Class="mt-2">
+                Asistente IA
+            </MudListItem>
+        </MudList>
 
-            <MudDrawer Open="true"
-                       ClipMode="DrawerClipMode.Never"
-                       Variant="DrawerVariant.Mini">
+    </MudDrawer>
 
-
-                <MudNavMenu>
-                    <div class="d-flex justify-center pa-4">
-                        <img src="/images/Log.png" style="width:120px;" />
-                    </div>
-                    <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">
-                        Inicio
-                    </MudNavLink>
-
-                    <MudNavLink Href="/ordenes" Icon="@Icons.Material.Filled.List">
-                        Órdenes
-                    </MudNavLink>
-
-                    <MudNavLink Href="/clientes" Icon="@Icons.Material.Filled.People">
-                        Clientes
-                    </MudNavLink>
-
-                    <MudNavLink Href="/usuarios" Icon="@Icons.Material.Filled.Person">
-                        Usuarios
-                    </MudNavLink>
-
-                    <MudNavLink Href="/ganancias" Icon="@Icons.Material.Filled.AttachMoney">
-                        Ganancias
-                    </MudNavLink>
-
-                </MudNavMenu>
-
-            </MudDrawer>
-
-            <MudMainContent>
-                @Body
-            </MudMainContent>
-
-        </MudLayout>
-    </Authorized>
-
-    <NotAuthorized>
-        <RedirectToLogin />
-    </NotAuthorized>
-</AuthorizeView>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
 @code {
-    [Inject] CustomAuthStateProvider Auth { get; set; }
-    [Inject] NavigationManager Nav { get; set; }
+
+    private void AbrirChat()
+    {
+        var options = new DialogOptions
+        {
+            Position = DialogPosition.Center, // <--- CAMBIO: Ahora aparece en el centro
+            MaxWidth = MaxWidth.Medium,       // Un poco más ancha para que sea cómoda
+            FullWidth = true,
+            NoHeader = true,                  // Usamos nuestro propio header personalizado
+            CloseOnEscapeKey = true
+        };
+
+        DialogService.Show<ChatAsistente>("", options);
+    }
 
     private async Task Logout()
     {
         await Auth.MarkUserAsLoggedOut();
-        Nav.NavigateTo("/login", true);
+        Nav.NavigateTo("/login");
     }
 }

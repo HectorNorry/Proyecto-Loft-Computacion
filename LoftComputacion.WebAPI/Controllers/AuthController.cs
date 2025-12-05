@@ -1,5 +1,5 @@
 ﻿using BCrypt.Net;
-using LoftComputacion.Application.DTOs;
+using LoftComputacion.Shared.DTOs;
 using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
 using Microsoft.AspNetCore.Mvc;

@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
-using LoftComputacion.BlazorApp.DTOs;
+using LoftComputacion.Shared.DTOs;
+
 
 
 namespace LoftComputacion.BlazorApp.Services.Auth

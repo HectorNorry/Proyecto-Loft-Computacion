@@ -1,4 +1,6 @@
-﻿using LoftComputacion.Application.DTOs;
+﻿using LoftComputacion.Shared.DTOs;
+using LoftComputacion.Shared.Enums;
+
 using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -141,75 +143,91 @@ namespace LoftComputacion.Application
             return orden.Id;
         }
 
-        public async Task<bool> UpdateOrdenAsync(int id, OrdenDeServicio ordenConNuevosDatos, int usuarioId)
+        public async Task<bool> UpdateOrdenAsync(int id, OrdenDeServicio ordenActualizada, int usuarioId, string? usuarioAutorizador = null)
         {
-            var ordenExistente = await _context.OrdenesDeServicio
-                .Include(o => o.Cliente)
+            // 1. Buscamos la orden existente en la DB
+            var ordenDb = await _context.OrdenesDeServicio
+                .Include(o => o.Estado) // Incluimos estado para obtener los nombres viejos/nuevos si hace falta
                 .FirstOrDefaultAsync(o => o.Id == id);
 
-            if (ordenExistente == null)
+            if (ordenDb == null)
                 return false;
 
-            int estadoAnteriorId = ordenExistente.EstadoId;
-            int estadoNuevoId = ordenConNuevosDatos.EstadoId;
+            // 2. Guardamos el estado anterior antes de modificar nada
+            int estadoAnteriorId = ordenDb.EstadoId;
 
-            var estadoAnterior = await _context.Estados
-                .FirstOrDefaultAsync(e => e.Id == estadoAnteriorId);
+            // Para el historial, a veces es útil saber los nombres de los estados
+            // (Esto asume que tienes acceso a los nombres, si no, usa solo los IDs)
+            var nombreEstadoAnterior = ordenDb.Estado?.Nombre ?? "Desconocido";
 
-            var estadoNuevo = await _context.Estados
-                .FirstOrDefaultAsync(e => e.Id == estadoNuevoId);
+            // 3. Actualizamos los datos básicos (Precios y Resumen)
+            ordenDb.PrecioPresupuestado = ordenActualizada.PrecioPresupuestado;
+            ordenDb.PrecioFinal = ordenActualizada.PrecioFinal;
+            ordenDb.ResumenTecnico = ordenActualizada.ResumenTecnico;
 
-            string nombreEstadoAnterior = estadoAnterior?.Nombre ?? "(desconocido)";
-            string nombreEstadoNuevo = estadoNuevo?.Nombre ?? "(desconocido)";
-
-            ordenExistente.EstadoId = estadoNuevoId;
-            ordenExistente.PrecioPresupuestado = ordenConNuevosDatos.PrecioPresupuestado;
-            ordenExistente.PrecioFinal = ordenConNuevosDatos.PrecioFinal;
-            ordenExistente.ResumenTecnico = ordenConNuevosDatos.ResumenTecnico;
-
-            await _context.SaveChangesAsync();
-
-            var historial = new HistorialOrden
+            // 4. VERIFICAMOS SI HUBO CAMBIO DE ESTADO
+            if (estadoAnteriorId != ordenActualizada.EstadoId)
             {
-                OrdenDeServicioId = ordenExistente.Id,
-                UsuarioId = usuarioId,
-                FechaHora = DateTime.UtcNow,
-                DescripcionDelCambio = $"Estado cambiado de {nombreEstadoAnterior} a {nombreEstadoNuevo}"
-            };
+                // A. Buscamos nombres de estados para el texto
+                var estadoNuevoObj = await _context.Estados.FindAsync(ordenActualizada.EstadoId);
+                string nombreEstadoNuevo = estadoNuevoObj?.Nombre ?? "Desconocido";
 
-            await _context.HistorialOrdenes.AddAsync(historial);
-            await _context.SaveChangesAsync();
+                // =================================================================================
+                // B. LÓGICA DE AUDITORÍA CORREGIDA (Aquí está la magia para el gráfico)
+                // =================================================================================
 
-            if (estadoNuevoId == ID_ESTADO_FINALIZADO_ESPERA_PAGO &&
-                estadoAnteriorId != ID_ESTADO_FINALIZADO_ESPERA_PAGO)
-            {
-                string resumenParaEmail;
+                int idUsuarioResponsable = usuarioId; // Por defecto: el que está logueado
+                string nombreUsuarioTexto = "Sistema";
+                string detalleAutorizacion = "";
 
-                if (!string.IsNullOrWhiteSpace(ordenExistente.ResumenTecnico))
-                    resumenParaEmail = await _aiService.GenerarResumenDesdeTecnicoAsync(
-                        ordenExistente.ResumenTecnico);
+                if (!string.IsNullOrEmpty(usuarioAutorizador))
+                {
+                    // SI hay un autorizador (vino del popup), buscamos SU usuario en la DB
+                    // Buscamos por Email o por Nombre (ya que el login suele ser el email)
+                    var usuarioAuthDb = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.Email == usuarioAutorizador || u.NombreCompleto == usuarioAutorizador);
+
+                    if (usuarioAuthDb != null)
+                    {
+                        // ¡CAMBIO DE IDENTIDAD!
+                        // Asignamos el ID del autorizador para que el gráfico le sume el punto a él
+                        idUsuarioResponsable = usuarioAuthDb.Id;
+                        nombreUsuarioTexto = usuarioAuthDb.NombreCompleto;
+                        detalleAutorizacion = " (Mediante autorización con credenciales)";
+                    }
+                    else
+                    {
+                        // Si no lo encontramos en la DB (raro), guardamos el texto nomás
+                        detalleAutorizacion = $" (Autorizado por externo: {usuarioAutorizador})";
+                    }
+                }
                 else
-                    resumenParaEmail = await _aiService.GenerarResumenDesdeFallaAsync(
-                        ordenExistente.FallaDeclaradaPorCliente);
-
-                if (string.IsNullOrEmpty(resumenParaEmail))
                 {
-                    resumenParaEmail =
-                        "¡Tu equipo está listo y funcionando correctamente! " +
-                        "Ya puedes pasar a retirarlo.\n\nSaludos,\nEl equipo de LOFT COMPUTACIÓN";
+                    // Si no hubo popup, usamos el usuario logueado normal
+                    var usuarioLogueado = await _context.Usuarios.FindAsync(usuarioId);
+                    nombreUsuarioTexto = usuarioLogueado?.NombreCompleto ?? "Sistema";
                 }
 
-                if (ordenExistente.Cliente != null &&
-                    !string.IsNullOrEmpty(ordenExistente.Cliente.Email))
+                // C. Creamos el registro en el historial
+                var historial = new HistorialOrden
                 {
-                    await _emailService.EnviarEmailNotificacion(
-                        ordenExistente.Cliente.Email,
-                        ordenExistente.Cliente.NombreCompleto,
-                        resumenParaEmail,
-                        ordenExistente.Id);
-                }
+                    OrdenDeServicioId = ordenDb.Id,
+                    FechaHora = DateTime.UtcNow,
+
+                    // AQUÍ GUARDAMOS EL ID DEL QUE AUTORIZÓ (Para que salga bien en el gráfico)
+                    UsuarioId = idUsuarioResponsable,
+
+                    DescripcionDelCambio = $"Estado cambiado de '{nombreEstadoAnterior}' a '{nombreEstadoNuevo}'{detalleAutorizacion}"
+                };
+
+                _context.HistorialOrdenes.Add(historial);
+
+                // D. Aplicar cambio
+                ordenDb.EstadoId = ordenActualizada.EstadoId;
             }
 
+            // 5. Guardamos todos los cambios en la base de datos
+            await _context.SaveChangesAsync();
             return true;
         }
 
@@ -277,14 +295,18 @@ namespace LoftComputacion.Application
             };
 
             var topClientes = await _context.OrdenesDeServicio
+                .Include(o => o.Cliente)
+                .Include(o => o.Estado)
                 .Where(o => o.FechaIngreso >= inicioMes)
-                .GroupBy(o => o.Cliente.NombreCompleto)
+                .GroupBy(o => o.Cliente)
                 .Select(g => new TopClienteDto
                 {
-                    Nombre = g.Key,
-                    TotalGenerado = g.Sum(o => o.PrecioFinal ?? 0),
-                    CantidadOrdenes = g.Count()
+                    Nombre = g.Key.NombreCompleto,
+                    CantidadOrdenes = g.Count(),
+                    TotalGenerado = g.Where(o => o.Estado.Nombre == "Pagado" || o.Estado.Nombre == "Entregado")
+                                     .Sum(o => o.PrecioFinal ?? 0)
                 })
+                .Where(x => x.TotalGenerado > 0)
                 .OrderByDescending(x => x.TotalGenerado)
                 .Take(5)
                 .ToListAsync();
@@ -404,7 +426,95 @@ namespace LoftComputacion.Application
             return foto;
         }
 
+        /// <summary>
+        /// Actualiza el estado de la orden a "Pagado" cuando recibe el Webhook.
+        /// </summary>
+        public async Task ActualizarEstadoPorPagoAsync(int ordenId, string notaHistorial)
+        {
+            // Asumo que el ID para "Pagado" es 7 (según tus estados anteriores)
+            const int ESTADO_PAGADO_ID = 7;
 
+            var orden = await _context.OrdenesDeServicio.Include(o => o.Estado).FirstOrDefaultAsync(o => o.Id == ordenId);
 
+            if (orden == null) return; // No hacer nada si la orden no existe
+
+            // 1. Cambiar el estado a "Pagado"
+            string estadoAnterior = orden.Estado.Nombre;
+            orden.EstadoId = ESTADO_PAGADO_ID;
+
+            // 2. Crear registro de historial
+            var historial = new HistorialOrden
+            {
+                OrdenDeServicioId = orden.Id,
+                FechaHora = DateTime.UtcNow,
+                UsuarioId = 1, // <--- AJUSTE: Usamos ID del sistema (Usuario 1: Admin) o un ID genérico.
+                DescripcionDelCambio = $"Pago de Mercado Pago confirmado. {notaHistorial}",
+            };
+
+            _context.HistorialOrdenes.Add(historial);
+            await _context.SaveChangesAsync();
+        }
+
+        // METRICAS 
+        public async Task<MetricasDto> GetMetricasOperativasAsync()
+        {
+            var metricas = new MetricasDto();
+
+            // Tomamos los últimos 30 días
+            var fechaInicio = DateTime.UtcNow.AddDays(-30);
+
+            // 1. DATOS DE HARDWARE (Igual que antes, con la corrección del Enum)
+            var porTipo = await _context.OrdenesDeServicio
+                .Include(o => o.Equipo)
+                .Where(o => o.FechaIngreso >= fechaInicio)
+                .GroupBy(o => o.Equipo.Tipo)
+                .Select(g => new { Tipo = g.Key, Cantidad = g.Count() })
+                .ToListAsync();
+
+            metricas.OrdenesPorTipo = porTipo.Select(x => new DatoGrafico
+            {
+                Etiqueta = x.Tipo.ToString(),
+                Valor = x.Cantidad
+            }).ToList();
+
+            // 2. EFICIENCIA
+            // CORRECCIÓN: Solo contamos Entregado (5) y Pagado (7) como ÉXITO.
+            // Cancelado (6) es REBOTE.
+            var ordenesCerradas = await _context.OrdenesDeServicio
+                .Where(o => o.FechaIngreso >= fechaInicio && (o.EstadoId == 5 || o.EstadoId == 7 || o.EstadoId == 6))
+                .ToListAsync();
+
+            metricas.CantidadFinalizadas = ordenesCerradas.Count(o => o.EstadoId != 6); // Solo 5 y 7
+            metricas.CantidadCanceladas = ordenesCerradas.Count(o => o.EstadoId == 6);  // Solo 6
+            metricas.TotalOrdenesMes = await _context.OrdenesDeServicio.CountAsync(o => o.FechaIngreso >= fechaInicio);
+
+            if ((metricas.CantidadFinalizadas + metricas.CantidadCanceladas) > 0)
+            {
+                metricas.TasaRebote = Math.Round((double)metricas.CantidadCanceladas / (metricas.CantidadFinalizadas + metricas.CantidadCanceladas) * 100, 1);
+            }
+
+            // 3. RENDIMIENTO TÉCNICO
+            // CORRECCIÓN: Solo buscamos eventos de Entregado o Pagado en el historial
+            var historialEventos = await _context.HistorialOrdenes
+                .Include(h => h.Usuario)
+                .Where(h => h.FechaHora >= fechaInicio &&
+                           (h.DescripcionDelCambio.Contains("Entregado") ||
+                            h.DescripcionDelCambio.Contains("Pagado"))) // Sacamos "Finalizado"
+                .ToListAsync();
+
+            var rendimiento = historialEventos
+                .GroupBy(h => h.Usuario?.NombreCompleto ?? "Sistema")
+                .Select(g => new DatoGrafico
+                {
+                    Etiqueta = g.Key,
+                    Valor = g.Count()
+                })
+                .OrderByDescending(x => x.Valor)
+                .ToList();
+
+            metricas.RendimientoTecnicos = rendimiento;
+
+            return metricas;
+        }
     }
 }

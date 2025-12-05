@@ -5,7 +5,7 @@
 @using System.Net.Http.Json
 @using Microsoft.AspNetCore.Components.Forms
 @using MudBlazor
-@using LoftComputacion.Application.DTOs
+@using LoftComputacion.Shared.DTOs;
 @using LoftComputacion.BlazorApp.Services.Ordenes
 @using LoftComputacion.BlazorApp.Services.Auth
 
@@ -32,7 +32,6 @@
     else
     {
         <MudGrid GutterSize="3">
-            <!-- Datos de la orden -->
             <MudItem xs="12" md="4">
                 <MudPaper Class="pa-4">
 
@@ -60,7 +59,6 @@
                 </MudPaper>
             </MudItem>
 
-            <!-- Cambiar estado -->
             <MudItem xs="12" md="4">
                 <MudPaper Class="pa-4">
 
@@ -93,6 +91,18 @@
                                   Class="mt-3" />
 
                     <MudStack Row="true" Spacing="2" Class="mt-4">
+
+                        @if (Orden.Estado == "Finalizado, a espera de pago" && Orden.PrecioFinal > 0)
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Info"
+                                       OnClick="GenerarLinkPago"
+                                       StartIcon="@Icons.Material.Filled.Payment"
+                                       Disabled="@Guardando">
+                                Generar Link MP
+                            </MudButton>
+                        }
+
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
                                    OnClick="GuardarCambios"
@@ -117,7 +127,6 @@
                 </MudPaper>
             </MudItem>
 
-            <!-- Historial -->
             <MudItem xs="12" md="4">
                 <MudPaper Class="pa-4">
 
@@ -136,19 +145,22 @@
                             {
                                 <MudListItem T="HistorialLineaDto">
                                     <MudListItemText>
-                                        <b>@h.FechaHora.ToShortDateString() @h.FechaHora.ToShortTimeString()</b><br />
-                                        <i>@h.Usuario</i><br />
-                                        @h.Descripcion
+                                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
+                                            @h.FechaHora.ToLocalTime().ToString("g")
+                                        </MudText>
+                                        
+                                        <div style="margin-top: 2px;">
+                                            @h.Descripcion
+                                        </div>
                                     </MudListItemText>
                                 </MudListItem>
-                            }
+                                <MudDivider /> }
                         </MudList>
                     }
 
                 </MudPaper>
             </MudItem>
 
-            <!-- FOTOS -->
             <MudItem xs="12">
                 <MudPaper Class="pa-4 mt-4">
 
@@ -160,38 +172,42 @@
                         {
                             @foreach (var foto in Orden.Fotos)
                             {
-                                <div style="position:relative; width:120px; height:120px; border-radius:6px; overflow:hidden; pointer-events:none;">
+                                <div style="position:relative; width:120px; height:120px; border-radius:6px; overflow:hidden; border: 1px solid #ddd;">
 
-    <!-- Imagen -->
-    <img src="@foto.Url"
-         style="width:100%; height:100%; object-fit:cover; pointer-events:none;" />
+                                    <img src="@foto.Url"
+                                         style="width:100%; height:100%; object-fit:cover;" />
 
-                                    <!-- BOTÓN DE BORRAR -->
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   Size="Size.Small"
-                                                   Style="position:absolute; top:4px; right:4px; background:white; pointer-events:auto;"
-                                                   OnClick="@(() => EliminarFoto(foto))" />
+                                    <div style="position:absolute; top:4px; right:4px; z-index:20;"
+                                         @onclick:stopPropagation="true"
+                                         @onclick:preventDefault="true">
+                                         
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       Style="background:white;"
+                                                       OnClick="@(() => EliminarFoto(foto))" />
+                                    </div>
 
-                                    <!-- BOTÓN DE ZOOM -->
-                                    <MudIconButton Icon="@Icons.Material.Filled.ZoomIn"
-                                                   Color="Color.Primary"
-                                                   Size="Size.Small"
-                                                   Style="position:absolute; bottom:4px; right:4px; background:white; pointer-events:auto;"
-                                                   OnClick="@(() => VerFoto(foto.Url))" />
+                                    <div style="position:absolute; bottom:4px; right:4px; z-index:20;"
+                                         @onclick:stopPropagation="true"
+                                         @onclick:preventDefault="true">
+                                         
+                                        <MudIconButton Icon="@Icons.Material.Filled.ZoomIn"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       Style="background:white;"
+                                                       OnClick="@(() => VerFoto(foto.Url))" />
+                                    </div>
 
-
-</div>
-
+                                </div>
                             }
                         }
 
-                        <!-- Botón subir -->
-                        <label style="width:120px; height:120px; border:2px dashed #bbb; display:flex; justify-content:center; align-items:center; cursor:pointer; border-radius:6px;">
+                        <label style="width:120px; height:120px; border:2px dashed #bbb; display:flex; justify-content:center; align-items:center; cursor:pointer; border-radius:6px; position:relative;">
                             <InputFile OnChange="SubirFoto"
                                        accept="image/*"
-                                       style="opacity:0; width:100%; height:100%; position:absolute;" />
-                            <div style="text-align:center; pointer-events:none;">
+                                       style="opacity:0; width:100%; height:100%; position:absolute; left:0; top:0; cursor:pointer;" />
+                            <div style="text-align:center;">
                                 <MudIcon Icon="@Icons.Material.Filled.AddAPhoto" />
                                 <div style="font-size:12px;">Agregar foto</div>
                             </div>
@@ -219,6 +235,7 @@
     private decimal? PrecioPresupuestado;
     private decimal? PrecioFinal;
     private string? ResumenTecnico;
+    private int _estadoIdOriginal; // Para saber si cambió
 
     // Estados posibles
     private readonly List<(int Id, string Nombre)> Estados = new()
@@ -232,7 +249,6 @@
         (7, "Pagado")
     };
 
-    // Clase auxiliar para leer la respuesta del POST de fotos
     private class FotoUploadResponse
     {
         public string Url { get; set; } = string.Empty;
@@ -252,6 +268,7 @@
                 PrecioFinal = Orden.PrecioFinal;
                 ResumenTecnico = Orden.ResumenTecnico;
 
+                _estadoIdOriginal = EstadoId;
                 Orden.Fotos ??= new List<FotoDto>();
                 Orden.Historial ??= new List<HistorialLineaDto>();
             }
@@ -275,10 +292,36 @@
     private async Task GuardarCambios()
     {
         Guardando = true;
+        string? usuarioAutorizador = null;
 
         try
         {
-            var usuarioId = await AuthProvider.GetUserIdAsync();
+            // 1. DETECTAR SI EL ESTADO CAMBIÓ
+            // Comparamos el ID seleccionado en el Select con el que guardamos al cargar la página
+            if (EstadoId != _estadoIdOriginal)
+            {
+                // Opciones para que no puedan cerrar el dialogo haciendo click afuera
+                var options = new DialogOptions { BackdropClick = false, CloseOnEscapeKey = false };
+
+                // Abrimos el diálogo de confirmación
+                var dialog = DialogService.Show<DialogoConfirmarCredenciales>("Confirmar Cambio de Estado", options);
+                var result = await dialog.Result;
+
+                if (result.Canceled)
+                {
+                    // Si el usuario cancela o pone mal la contraseña, ABORTAMOS TODO.
+                    // No se guarda nada.
+                    Guardando = false;
+                    return;
+                }
+
+                // Si llegamos aquí, es porque las credenciales fueron correctas.
+                // Obtenemos el nombre del usuario que autorizó (viene en result.Data)
+                usuarioAutorizador = result.Data.ToString();
+            }
+
+            // 2. Preparamos los datos para enviar a la API
+            var usuarioIdLogueado = await AuthProvider.GetUserIdAsync();
 
             var dto = new UpdateOrdenDto
             {
@@ -286,9 +329,11 @@
                 PrecioPresupuestado = PrecioPresupuestado,
                 PrecioFinal = PrecioFinal,
                 ResumenTecnico = ResumenTecnico,
-                UsuarioId = usuarioId
+                UsuarioId = usuarioIdLogueado,       // El que está usando la PC
+                UsuarioAutorizador = usuarioAutorizador // El que puso la contraseña (puede ser null si no cambió estado)
             };
 
+            // 3. Enviamos la petición PUT
             var request = new HttpRequestMessage(HttpMethod.Put, $"api/OrdenesDeServicio/{id}")
             {
                 Content = JsonContent.Create(dto)
@@ -303,12 +348,21 @@
                 return;
             }
 
+            // 4. Éxito
             Snackbar.Add("Cambios guardados correctamente.", Severity.Success);
+
+            // Actualizamos el estado original para que si guarda de nuevo sin cambiar estado, no pida pass
+            _estadoIdOriginal = EstadoId;
+
+            // Opcional: Recargar la página para ver el historial nuevo actualizado
+            // await OnInitializedAsync();
+
+            // O volver al listado (como lo tenías antes)
             Nav.NavigateTo("/ordenes");
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error crítico: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -425,5 +479,47 @@
         };
 
         DialogService.Show<DialogoFoto>("Foto del equipo", parameters, options);
+    }
+
+    private async Task GenerarLinkPago()
+    {
+        if (Orden is null || Orden.PrecioFinal <= 0)
+        {
+            Snackbar.Add("Debe definir un precio final válido para generar el link.", Severity.Warning);
+            return;
+        }
+
+        Guardando = true;
+        try
+        {
+            // 1. Llamamos al Backend para crear la preferencia
+            string? url = await OrdenesService.GenerarLinkDePagoAsync(id);
+
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                Snackbar.Add("La API no devolvió un link válido.", Severity.Error);
+                return;
+            }
+
+            // 2. Mostramos el link en un diálogo
+            var parameters = new DialogParameters
+            {
+                ["Url"] = url,
+                ["Monto"] = (Orden.PrecioFinal ?? 0).ToString("C"),
+                ["OrdenId"] = Orden.Id
+            };
+
+            // Asumo que tienes un componente DialogoLinkPago.razor, si no, lo creamos después.
+            DialogService.Show<DialogoLinkPago>("Link de Pago Generado", parameters);
+
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al generar link MP: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            Guardando = false;
+        }
     }
 }

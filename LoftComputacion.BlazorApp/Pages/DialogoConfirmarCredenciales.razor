@@ -1,0 +1,60 @@
+﻿@using MudBlazor
+@using LoftComputacion.BlazorApp.Services.Auth
+@inject AuthApiService AuthService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudAlert Severity="Severity.Warning" Class="mb-3">
+            Estás cambiando el estado de la orden.
+        </MudAlert>
+        <MudText Class="mb-3">Para auditar este cambio, por favor ingresa tus credenciales (o las de un supervisor).</MudText>
+
+        <MudTextField @bind-Value="_usuario" Label="Usuario" Variant="Variant.Outlined" Class="mb-3" />
+        <MudTextField @bind-Value="_password" Label="Contraseña" Variant="Variant.Outlined" InputType="InputType.Password" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancelar" Color="Color.Default">Cancelar</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Confirmar" Disabled="_procesando">
+            @if (_procesando)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Confirmar Cambio
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; }
+
+    private string _usuario = "";
+    private string _password = "";
+    private bool _procesando = false;
+
+    private async Task Confirmar()
+    {
+        if (string.IsNullOrWhiteSpace(_usuario) || string.IsNullOrWhiteSpace(_password))
+        {
+            Snackbar.Add("Ingrese las credenciales.", Severity.Warning);
+            return;
+        }
+
+        _procesando = true;
+        // Validamos contra la API de Auth
+        var token = await AuthService.LoginAsync(_usuario, _password);
+        _procesando = false;
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            // Login exitoso: Devolvemos el nombre de usuario para guardarlo en el historial
+            MudDialog.Close(DialogResult.Ok(_usuario));
+        }
+        else
+        {
+            Snackbar.Add("Credenciales incorrectas.", Severity.Error);
+        }
+    }
+
+    private void Cancelar() => MudDialog.Cancel();
+}

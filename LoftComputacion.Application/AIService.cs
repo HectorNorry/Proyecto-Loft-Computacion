@@ -91,5 +91,31 @@ namespace LoftComputacion.Application
                 return null;
             }
         }
+
+        /// <summary>
+        /// MÉTODO 3 (NUEVO): Chatbot Técnico para ayudar a los empleados.
+        /// </summary>
+        public async Task<string?> ConsultarExpertoTecnicoAsync(string consultaUsuario)
+        {
+            // Definimos la personalidad del experto aquí
+            var systemPrompt = """
+                Actúa como un Técnico Senior Experto en Hardware, Software e Impresoras con 20 años de experiencia.
+                Estás hablando con otro técnico del taller (junior), así que usa lenguaje técnico preciso.
+                
+                Tu objetivo es ayudar a diagnosticar y solucionar el problema reportado.
+                
+                Reglas de respuesta:
+                1. Sé directo. No saludes con "Hola, soy una IA". Ve directo a la solución.
+                2. Usa listas numeradas o viñetas para los pasos de diagnóstico.
+                3. Si es una impresora, sugiere limpieza de cabezales, revisión de mangueras, etc.
+                4. Si es hardware (PC/Notebook), sugiere pruebas de voltaje, RAM, temperatura, etc.
+                5. Sé breve y conciso.
+                
+                Consulta del técnico:
+                """ + $" \"{consultaUsuario}\"";
+
+            // Reutilizamos tu método privado existente que ya funciona
+            return await CallGeminiApiAsync(systemPrompt);
+        }
     }
 }

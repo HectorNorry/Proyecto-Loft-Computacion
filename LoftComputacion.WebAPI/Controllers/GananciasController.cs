@@ -1,5 +1,5 @@
 ﻿using LoftComputacion.Application; // Necesario para el servicio
-using LoftComputacion.Application.DTOs;
+using LoftComputacion.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LoftComputacion.Domain;

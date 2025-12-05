@@ -1,6 +1,6 @@
 ﻿@page "/"
 @using LoftComputacion.BlazorApp.Services.Ordenes
-@using LoftComputacion.Application.DTOs
+@using LoftComputacion.Shared.DTOs
 @using Microsoft.AspNetCore.Authorization
 @inject OrdenesApiService OrdenesService
 @attribute [Authorize]
@@ -11,144 +11,169 @@
         Panel principal
     </MudText>
 
-    <!-- KPIs -->
-    <MudGrid>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="3" Class="pa-4 kpi-card">
-                <MudIcon Icon="@Icons.Material.Filled.Event" Color="Color.Primary" Size="Size.Large" />
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Órdenes hoy</MudText>
-                <MudText Typo="Typo.h5" Class="fw-bold">@Dashboard?.OrdenesHoy</MudText>
-            </MudPaper>
-        </MudItem>
+    @if (Dashboard == null)
+    {
+        <!-- ESTADO DE CARGA: Muestra esto mientras espera a la API en lugar de explotar -->
+        <div class="d-flex justify-center align-center" style="height: 50vh;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <MudText Class="ml-4">Cargando métricas...</MudText>
+        </div>
+    }
+    else
+    {
+        <!-- CONTENIDO REAL (Tu diseño original) -->
+        <!-- KPIs -->
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="3" Class="pa-4 kpi-card d-flex flex-column justify-center align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Event" Color="Color.Primary" Style="font-size: 3rem;" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">Órdenes hoy</MudText>
+                    <MudText Typo="Typo.h3" Class="fw-bold">@Dashboard.OrdenesHoy</MudText>
+                </MudPaper>
+            </MudItem>
 
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="3" Class="pa-4 kpi-card">
-                <MudIcon Icon="@Icons.Material.Filled.Build" Color="Color.Warning" Size="Size.Large" />
-                <MudText Typo="Typo.body2" Color="Color.Secondary">En taller</MudText>
-                <MudText Typo="Typo.h5" Class="fw-bold">@Dashboard?.EnTaller</MudText>
-            </MudPaper>
-        </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="3" Class="pa-4 kpi-card d-flex flex-column justify-center align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Build" Color="Color.Warning" Style="font-size: 3rem;" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">En taller</MudText>
+                    <MudText Typo="Typo.h3" Class="fw-bold">@Dashboard.EnTaller</MudText>
+                </MudPaper>
+            </MudItem>
 
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="3" Class="pa-4 kpi-card">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Finalizadas</MudText>
-                <MudText Typo="Typo.h5" Class="fw-bold">@Dashboard?.Finalizadas</MudText>
-            </MudPaper>
-        </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="3" Class="pa-4 kpi-card d-flex flex-column justify-center align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Style="font-size: 3rem;" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">Finalizadas</MudText>
+                    <MudText Typo="Typo.h3" Class="fw-bold">@Dashboard.Finalizadas</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
 
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="3" Class="pa-4 kpi-card">
-                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Large" />
-                <MudText Typo="Typo.body2" Color="Color.Secondary">Ingresos</MudText>
-                <MudText Typo="Typo.h5" Class="fw-bold">@((Dashboard?.Ingresos ?? 0).ToString("C"))</MudText>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+        <!-- Alertas + Top Clientes -->
+        <MudGrid Class="mt-6">
 
-    <!-- Alertas + Top Clientes -->
-    <MudGrid Class="mt-6">
+            <!-- Alertas -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="2" Class="pa-4">
 
-        <!-- Alertas -->
-        <MudItem xs="12" md="6">
-            <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Alertas del taller</MudText>
 
-                <MudText Typo="Typo.h6" Class="fw-bold mb-3">Alertas del taller</MudText>
+                    <MudList T="object" Dense="true">
 
-                <MudList T="object" Dense="true">
+                        <MudListItem T="object">
+                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Style="color:#FFC107; margin-right:10px;" />
+                            <MudText>Esperando aprobación: <b>@Dashboard.Alertas.EsperandoAprobacion</b></MudText>
+                        </MudListItem>
 
-                    <MudListItem T="object">
-                        <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Style="color:#FFC107; margin-right:10px;" />
-                        <MudText>Esperando aprobación: <b>@Dashboard?.Alertas.EsperandoAprobacion</b></MudText>
-                    </MudListItem>
+                        <MudListItem T="object">
+                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Style="color:#FF7043; margin-right:10px;" />
+                            <MudText>Más de 7 días en taller: <b>@Dashboard.Alertas.MasDe7Dias</b></MudText>
+                        </MudListItem>
 
-                    <MudListItem T="object">
-                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Style="color:#FF7043; margin-right:10px;" />
-                        <MudText>Más de 7 días en taller: <b>@Dashboard?.Alertas.MasDe7Dias</b></MudText>
-                    </MudListItem>
+                        <MudListItem T="object">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Style="color:#4CAF50; margin-right:10px;" />
+                            <MudText>Listas para entregar: <b>@Dashboard.Alertas.ListasParaEntregar</b></MudText>
+                        </MudListItem>
 
-                    <MudListItem T="object">
-                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Style="color:#4CAF50; margin-right:10px;" />
-                        <MudText>Listas para entregar: <b>@Dashboard?.Alertas.ListasParaEntregar</b></MudText>
-                    </MudListItem>
+                    </MudList>
 
-                </MudList>
+                </MudPaper>
+            </MudItem>
 
-            </MudPaper>
-        </MudItem>
+            <!-- TOP CLIENTES -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Top clientes del mes</MudText>
 
-        <!-- TOP CLIENTES -->
-        <MudItem xs="12" md="6">
-            <MudPaper Elevation="2" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="fw-bold mb-3">Top clientes del mes</MudText>
+                    <MudTable Items="@TopClientesConIndice" Dense="true" Hover="true" Striped="true">
+                        <HeaderContent>
+                            <MudTh>#</MudTh>
+                            <MudTh>Cliente</MudTh>
+                            <MudTh>Órdenes</MudTh>
+                            <MudTh>Total</MudTh>
+                        </HeaderContent>
 
-                <MudTable Items="@TopClientesConIndice" Dense="true">
-                    <HeaderContent>
-                        <MudTh>#</MudTh>
-                        <MudTh>Cliente</MudTh>
-                        <MudTh>Órdenes</MudTh>
-                        <MudTh>Total</MudTh>
-                    </HeaderContent>
+                        <RowTemplate Context="item">
+                            <MudTd>@item.Index</MudTd>
+                            <MudTd>@item.Cliente.Nombre</MudTd>
+                            <MudTd>@item.Cliente.CantidadOrdenes</MudTd>
+                            <MudTd>@item.Cliente.TotalGenerado.ToString("C")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+            </MudItem>
 
-                    <RowTemplate Context="item">
-                        <MudTd>@item.Index</MudTd>
-                        <MudTd>@item.Cliente.Nombre</MudTd>
-                        <MudTd>@item.Cliente.CantidadOrdenes</MudTd>
-                        <MudTd>@item.Cliente.TotalGenerado.ToString("C")</MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </MudPaper>
-        </MudItem>
+        </MudGrid>
 
-    </MudGrid>
+        <!-- Órdenes por estado con colores -->
+        <MudPaper Elevation="2" Class="pa-6 mt-6">
+            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Órdenes por estado</MudText>
 
-    <!-- Órdenes por estado con colores -->
-    <MudPaper Elevation="2" Class="pa-6 mt-6">
-        <MudText Typo="Typo.h6" Class="fw-bold mb-3">Órdenes por estado</MudText>
+            <MudTable Items="@EstadosResumen" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Estado</MudTh>
+                    <MudTh Align="Align.Right">Cantidad</MudTh>
+                </HeaderContent>
 
-        <MudTable Items="@EstadosResumen" Dense="true">
-            <HeaderContent>
-                <MudTh>Estado</MudTh>
-                <MudTh Align="Align.Right">Cantidad</MudTh>
-            </HeaderContent>
-
-            <RowTemplate Context="context">
-                <MudTd>
-                    <MudChip T="string" Color="Color.Primary"
-                             Style=@($"background-color:{GetEstadoColor(context.Estado)}; margin-right:8px;") />
-                    @context.Estado
-                </MudTd>
-                <MudTd Align="Align.Right">@context.Cantidad</MudTd>
-            </RowTemplate>
-        </MudTable>
-    </MudPaper>
+                <RowTemplate Context="context">
+                    <MudTd>
+                        <MudChip T="string" Color="Color.Primary"
+                                 Style=@($"background-color:{GetEstadoColor(context.Estado)}; color: white;") Size="Size.Small" />
+                        @context.Estado
+                    </MudTd>
+                    <MudTd Align="Align.Right">@context.Cantidad</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudPaper>
+    }
 
 </MudContainer>
 
 @code {
     private DashboardDto? Dashboard;
     private List<EstadoResumen> EstadosResumen = new();
+    private List<(int Index, TopClienteDto Cliente)> TopClientesConIndice = new();
 
     protected override async Task OnInitializedAsync()
     {
-        Dashboard = await OrdenesService.GetDashboardDataAsync();
+        try
+        {
+            Dashboard = await OrdenesService.GetDashboardDataAsync();
 
-        EstadosResumen = Dashboard.Estados
-            .Select(x => new EstadoResumen { Estado = x.Key, Cantidad = x.Value })
-            .OrderByDescending(x => x.Cantidad)
-            .ToList();
+            // PROTECCIÓN CONTRA NULOS (Vital para evitar el reinicio)
+            if (Dashboard != null)
+            {
+                if (Dashboard.Estados != null)
+                {
+                    EstadosResumen = Dashboard.Estados
+                        .Select(x => new EstadoResumen { Estado = x.Key, Cantidad = x.Value })
+                        .OrderByDescending(x => x.Cantidad)
+                        .ToList();
+                }
 
-        TopClientesConIndice = Dashboard.TopClientes
-            .Select((cliente, index) => (index + 1, cliente))
-            .ToList();
+                if (Dashboard.TopClientes != null)
+                {
+                    TopClientesConIndice = Dashboard.TopClientes
+                        .Select((cliente, index) => (index + 1, cliente))
+                        .ToList();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cargando dashboard: {ex.Message}");
+            // Aquí podrías mostrar un Snackbar con el error si quisieras
+        }
     }
 
 
     private string GetEstadoColor(string estado)
     {
-        return Dashboard?.EstadoColores.ContainsKey(estado) == true
+        if (Dashboard?.EstadoColores == null) return "#90A4AE";
+
+        return Dashboard.EstadoColores.ContainsKey(estado)
             ? Dashboard.EstadoColores[estado]
-            : "#90A4AE"; // gris por defecto
+            : "#90A4AE";
     }
 
     private class EstadoResumen
@@ -156,7 +181,4 @@
         public string Estado { get; set; } = "";
         public int Cantidad { get; set; }
     }
-
-    private List<(int Index, TopClienteDto Cliente)> TopClientesConIndice = new();
-
 }

@@ -1,17 +1,17 @@
 ﻿@page "/login"
 @layout LoginLayout
+@attribute [AllowAnonymous]
 
 @using LoftComputacion.BlazorApp.Services.Auth
+@using Microsoft.AspNetCore.Authorization
 @inject AuthApiService AuthApi
 @inject CustomAuthStateProvider AuthState
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
 
-
 <MudPaper Class="pa-6" Elevation="4" Style="width:350px;margin:auto;margin-top:70px;">
     <div style="text-align:center; margin-bottom:20px;">
-        <img src="images/Log.png"
-             style="width:60%; max-width:220px;" />
+        <img src="images/Log.png" style="width:60%; max-width:220px;" />
     </div>
     <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4 fw-bold">
         Iniciar sesión
@@ -44,8 +44,6 @@
 
     private async Task SubmitLogin()
     {
-        Console.WriteLine(">>> SubmitLogin() ejecutado.");  // para probar
-
         try
         {
             var token = await AuthApi.LoginAsync(_email, _password);
@@ -56,15 +54,19 @@
                 return;
             }
 
+            token = token.Trim('"');
+            // Notificamos a la app que estamos logueados
             await AuthState.MarkUserAsAuthenticated(token);
 
-            Console.WriteLine(">>> Login exitoso, redirigiendo...");
-            Nav.NavigateTo("/", true);
+            // --- CORRECCIÓN AQUÍ ---
+            // Quitamos el ", true". Ahora la navegación es interna y suave.
+            // Esto mantiene el estado de autenticación en memoria.
+            Nav.NavigateTo("/");
         }
         catch (Exception ex)
         {
             Snackbar.Add("Error al iniciar sesión.", Severity.Error);
-            Console.WriteLine(">>> ERROR LOGIN: " + ex.Message);
+            Console.WriteLine("Error: " + ex.Message);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 @using MudBlazor
 @using LoftComputacion.BlazorApp.Services.Clientes
-@using LoftComputacion.Application.DTOs
+@using LoftComputacion.Shared.DTOs;
 @using Microsoft.AspNetCore.Authorization
 
 
@@ -14,38 +14,29 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
 
-    <!-- TÍTULO + BOTÓN NUEVO -->
-    <MudStack Direction="Row"
-              Justify="Justify.SpaceBetween"
-              AlignItems="AlignItems.Center"
-              Class="mb-4">
-        <MudText Typo="Typo.h4" Class="fw-bold">
-            Clientes
-        </MudText>
-
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.PersonAdd"
-                   OnClick="AbrirDialogNuevoCliente">
+    <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudText Typo="Typo.h4" Class="fw-bold">Clientes</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="AbrirDialogNuevoCliente">
             Nuevo Cliente
         </MudButton>
     </MudStack>
 
-    <!-- BUSCADOR -->
-    <MudTextField @bind-Value="Filtro"
-                  Placeholder="Buscar cliente por nombre, teléfono, email..."
-                  Adornment="Adornment.Start"
-                  AdornmentIcon="@Icons.Material.Filled.Search"
-                  Class="mb-4"
-                  Immediate="true"
-                  OnKeyUp="Buscar" />
-
-    <!-- TABLA -->
     <MudTable T="ClienteDto"
               Items="@ListaClientes"
               Hover="true"
               Dense="true"
-              Sortable="true">
+              Sortable="true"
+              Filter="new Func<ClienteDto,bool>(FilterFunc1)">
+        <ToolBarContent>
+            <MudSpacer />
+            <MudTextField @bind-Value="Filtro"
+                          Placeholder="Buscar cliente por nombre, teléfono, email..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true" />
+        </ToolBarContent>
 
         <HeaderContent>
             <MudTh SortLabel="NombreCompleto">Nombre</MudTh>
@@ -56,28 +47,25 @@
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd>@context.NombreCompleto</MudTd>
-            <MudTd>@context.Telefono</MudTd>
-            <MudTd>@context.Email</MudTd>
-            <MudTd>@context.DNI</MudTd>
+            <MudTd DataLabel="Nombre">@context.NombreCompleto</MudTd>
+            <MudTd DataLabel="Teléfono">@context.Telefono</MudTd>
+            <MudTd DataLabel="Email">@context.Email</MudTd>
+            <MudTd DataLabel="DNI">@context.DNI</MudTd>
             <MudTd>
                 <MudStack Row="true" Spacing="1">
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Primary"
-                               Size="Size.Small"
-                               OnClick="@(() => AbrirDialogEditarCliente(context))">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="@(() => AbrirDialogEditarCliente(context))">
                         Editar
                     </MudButton>
-
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Error"
-                               Size="Size.Small"
-                               OnClick="@(() => EliminarClienteAsync(context))">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => EliminarClienteAsync(context))">
                         Eliminar
                     </MudButton>
                 </MudStack>
             </MudTd>
         </RowTemplate>
+
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
 
         <NoRecordsContent>
             <MudText Color="Color.Secondary">No se encontraron clientes.</MudText>
@@ -90,8 +78,6 @@
 @code {
     private List<ClienteDto> ListaClientes = new();
     private string Filtro = string.Empty;
-
-    // para edición
     private ClienteEditarDto ClienteEditando = new();
     private int _clienteIdEditando;
 
@@ -112,44 +98,41 @@
         }
     }
 
+    // --- FUNCIÓN DE FILTRADO ---
+    // Esta función revisa cada cliente y decide si mostrarlo o no según lo que escribas
+    private bool FilterFunc1(ClienteDto element) => FilterFunc(element, Filtro);
 
-
-    private async Task Buscar()
+    private bool FilterFunc(ClienteDto element, string searchString)
     {
-        await CargarClientes();
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        // Buscamos en Nombre, Email, DNI y Teléfono (ignorando mayúsculas/minúsculas)
+        if ($"{element.NombreCompleto} {element.Email} {element.DNI} {element.Telefono}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
     }
 
     /* ------------------- NUEVO CLIENTE ------------------- */
-
     private async Task AbrirDialogNuevoCliente()
     {
-        var options = new DialogOptions
-        {
-            CloseButton = true,
-            MaxWidth = MaxWidth.Medium,
-            FullWidth = true
-        };
-
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
         var dialog = DialogService.Show<DialogNuevoCliente>("Nuevo cliente", options);
         var result = await dialog.Result;
 
-        // OJO: la propiedad se llama Canceled (una sola L)
-        if (result.Canceled)
-            return;
+        if (result.Canceled) return;
 
         var dto = (ClienteCrearDto)result.Data!;
         await ClientesService.CrearClienteAsync(dto);
-
         Snackbar.Add("Cliente creado correctamente.", Severity.Success);
         await CargarClientes();
     }
 
     /* ------------------- EDITAR CLIENTE ------------------- */
-
     private async Task AbrirDialogEditarCliente(ClienteDto cliente)
     {
         _clienteIdEditando = cliente.Id;
-
         var model = new ClienteEditarDto
         {
             Id = cliente.Id,
@@ -159,44 +142,25 @@
             DNI = cliente.DNI
         };
 
-        var parameters = new DialogParameters
-    {
-        { "Cliente", model }
-    };
-
-        var options = new DialogOptions
-        {
-            CloseButton = true,
-            MaxWidth = MaxWidth.Medium,
-            FullWidth = true
-        };
+        var parameters = new DialogParameters { { "Cliente", model } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
 
         var dialog = DialogService.Show<DialogEditarCliente>("Editar cliente", parameters, options);
         var result = await dialog.Result;
 
-        if (result.Canceled)
-            return;
+        if (result.Canceled) return;
 
         var dto = (ClienteEditarDto)result.Data!;
         await ClientesService.EditarClienteAsync(_clienteIdEditando, dto);
-
         Snackbar.Add("Cliente actualizado correctamente.", Severity.Success);
         await CargarClientes();
     }
 
-
     /* ------------------- ELIMINAR CLIENTE ------------------- */
-
     private async Task EliminarClienteAsync(ClienteDto cliente)
     {
-        bool? confirm = await DialogService.ShowMessageBox(
-            "Eliminar cliente",
-            $"¿Seguro que deseas eliminar a {cliente.NombreCompleto}?",
-            yesText: "Eliminar",
-            cancelText: "Cancelar");
-
-        if (confirm != true)
-            return;
+        bool? confirm = await DialogService.ShowMessageBox("Eliminar cliente", $"¿Seguro que deseas eliminar a {cliente.NombreCompleto}?", yesText: "Eliminar", cancelText: "Cancelar");
+        if (confirm != true) return;
 
         await ClientesService.EliminarClienteAsync(cliente.Id);
         Snackbar.Add("Cliente eliminado.", Severity.Success);

@@ -1,0 +1,116 @@
+﻿@page "/usuarios-lista"
+@using LoftComputacion.Shared.DTOs
+@using LoftComputacion.BlazorApp.Services.Auth @* O donde esté tu UsuariosApiService *@
+@inject UsuariosApiService UsuariosService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@using MudBlazor
+
+<div class="pa-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h5">Gestión de Usuarios</MudText>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="NuevoUsuario">
+            Nuevo Usuario
+        </MudButton>
+    </div>
+
+    @if (_cargando)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText>Cargando lista de usuarios...</MudText>
+    }
+    else
+    {
+        <MudTable Items="_usuarios" Dense="true" Hover="true" Bordered="true" Filter="new Func<UsuarioDto, bool>(FilterFunc1)">
+            <ToolBarContent>
+                <MudSpacer />
+                <MudTextField @bind-Value="_busqueda" Placeholder="Buscar..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0" Immediate="true" />
+            </ToolBarContent>
+
+            <HeaderContent>
+                <MudTh>Nombre</MudTh>
+                <MudTh>Email</MudTh>
+                <MudTh>Rol</MudTh>
+                <MudTh>Acciones</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.NombreCompleto</MudTd>
+                <MudTd>@context.Email</MudTd>
+                <MudTd>@context.Rol</MudTd>
+                <MudTd>
+                    <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditarUsuario(context))" />
+                    <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => EliminarUsuario(context))" />
+                </MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudAlert Severity="Severity.Info">No se encontraron usuarios o la API no devolvió datos.</MudAlert>
+            </NoRecordsContent>
+
+            <PagerContent><MudTablePager /></PagerContent>
+        </MudTable>
+    }
+</div>
+
+@code {
+    private List<UsuarioDto> _usuarios = new();
+    private string _busqueda = "";
+    private bool _cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        _cargando = true;
+        try
+        {
+            var data = await UsuariosService.GetUsuarios();
+            if (data != null) _usuarios = data;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error cargando usuarios: {ex.Message}", Severity.Error);
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+    private bool FilterFunc1(UsuarioDto element) =>
+        string.IsNullOrWhiteSpace(_busqueda) ||
+        $"{element.NombreCompleto} {element.Email} {element.Rol}".Contains(_busqueda, StringComparison.OrdinalIgnoreCase);
+
+    private void NuevoUsuario() => AbrirDialogoUsuario(null);
+    private void EditarUsuario(UsuarioDto usuario) => AbrirDialogoUsuario(usuario);
+
+    private async Task EliminarUsuario(UsuarioDto usuario)
+    {
+        var confirm = await DialogService.ShowMessageBox("Eliminar", $"¿Eliminar a {usuario.NombreCompleto}?", yesText: "Eliminar", cancelText: "Cancelar");
+        if (confirm != true) return;
+
+        var resp = await UsuariosService.Eliminar(usuario.Id);
+        if (resp.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Usuario eliminado.", Severity.Success);
+            await Cargar();
+        }
+        else
+        {
+            Snackbar.Add("Error al eliminar.", Severity.Error);
+        }
+    }
+
+    private async void AbrirDialogoUsuario(UsuarioDto? usuario)
+    {
+        var parameters = new DialogParameters { ["Usuario"] = usuario };
+        var dialog = DialogService.Show<DialogoUsuario>("Usuario", parameters);
+        var result = await dialog.Result;
+        if (!result.Canceled) await Cargar();
+    }
+}

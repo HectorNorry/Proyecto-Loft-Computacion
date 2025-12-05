@@ -1,0 +1,136 @@
+﻿@using MudBlazor
+@using LoftComputacion.Shared.DTOs
+@using System.Net.Http.Json
+@inject ISnackbar Snackbar
+@inject HttpClient Http
+
+<MudDialog Style="border-radius: 16px; overflow: hidden;">
+    <TitleContent>
+        <div class="d-flex align-center gap-3 pa-4" style="background: linear-gradient(90deg, #594AE2 0%, #3d34a0 100%); color: white;">
+            <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled">
+                <MudIcon Icon="@Icons.Material.Filled.SmartToy" />
+            </MudAvatar>
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight:bold;">Copiloto Técnico</MudText>
+                <MudText Typo="Typo.caption" Style="opacity: 0.8;">Potenciado por IA</MudText>
+            </div>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="Cerrar" />
+        </div>
+    </TitleContent>
+
+    <DialogContent>
+        <div class="d-flex flex-column" style="height: 500px; max-height: 70vh;">
+
+            <div class="flex-grow-1 pa-4 overflow-auto" id="chat-container" style="background-color: #f5f7fb;">
+                @if (_mensajes.Count == 0)
+                {
+                    <div class="d-flex flex-column align-center justify-center mt-10">
+                        <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Large" Color="Color.Primary" Class="mb-3" />
+                        <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Secondary">
+                            <b>Hola, Técnico.</b><br>Descríbeme la falla y te ayudaré a diagnosticar.
+                        </MudText>
+                    </div>
+                }
+
+                @foreach (var msg in _mensajes)
+                {
+                    <div class="d-flex @(msg.EsMio ? "justify-end" : "justify-start") mb-3">
+                        @if (!msg.EsMio)
+                        {
+                            <MudAvatar Size="Size.Small" Color="Color.Tertiary" Class="mr-2 mt-1"><MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Small" /></MudAvatar>
+                        }
+
+                        <MudPaper Class="pa-3"
+                                  Elevation="0"
+                                  Style="@(msg.EsMio
+                                                                        ? "background:#594AE2; color:white; border-radius: 12px 12px 0 12px; max-width:80%;"
+                                                                        : "background:white; border: 1px solid #e0e0e0; border-radius: 12px 12px 12px 0; max-width:80%;")">
+
+                        <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">@msg.Texto</MudText>
+                    </MudPaper>
+                </div>
+                                }
+
+                @if (_pensando)
+                {
+                    <div class="d-flex align-center ml-2">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Tertiary" Class="mr-2" />
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Analizando...</MudText>
+                    </div>
+                }
+            </div>
+
+            <div class="pa-3 bg-white border-top d-flex gap-2 align-center">
+                <MudTextField @bind-Value="_inputUsuario"
+                              Placeholder="Escribe el problema aquí..."
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              OnKeyUp="HandleKeyUp"
+                              Disabled="_pensando"
+                              Class="flex-grow-1" />
+
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="EnviarMensaje"
+                               Disabled="@(string.IsNullOrWhiteSpace(_inputUsuario) || _pensando)" />
+            </div>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    private string _inputUsuario = "";
+    private bool _pensando = false;
+    private List<MensajeChat> _mensajes = new();
+
+    public class MensajeChat { public string Texto { get; set; } = ""; public bool EsMio { get; set; } }
+
+    private void Cerrar() => MudDialog.Cancel();
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await EnviarMensaje();
+    }
+
+    // --- AQUÍ CONECTAMOS CON EL CEREBRO ---
+    private async Task EnviarMensaje()
+    {
+        if (string.IsNullOrWhiteSpace(_inputUsuario)) return;
+
+        var pregunta = _inputUsuario;
+        _mensajes.Add(new MensajeChat { Texto = pregunta, EsMio = true });
+        _inputUsuario = "";
+        _pensando = true;
+        StateHasChanged();
+
+        try
+        {
+            // LLAMADA REAL A TU API (La crearemos en el paso siguiente)
+            var response = await Http.PostAsJsonAsync("api/ia/consultar", new { prompt = pregunta });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var respuestaIA = await response.Content.ReadAsStringAsync();
+                _mensajes.Add(new MensajeChat { Texto = respuestaIA, EsMio = false });
+            }
+            else
+            {
+                _mensajes.Add(new MensajeChat { Texto = "Error: No pude conectar con el servidor de IA.", EsMio = false });
+            }
+        }
+        catch (Exception ex)
+        {
+            _mensajes.Add(new MensajeChat { Texto = $"Error de conexión: {ex.Message}", EsMio = false });
+        }
+        finally
+        {
+            _pensando = false;
+            StateHasChanged();
+        }
+    }
+}

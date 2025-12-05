@@ -22,6 +22,28 @@ namespace LoftComputacion.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Foto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("OrdenDeServicioId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RutaArchivo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrdenDeServicioId");
+
+                    b.ToTable("Fotos");
+                });
+
             modelBuilder.Entity("LoftComputacion.Domain.Cliente", b =>
                 {
                     b.Property<int>("Id")
@@ -96,28 +118,6 @@ namespace LoftComputacion.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Estados");
-                });
-
-            modelBuilder.Entity("LoftComputacion.Domain.Foto", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("OrdenDeServicioId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RutaArchivo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrdenDeServicioId");
-
-                    b.ToTable("Fotos");
                 });
 
             modelBuilder.Entity("LoftComputacion.Domain.HistorialOrden", b =>
@@ -235,9 +235,6 @@ namespace LoftComputacion.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool>("EstaActivo")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("datetime2");
 
@@ -247,7 +244,7 @@ namespace LoftComputacion.Infrastructure.Migrations
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Rol")
                         .IsRequired()
@@ -262,7 +259,7 @@ namespace LoftComputacion.Infrastructure.Migrations
                     b.ToTable("Usuarios");
                 });
 
-            modelBuilder.Entity("LoftComputacion.Domain.Foto", b =>
+            modelBuilder.Entity("Foto", b =>
                 {
                     b.HasOne("LoftComputacion.Domain.OrdenDeServicio", "OrdenDeServicio")
                         .WithMany("Fotos")

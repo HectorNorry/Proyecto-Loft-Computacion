@@ -1,6 +1,6 @@
 ﻿using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
-using LoftComputacion.Application.DTOs;
+using LoftComputacion.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

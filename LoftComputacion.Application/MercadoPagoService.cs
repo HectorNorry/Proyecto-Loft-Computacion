@@ -5,7 +5,7 @@ using MercadoPago.Config;
 using MercadoPago.Resource.Payment;
 using MercadoPago.Resource.Preference;
 using Microsoft.Extensions.Configuration;
-using System; // <-- Asegúrate de tener este
+using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -13,97 +13,65 @@ namespace LoftComputacion.Application
 {
     public class MercadoPagoService
     {
-        private readonly IConfiguration _configuration;
         private readonly string _accessToken;
-        private readonly string _ngrokPublicUrl; // <-- NUEVO CAMPO
+
+        // ⚠️ IMPORTANTE: Aquí pegarás la URL que te dé Visual Studio al arrancar
+        // Ejemplo: "https://tu-tunnel-id.use.devtunnels.ms"
+        private const string BaseUrlTunnel = "https://25bkxsbn-7081.brs.devtunnels.ms";
 
         public MercadoPagoService(IConfiguration configuration)
         {
-            _configuration = configuration;
-
-            _accessToken = _configuration["MercadoPago:AccessToken"];
-            _ngrokPublicUrl = _configuration["NgrokPublicUrl"]; // <-- LEEMOS LA URL DE NGROK}
-
-
-            if (string.IsNullOrEmpty(_accessToken))
-            {
-                throw new InvalidOperationException("El 'MercadoPago:AccessToken' no se encontró en appsettings.json.");
-            }
-            if (string.IsNullOrEmpty(_ngrokPublicUrl))
-            {
-                // En un entorno de producción, esto debería lanzar una excepción,
-                // pero en desarrollo, usamos localhost:52004 como URL de notificación temporal.
-                _ngrokPublicUrl = "https://loftcomputacion-api-webapp-ceeyjhrb9fvbj.brazilsouth-01.azurewebsites.net4";
-            }
-            else
-            {
-                _ngrokPublicUrl = _ngrokPublicUrl;
-            }
-
-            if (string.IsNullOrEmpty(_accessToken))
-            {
-                // Si el token es nulo, sí lanzamos excepción (es necesario para el SDK)
-                throw new InvalidOperationException("El 'MercadoPago:AccessToken' no está configurado.");
-            }
+            _accessToken = configuration["MercadoPago:AccessToken"];
         }
 
-        /// <summary>
-        /// Crea una "Preferencia de Pago" en Mercado Pago (CORREGIDO)
-        /// </summary>
         public async Task<string> CrearPreferenciaDePagoAsync(OrdenDeServicio orden)
         {
-            // Asignamos el token justo antes de usarlo
             MercadoPagoConfig.AccessToken = _accessToken;
 
-            var itemRequest = new PreferenceItemRequest
-            {
-                Id = orden.Id.ToString(),
-                Title = $"Reparación de {orden.Equipo?.Tipo.ToString() ?? "Equipo"} (Orden N° {orden.Id})",
-                Description = orden.FallaDeclaradaPorCliente,
-                Quantity = 1,
-                UnitPrice = orden.PrecioFinal ?? 0,
-                CurrencyId = "ARS",
-            };
+            // 1. Configuración de URL de Notificación
+            // Le decimos a MP: "Cuando paguen, avisa a MI túnel de Visual Studio"
+            string webhookUrl = $"{BaseUrlTunnel}/api/mercadopago/notificacion";
 
             var request = new PreferenceRequest
             {
-                Items = new List<PreferenceItemRequest> { itemRequest },
-
-                // Nos aseguramos de que MP sepa a qué orden referirse
+                // Referencia para saber qué orden es cuando vuelva el aviso
                 ExternalReference = orden.Id.ToString(),
 
+                Items = new List<PreferenceItemRequest>
+                {
+                    new PreferenceItemRequest
+                    {
+                        Id = orden.Id.ToString(),
+                        Title = $"Servicio Técnico - Orden #{orden.Id}",
+                        Quantity = 1,
+                        CurrencyId = "ARS",
+                        UnitPrice = orden.PrecioFinal ?? 1 // Evitamos error si es nulo
+                    }
+                },
+
+                // Aquí está la magia
+                NotificationUrl = webhookUrl,
+
+                AutoReturn = "approved",
                 BackUrls = new PreferenceBackUrlsRequest
                 {
-                    Success = "https://www.google.com", // Redirigimos a Google por ahora
+                    Success = "https://www.google.com", // O tu localhost si prefieres
                     Failure = "https://www.google.com",
                     Pending = "https://www.google.com"
-                },
-                AutoReturn = "approved",
-
-                // --- ¡CAMBIO 1: EL BLOQUE 'Payer' SE ELIMINA! ---
-                // (Ya no va aquí, para evitar el conflicto de identidad)
-
-                // --- ¡CAMBIO 2: FORZAMOS LA URL DEL WEBHOOK! ---
-                NotificationUrl = $"{_ngrokPublicUrl}/api/mercadopago/notificacion"
+                }
             };
-                
+
             var client = new PreferenceClient();
             Preference preference = await client.CreateAsync(request);
 
-            return preference.SandboxInitPoint;
+            return preference.InitPoint; // Usamos InitPoint (Prod) o SandboxInitPoint según corresponda
         }
 
-        /// <summary>
-        /// Busca un pago específico en la API de Mercado Pago
-        /// </summary>
-        public async Task<Payment> ObtenerPagoAsync(long pagoId)
+        public async Task<Payment> ObtenerPagoAsync(long id)
         {
-            // Asignamos el token justo antes de usarlo
             MercadoPagoConfig.AccessToken = _accessToken;
-
             var client = new PaymentClient();
-            Payment pago = await client.GetAsync(pagoId);
-            return pago;
+            return await client.GetAsync(id);
         }
     }
 }

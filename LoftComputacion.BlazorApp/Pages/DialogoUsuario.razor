@@ -1,100 +1,78 @@
 ﻿@using MudBlazor
-@using LoftComputacion.Application.DTOs
-
+@using LoftComputacion.Shared.DTOs
+@using LoftComputacion.BlazorApp.Services.Auth
 @inject UsuariosApiService UsuariosService
 @inject ISnackbar Snackbar
 
 <MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@(EsNuevo? Icons.Material.Filled.PersonAdd : Icons.Material.Filled.Edit)" Class="mr-3" />
+            @(EsNuevo ? "Nuevo usuario" : "Editar usuario")
+        </MudText>
+    </TitleContent>
 
-    <MudDialogTitle>
-        @(EsNuevo ? "Nuevo usuario" : "Editar usuario")
-    </MudDialogTitle>
+    <DialogContent>
+        <MudTextField Label="Nombre completo" @bind-Value="_nombre" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+        <MudTextField Label="Email" @bind-Value="_email" Required="true" Variant="Variant.Outlined" Class="mb-3" />
 
-    <MudDialogContent>
-
-        <MudTextField Label="Nombre completo"
-                      @bind-Value="_nombre"
-                      Required="true" />
-
-        <MudTextField Label="Email"
-                      @bind-Value="_email"
-                      Required="true" />
-
-        <MudSelect Label="Rol"
-                   @bind-Value="_rol"
-                   Required="true">
-
+        <MudSelect Label="Rol" @bind-Value="_rol" Required="true" Variant="Variant.Outlined" Class="mb-3">
             <MudSelectItem Value="@RolAdministrador">@RolAdministrador</MudSelectItem>
             <MudSelectItem Value="@RolTecnico">@RolTecnico</MudSelectItem>
         </MudSelect>
 
         @if (EsNuevo)
         {
-            <MudTextField Label="Contraseña"
-                          @bind-Value="_password"
-                          InputType="InputType.Password"
-                          Required="true" />
+            <MudTextField Label="Contraseña" @bind-Value="_password" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" />
         }
         else
         {
-            <MudTextField Label="Nueva contraseña"
-                          @bind-Value="_newPassword"
-                          InputType="InputType.Password"
-                          HelperText="Dejar vacío si no se desea cambiar." />
+            <MudTextField Label="Nueva contraseña" @bind-Value="_newPassword" InputType="InputType.Password" HelperText="Dejar vacío si no se desea cambiar" Variant="Variant.Outlined" />
         }
+    </DialogContent>
 
-        <MudSwitch @bind-Value="_activo"
-                   Color="Color.Primary"
-                   Class="mt-3">
-            Activo
-        </MudSwitch>
-
-    </MudDialogContent>
-
-    <MudDialogActions>
-        <MudButton Variant="Variant.Text" OnClick="Cerrar">Cancelar</MudButton>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   OnClick="Guardar">
-            Guardar
-        </MudButton>
-    </MudDialogActions>
-
+    <DialogActions>
+        <MudButton OnClick="Cerrar" Color="Color.Default">Cancelar</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Guardar">Guardar</MudButton>
+    </DialogActions>
 </MudDialog>
 
 @code {
-    [CascadingParameter]
-    public IDialogReference DialogReference { get; set; } = default!;
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } // Usamos la interfaz IMudDialogInstance
 
     [Parameter] public UsuarioDto? Usuario { get; set; }
 
     private bool EsNuevo => Usuario == null;
-
     private const string RolAdministrador = "Administrador";
-    private const string RolTecnico       = "Tecnico";
+    private const string RolTecnico = "Tecnico";
 
-    private string _nombre      = string.Empty;
-    private string _email       = string.Empty;
-    private string _rol         = RolTecnico;
-    private string _password    = string.Empty;
-    private string _newPassword = string.Empty;
-    private bool   _activo      = true;
+    private string _nombre = "";
+    private string _email = "";
+    private string _rol = RolTecnico;
+    private string _password = "";
+    private string _newPassword = "";
 
     protected override void OnInitialized()
     {
         if (Usuario != null)
         {
             _nombre = Usuario.NombreCompleto;
-            _email  = Usuario.Email;
-            _rol    = Usuario.Rol;
-            _activo = Usuario.EstaActivo;
+            _email = Usuario.Email;
+            _rol = Usuario.Rol;
         }
     }
 
-    void Cerrar() => DialogReference.Close();
+    void Cerrar() => MudDialog.Cancel();
 
     private async Task Guardar()
     {
+        // Validaciones básicas antes de llamar a la API
+        if (string.IsNullOrWhiteSpace(_nombre) || string.IsNullOrWhiteSpace(_email) || (EsNuevo && string.IsNullOrWhiteSpace(_password)))
+        {
+            Snackbar.Add("Complete los campos obligatorios", Severity.Warning);
+            return;
+        }
+
         HttpResponseMessage resp;
 
         if (EsNuevo)
@@ -102,9 +80,9 @@
             resp = await UsuariosService.Crear(new CreateUsuarioDto
             {
                 NombreCompleto = _nombre,
-                Email          = _email,
-                Password       = _password,
-                Rol            = _rol
+                Email = _email,
+                Password = _password,
+                Rol = _rol
             });
         }
         else
@@ -112,20 +90,20 @@
             resp = await UsuariosService.Editar(Usuario!.Id, new UpdateUsuarioDto
             {
                 NombreCompleto = _nombre,
-                Email          = _email,
-                Rol            = _rol,
-                EstaActivo     = _activo,
-                NewPassword    = string.IsNullOrWhiteSpace(_newPassword) ? null : _newPassword
+                Email = _email,
+                Rol = _rol,
+                NewPassword = string.IsNullOrWhiteSpace(_newPassword) ? null : _newPassword
             });
         }
 
         if (!resp.IsSuccessStatusCode)
         {
-            Snackbar.Add("Error al guardar usuario.", Severity.Error);
+            var error = await resp.Content.ReadAsStringAsync();
+            Snackbar.Add($"Error: {error}", Severity.Error);
             return;
         }
 
         Snackbar.Add("Usuario guardado correctamente.", Severity.Success);
-        DialogReference.Close(DialogResult.Ok(true));
+        MudDialog.Close(DialogResult.Ok(true));
     }
 }

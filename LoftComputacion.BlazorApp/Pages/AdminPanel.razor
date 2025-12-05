@@ -1,0 +1,86 @@
+﻿@page "/administracion"
+@using LoftComputacion.BlazorApp.Services.Auth
+@using LoftComputacion.BlazorApp.Pages
+
+@inject AuthApiService AuthService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+
+    @if (!_isAdminUnlocked)
+    {
+        <MudCard Style="max-width: 400px; margin: auto; margin-top: 10vh;" Elevation="4">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary" Class="fw-bold">Acceso Administrativo</MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">Verificación de seguridad requerida</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField @bind-Value="_adminUser" Label="Usuario Admin" Variant="Variant.Outlined" Class="mb-3" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Person"/>
+                <MudTextField @bind-Value="_adminPass" Label="Contraseña" Variant="Variant.Outlined" InputType="InputType.Password" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Lock"/>
+            </MudCardContent>
+            <MudCardActions Class="justify-center pb-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" OnClick="VerificarAdmin" Disabled="_verificando" FullWidth="true" Class="mx-4">
+                    @if (_verificando) { <MudProgressCircular Size="Size.Small" Indeterminate="true"/> } 
+                    else { <span>DESBLOQUEAR</span> }
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    }
+    else
+    {
+        <MudText Typo="Typo.h4" Class="mb-4 fw-bold">Administración</MudText>
+        
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" KeepPanelsAlive="true" Color="Color.Primary">
+            
+            <MudTabPanel Text="Ganancias" Icon="@Icons.Material.Filled.AttachMoney">
+                <LoftComputacion.BlazorApp.Pages.Ganancias />
+            </MudTabPanel>
+
+            <MudTabPanel Text="Gestión de Usuarios" Icon="@Icons.Material.Filled.People">
+                
+                <LoftComputacion.BlazorApp.Pages.ListaUsuarios />
+                
+            </MudTabPanel>
+
+        </MudTabs>
+    }
+
+</MudContainer>
+
+@code {
+    // ... (El código C# sigue igual que antes) ...
+    private bool _isAdminUnlocked = false;
+    private bool _verificando = false;
+    private string _adminUser = "";
+    private string _adminPass = "";
+
+    private async Task VerificarAdmin()
+    {
+        _verificando = true;
+        // Simulación de delay para UX
+        await Task.Delay(500); 
+        try
+        {
+            var token = await AuthService.LoginAsync(_adminUser, _adminPass);
+            if (!string.IsNullOrEmpty(token))
+            {
+                _isAdminUnlocked = true;
+                Snackbar.Add("Panel desbloqueado.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Credenciales inválidas.", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snackbar.Add("Error de conexión.", Severity.Error);
+        }
+        finally
+        {
+            _verificando = false;
+        }
+    }
+}

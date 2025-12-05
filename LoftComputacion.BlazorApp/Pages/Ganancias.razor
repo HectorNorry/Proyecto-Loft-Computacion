@@ -1,148 +1,136 @@
 ﻿@page "/ganancias"
-
 @using MudBlazor
 @using LoftComputacion.BlazorApp.Services.Ordenes
-
 @inject OrdenesApiService OrdenesService
 
 <MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Reporte de Ganancias Reales</MudText>
 
-    <MudText Typo="Typo.h5" Class="mb-4">Ganancias</MudText>
-
-    <!-- FILTROS DE FECHA -->
-    <div class="d-flex gap-4 mb-4">
-        <MudDatePicker Label="Desde"
-                       @bind-Date="_desde"
-                       MaxDate="_hasta" />
-
-        <MudDatePicker Label="Hasta"
-                       @bind-Date="_hasta"
-                       MinDate="_desde" />
-
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   OnClick="Filtrar">
-            Aplicar filtros
-        </MudButton>
+    <div class="d-flex gap-4 mb-4 align-center flex-wrap">
+        <MudDatePicker Label="Desde" @bind-Date="_desde" MaxDate="_hasta" Variant="Variant.Outlined" />
+        <MudDatePicker Label="Hasta" @bind-Date="_hasta" MinDate="_desde" Variant="Variant.Outlined" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Filtrar">Aplicar filtros</MudButton>
     </div>
 
-    <!-- RESUMEN -->
-    <MudPaper Class="pa-4 mb-4" Elevation="2">
-        <MudText Typo="Typo.h6">Resumen</MudText>
-
-        <div class="mt-2">
-            <MudText><b>Total facturado:</b> @_totalFacturado.ToString("C")</MudText>
-        </div>
-
-        <div>
-            <MudText><b>Cantidad de órdenes:</b> @_ordenesFiltradas.Count</MudText>
-        </div>
-
-        <div>
-            <MudText Color="Color.Success"><b>Ganancia neta:</b> @_totalFacturado.ToString("C")</MudText>
-        </div>
+    <MudPaper Class="pa-4 mb-4" Elevation="2" Style="background-color: #e8f5e9;">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudText><b>Total Cobrado (Pagado/Entregado):</b></MudText>
+                <MudText Typo="Typo.h4" Color="Color.Success" Class="fw-bold">@_totalFacturado.ToString("C")</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudText><b>Órdenes cobradas en este periodo:</b></MudText>
+                <MudText Typo="Typo.h4">@_cantidadCobradas</MudText>
+            </MudItem>
+        </MudGrid>
     </MudPaper>
 
-    <!-- TABLA DE ÓRDENES -->
-    <MudTable Items="_ordenesFiltradas"
-              Dense="true"
-              Hover="true"
-              Bordered="true"
-              Elevation="1">
-
+    <MudTable Items="_ordenesFiltradas" Dense="true" Hover="true" Bordered="true" Elevation="1" Striped="true">
         <HeaderContent>
             <MudTh>Fecha</MudTh>
             <MudTh>Cliente</MudTh>
-            <MudTh>Total</MudTh>
             <MudTh>Estado</MudTh>
+            <MudTh>Monto</MudTh>
         </HeaderContent>
-
         <RowTemplate>
-            <!-- context es dynamic -->
-            <MudTd>
-                @{
-                    DateTime fecha = DateTime.MinValue;
-                    try { fecha = (DateTime)context.FechaIngreso; } catch { }
-                }
-                @fecha.ToShortDateString()
-            </MudTd>
-
+            <MudTd>@context.FechaIngreso.ToString("dd/MM/yyyy")</MudTd>
             <MudTd>@context.ClienteNombre</MudTd>
-            <MudTd>@CalcularTotal(context).ToString("C")</MudTd>
-            <MudTd>@context.EstadoActual</MudTd>
+            <MudTd>
+                @if (EsGanancia(context.Estado))
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success">@context.Estado</MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">@context.Estado</MudChip>
+                }
+            </MudTd>
+            <MudTd>
+                @if (EsGanancia(context.Estado))
+                {
+                    <b style="color:green">@context.Total.ToString("C")</b>
+                }
+                else
+                {
+                    <span style="color:gray; text-decoration: line-through;">@context.Total.ToString("C")</span>
+                }
+            </MudTd>
         </RowTemplate>
-
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
-
 </MudPaper>
 
 @code {
-    // Listas dinámicas para no depender del tipo exacto del DTO
-    private List<dynamic> _ordenes = new();
-    private List<dynamic> _ordenesFiltradas = new();
+    public class ReporteOrdenDto
+    {
+        public int Id { get; set; }
+        public DateTime FechaIngreso { get; set; }
+        public string ClienteNombre { get; set; } = "";
+        public decimal Total { get; set; }
+        public string Estado { get; set; } = "";
+    }
+
+    private List<ReporteOrdenDto> _ordenes = new();
+    private List<ReporteOrdenDto> _ordenesFiltradas = new();
 
     private DateTime? _desde = DateTime.Today.AddMonths(-1);
     private DateTime? _hasta = DateTime.Today;
 
     private decimal _totalFacturado = 0m;
+    private int _cantidadCobradas = 0;
+
+    // DEFINIMOS QUÉ ESTADOS SON DINERO REAL
+    // Solo sumamos si dice "Pagado" o "Entregado"
+    private readonly string[] _estadosQueSuman = new[] { "Pagado", "Entregado" };
 
     protected override async Task OnInitializedAsync()
     {
-        // Usa el mismo servicio que ya tenés inyectado en otras vistas
-        var data = await OrdenesService.GetTodasSimplesAsync();
-
-
-        if (data != null)
+        try
         {
-            // lo casteamos a dynamic para trabajar sin tipos fuertes
-            _ordenes = data.Cast<dynamic>().ToList();
-            Filtrar();
+            var data = await OrdenesService.GetTodasSimplesAsync();
+            if (data != null)
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(data);
+                _ordenes = System.Text.Json.JsonSerializer.Deserialize<List<ReporteOrdenDto>>(json,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<ReporteOrdenDto>();
+
+                Filtrar();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
         }
     }
 
     private void Filtrar()
     {
-        _ordenesFiltradas = _ordenes
-            .Where(o =>
-            {
-                DateTime fecha;
+        // 1. Filtramos por FECHA y por ESTADO (Solo lo que es ganancia)
+        var query = _ordenes.Where(o =>
+        {
+            // Filtro de fecha
+            bool okDesde = !_desde.HasValue || o.FechaIngreso.Date >= _desde.Value.Date;
+            bool okHasta = !_hasta.HasValue || o.FechaIngreso.Date <= _hasta.Value.Date;
 
-                try { fecha = (DateTime)o.FechaIngreso; }
-                catch { return false; }
+            // Filtro de Estado (NUEVO: Solo mostramos si es dinero real)
+            bool esDineroReal = EsGanancia(o.Estado);
 
-                bool okDesde = !_desde.HasValue || fecha.Date >= _desde.Value.Date;
-                bool okHasta = !_hasta.HasValue || fecha.Date <= _hasta.Value.Date;
-                return okDesde && okHasta;
-            })
-            .OrderBy(o => (DateTime)o.FechaIngreso)
-            .ToList();
+            return okDesde && okHasta && esDineroReal;
+        });
 
-        _totalFacturado = _ordenesFiltradas.Sum(o => CalcularTotal(o));
+        // Generamos la lista visual
+        _ordenesFiltradas = query.OrderByDescending(o => o.FechaIngreso).ToList();
+
+        // Calculamos totales (ahora es simplemente la suma de la lista filtrada)
+        _totalFacturado = _ordenesFiltradas.Sum(o => o.Total);
+        _cantidadCobradas = _ordenesFiltradas.Count;
     }
 
-    // Calcula el total usando PrecioFinal o PrecioPresupuestado si existen
-    private decimal CalcularTotal(dynamic orden)
+    private bool EsGanancia(string estado)
     {
-        try
-        {
-            // si existe PrecioFinal y no es null
-            if (HasProp(orden, "PrecioFinal") && orden.PrecioFinal != null)
-                return (decimal)orden.PrecioFinal;
-        }
-        catch { }
-
-        try
-        {
-            if (HasProp(orden, "PrecioPresupuestado") && orden.PrecioPresupuestado != null)
-                return (decimal)orden.PrecioPresupuestado;
-        }
-        catch { }
-
-        return 0m;
-    }
-
-    private bool HasProp(dynamic obj, string name)
-    {
-        return obj.GetType().GetProperty(name) != null;
+        return _estadosQueSuman.Contains(estado);
     }
 }
