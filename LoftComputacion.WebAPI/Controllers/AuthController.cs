@@ -1,7 +1,8 @@
 ﻿using BCrypt.Net;
-using LoftComputacion.Shared.DTOs;
 using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
+using LoftComputacion.Shared.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +27,7 @@ namespace LoftComputacion.WebAPI.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)

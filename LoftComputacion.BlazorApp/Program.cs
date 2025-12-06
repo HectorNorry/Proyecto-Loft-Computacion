@@ -1,80 +1,83 @@
-using Blazored.LocalStorage;
-using LoftComputacion.BlazorApp;
-using LoftComputacion.BlazorApp.Services.Auth;
-using LoftComputacion.BlazorApp.Services.Clientes;
-using LoftComputacion.BlazorApp.Services.Ordenes;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http;
 using MudBlazor.Services;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Globalization;
-
-// ============================================
-// 1) Creamos cultura ES-AR para usar el $
-// ============================================
-var culture = new CultureInfo("es-AR");
-culture.NumberFormat.CurrencySymbol = "$";  // fuerza símbolo de $
-CultureInfo.DefaultThreadCurrentCulture = culture;
-CultureInfo.DefaultThreadCurrentUICulture = culture;
+// Asegúrate de que estos namespaces coincidan con tus carpetas reales
+using LoftComputacion.BlazorApp;
+using LoftComputacion.BlazorApp.Services.Auth;
+using LoftComputacion.BlazorApp.Services.Ordenes;
+using LoftComputacion.BlazorApp.Services.Clientes;
+using LoftComputacion.BlazorApp.Services.Ai;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// ============================================
-// 2) HttpClient simple apuntando a la API
-// ============================================
-// Registrar el Handler como servicio (para que pueda ser inyectado)
+// =================================================================
+// 1. CONFIGURACIÓN DE CULTURA
+// =================================================================
+var culture = new CultureInfo("es-AR");
+culture.NumberFormat.CurrencySymbol = "$";
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+// =================================================================
+// 2. URL DINÁMICA (CORREGIDO)
+// =================================================================
+// Al usar la propiedad BaseAddress del HostEnvironment, la URL se adapta sola.
+// En Local será: https://localhost:TUPUERTO/
+// En Producción será: https://tu-sitio.azurewebsites.net/
+//string backendUrl = builder.HostEnvironment.BaseAddress;
+string backendUrl = "https://loftcomputacion-api-webapp-ceeycjhrb9evfvbj.brazilsouth-01.azurewebsites.net/";
+
+// Registramos el Handler que pega el Token en las llamadas
 builder.Services.AddTransient<JwtAuthMessageHandler>();
 
-// Configurar el cliente HTTP nombrado "API"
-builder.Services.AddHttpClient("API", client =>
-{
-    client.BaseAddress = new Uri("https://25bkxsbn-7081.brs.devtunnels.ms/"); // Tu puerto de API
+// Cliente HTTP genérico
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(backendUrl) });
 
+// =================================================================
+// 3. SERVICIOS DE NEGOCIO (Tipados)
+// =================================================================
 
-})
+// Auth (No lleva Token Handler porque es para loguearse)
+builder.Services.AddHttpClient<AuthApiService>(client =>
+    client.BaseAddress = new Uri(backendUrl));
 
+// Órdenes (Lleva Token)
+builder.Services.AddHttpClient<OrdenesApiService>(client =>
+    client.BaseAddress = new Uri(backendUrl))
+    .AddHttpMessageHandler<JwtAuthMessageHandler>();
 
-    .AddHttpMessageHandler<JwtAuthMessageHandler>(); // ¡Aquí está la magia!
+// Clientes (Lleva Token)
+builder.Services.AddHttpClient<ClientesApiService>(client =>
+    client.BaseAddress = new Uri(backendUrl))
+    .AddHttpMessageHandler<JwtAuthMessageHandler>();
 
-// Crear el cliente default usando la fábrica
-builder.Services.AddScoped(sp =>
-    sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
-// ============================================
-// 3) Auth + LocalStorage
-// ============================================
+// Usuarios (Lleva Token)
+builder.Services.AddHttpClient<UsuariosApiService>(client =>
+    client.BaseAddress = new Uri(backendUrl))
+    .AddHttpMessageHandler<JwtAuthMessageHandler>();
+
+// Inteligencia Artificial (Lleva Token)
+builder.Services.AddHttpClient<AiApiService>(client =>
+    client.BaseAddress = new Uri(backendUrl))
+    .AddHttpMessageHandler<JwtAuthMessageHandler>();
+
+// =================================================================
+// 4. AUTENTICACIÓN Y UI
+// =================================================================
 builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage();
 
-// --- CORRECCIÓN AQUÍ ---
-// 1. Registramos tu clase concreta
+// Proveedor de Estado de Auth
 builder.Services.AddScoped<CustomAuthStateProvider>();
-
-// 2. Le decimos al sistema: "Cuando necesites AuthenticationStateProvider, 
-// usa la MISMA instancia de CustomAuthStateProvider que creamos arriba"
 builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
     provider.GetRequiredService<CustomAuthStateProvider>());
 
-// ============================================
-// 4) Servicios propios
-// ============================================
-builder.Services.AddScoped<AuthApiService>();
-builder.Services.AddScoped<OrdenesApiService>();
-builder.Services.AddScoped<ClientesApiService>();
-builder.Services.AddHttpClient<UsuariosApiService>(client =>
-{
-    client.BaseAddress = new Uri("https://localhost:52004/"); // Asegúrate que este sea tu puerto API
-})
-    .AddHttpMessageHandler<JwtAuthMessageHandler>();
-
-
-
-// ============================================
-// 5) MudBlazor
-// ============================================
+// Librería Gráfica MudBlazor
 builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

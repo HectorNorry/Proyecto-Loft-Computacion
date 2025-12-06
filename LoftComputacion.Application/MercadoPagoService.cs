@@ -17,7 +17,7 @@ namespace LoftComputacion.Application
 
         // ⚠️ IMPORTANTE: Aquí pegarás la URL que te dé Visual Studio al arrancar
         // Ejemplo: "https://tu-tunnel-id.use.devtunnels.ms"
-        private const string BaseUrlTunnel = "https://25bkxsbn-7081.brs.devtunnels.ms";
+        private const string BaseUrlTunnel = "https://loftcomputacion-api-webapp-ceeycjhrb9evfvbj.brazilsouth-01.azurewebsites.net/";
 
         public MercadoPagoService(IConfiguration configuration)
         {

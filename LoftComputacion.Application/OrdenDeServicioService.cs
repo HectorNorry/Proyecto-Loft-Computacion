@@ -147,20 +147,18 @@ namespace LoftComputacion.Application
         {
             // 1. Buscamos la orden existente en la DB
             var ordenDb = await _context.OrdenesDeServicio
-                .Include(o => o.Estado) // Incluimos estado para obtener los nombres viejos/nuevos si hace falta
+                .Include(o => o.Estado)
+                .Include(o => o.Cliente) // <--- ¡VITAL! Agregado para poder enviar el email al cliente
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (ordenDb == null)
                 return false;
 
-            // 2. Guardamos el estado anterior antes de modificar nada
+            // 2. Guardamos el estado anterior
             int estadoAnteriorId = ordenDb.EstadoId;
-
-            // Para el historial, a veces es útil saber los nombres de los estados
-            // (Esto asume que tienes acceso a los nombres, si no, usa solo los IDs)
             var nombreEstadoAnterior = ordenDb.Estado?.Nombre ?? "Desconocido";
 
-            // 3. Actualizamos los datos básicos (Precios y Resumen)
+            // 3. Actualizamos los datos básicos
             ordenDb.PrecioPresupuestado = ordenActualizada.PrecioPresupuestado;
             ordenDb.PrecioFinal = ordenActualizada.PrecioFinal;
             ordenDb.ResumenTecnico = ordenActualizada.ResumenTecnico;
@@ -168,44 +166,30 @@ namespace LoftComputacion.Application
             // 4. VERIFICAMOS SI HUBO CAMBIO DE ESTADO
             if (estadoAnteriorId != ordenActualizada.EstadoId)
             {
-                // A. Buscamos nombres de estados para el texto
+                // A. Buscamos nombre del nuevo estado
                 var estadoNuevoObj = await _context.Estados.FindAsync(ordenActualizada.EstadoId);
                 string nombreEstadoNuevo = estadoNuevoObj?.Nombre ?? "Desconocido";
 
-                // =================================================================================
-                // B. LÓGICA DE AUDITORÍA CORREGIDA (Aquí está la magia para el gráfico)
-                // =================================================================================
-
-                int idUsuarioResponsable = usuarioId; // Por defecto: el que está logueado
-                string nombreUsuarioTexto = "Sistema";
+                // ============================================================
+                // B. LÓGICA DE AUDITORÍA (Tu código existente)
+                // ============================================================
+                int idUsuarioResponsable = usuarioId;
                 string detalleAutorizacion = "";
 
                 if (!string.IsNullOrEmpty(usuarioAutorizador))
                 {
-                    // SI hay un autorizador (vino del popup), buscamos SU usuario en la DB
-                    // Buscamos por Email o por Nombre (ya que el login suele ser el email)
                     var usuarioAuthDb = await _context.Usuarios
                         .FirstOrDefaultAsync(u => u.Email == usuarioAutorizador || u.NombreCompleto == usuarioAutorizador);
 
                     if (usuarioAuthDb != null)
                     {
-                        // ¡CAMBIO DE IDENTIDAD!
-                        // Asignamos el ID del autorizador para que el gráfico le sume el punto a él
                         idUsuarioResponsable = usuarioAuthDb.Id;
-                        nombreUsuarioTexto = usuarioAuthDb.NombreCompleto;
                         detalleAutorizacion = " (Mediante autorización con credenciales)";
                     }
                     else
                     {
-                        // Si no lo encontramos en la DB (raro), guardamos el texto nomás
                         detalleAutorizacion = $" (Autorizado por externo: {usuarioAutorizador})";
                     }
-                }
-                else
-                {
-                    // Si no hubo popup, usamos el usuario logueado normal
-                    var usuarioLogueado = await _context.Usuarios.FindAsync(usuarioId);
-                    nombreUsuarioTexto = usuarioLogueado?.NombreCompleto ?? "Sistema";
                 }
 
                 // C. Creamos el registro en el historial
@@ -213,16 +197,43 @@ namespace LoftComputacion.Application
                 {
                     OrdenDeServicioId = ordenDb.Id,
                     FechaHora = DateTime.UtcNow,
-
-                    // AQUÍ GUARDAMOS EL ID DEL QUE AUTORIZÓ (Para que salga bien en el gráfico)
                     UsuarioId = idUsuarioResponsable,
-
                     DescripcionDelCambio = $"Estado cambiado de '{nombreEstadoAnterior}' a '{nombreEstadoNuevo}'{detalleAutorizacion}"
                 };
 
                 _context.HistorialOrdenes.Add(historial);
 
-                // D. Aplicar cambio
+                // ============================================================
+                // D. LÓGICA DE EMAIL + IA (NUEVO)
+                // ============================================================
+                // Solo si pasa a "Finalizado, a espera de pago" (ID 4)
+                if (ordenActualizada.EstadoId == 4)
+                {
+                    try
+                    {
+                        // 1. Generamos el resumen con la IA
+                        string resumenTecnico = ordenActualizada.ResumenTecnico ?? "El equipo ha sido reparado exitosamente.";
+                        string? resumenIA = await _aiService.GenerarResumenDesdeTecnicoAsync(resumenTecnico);
+
+                        // 2. Si la IA respondió y el cliente tiene email, enviamos
+                        if (resumenIA != null && ordenDb.Cliente != null && !string.IsNullOrEmpty(ordenDb.Cliente.Email))
+                        {
+                            await _emailService.EnviarEmailNotificacion(
+                                ordenDb.Cliente.Email,
+                                ordenDb.Cliente.NombreCompleto,
+                                resumenIA,
+                                ordenDb.Id
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Logueamos el error en consola pero NO detenemos el guardado de la orden
+                        Console.WriteLine($"⚠️ Error enviando email automático: {ex.Message}");
+                    }
+                }
+
+                // E. Aplicar cambio de estado
                 ordenDb.EstadoId = ordenActualizada.EstadoId;
             }
 
