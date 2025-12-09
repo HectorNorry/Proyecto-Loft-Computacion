@@ -84,6 +84,9 @@
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
 
+    // INYECCIÓN CORRECTA (Reemplaza al @inject HttpClient de arriba)
+    [Inject] private LoftComputacion.BlazorApp.Services.Ai.AiApiService AiService { get; set; }
+
     private string _inputUsuario = "";
     private bool _pensando = false;
     private List<MensajeChat> _mensajes = new();
@@ -97,7 +100,6 @@
         if (e.Key == "Enter") await EnviarMensaje();
     }
 
-    // --- AQUÍ CONECTAMOS CON EL CEREBRO ---
     private async Task EnviarMensaje()
     {
         if (string.IsNullOrWhiteSpace(_inputUsuario)) return;
@@ -110,22 +112,15 @@
 
         try
         {
-            // LLAMADA REAL A TU API (La crearemos en el paso siguiente)
-            var response = await Http.PostAsJsonAsync("api/ia/consultar", new { prompt = pregunta });
+            // AHORA USAMOS EL SERVICIO (Que sí tiene el Token)
+            var respuestaIA = await AiService.ConsultarIa(pregunta);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var respuestaIA = await response.Content.ReadAsStringAsync();
-                _mensajes.Add(new MensajeChat { Texto = respuestaIA, EsMio = false });
-            }
-            else
-            {
-                _mensajes.Add(new MensajeChat { Texto = "Error: No pude conectar con el servidor de IA.", EsMio = false });
-            }
+            _mensajes.Add(new MensajeChat { Texto = respuestaIA, EsMio = false });
         }
         catch (Exception ex)
         {
-            _mensajes.Add(new MensajeChat { Texto = $"Error de conexión: {ex.Message}", EsMio = false });
+            // Si es un 401 real, caerá aquí
+            _mensajes.Add(new MensajeChat { Texto = $"Error: No pude conectar con la IA ({ex.Message})", EsMio = false });
         }
         finally
         {

@@ -1,16 +1,9 @@
 ﻿using LoftComputacion.Application;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System;
-using MercadoPago.Resource.Payment;
 using Newtonsoft.Json.Linq;
 using System.IO;
-using System.Text;
-using Microsoft.Extensions.Configuration;
-// --- ¡NUEVOS 'USINGS' NECESARIOS! ---
-using System.Security.Cryptography;
-using System.Globalization;
 
 namespace LoftComputacion.WebAPI.Controllers
 {
@@ -32,47 +25,62 @@ namespace LoftComputacion.WebAPI.Controllers
         {
             try
             {
-                // 1. Leemos el aviso de Mercado Pago
+                // 1. Leer el cuerpo de la notificación
                 string rawBody;
                 using (var reader = new StreamReader(Request.Body))
                 {
                     rawBody = await reader.ReadToEndAsync();
                 }
 
-                // Console.WriteLine($"🔔 AVISO MP: {rawBody}"); // Descomentar para depurar
+                // Log para ver en Azure Log Stream qué está llegando (Vital para debug)
+                Console.WriteLine($"🔔 [WEBHOOK] Recibido: {rawBody}");
 
-                // 2. Buscamos el ID del pago dentro del JSON
-                // La documentación dice que viene en 'data.id' o a veces en 'id' directo
                 var json = JObject.Parse(rawBody);
-                string? paymentId = json["data"]?["id"]?.ToString() ?? json["id"]?.ToString();
-                string? topic = json["type"]?.ToString() ?? json["topic"]?.ToString();
 
-                // 3. Validamos si es un pago
-                if (topic == "payment" && !string.IsNullOrEmpty(paymentId))
+                // 2. Extraer ID. 
+                // MercadoPago a veces manda 'data.id' (nuevo estándar) o 'id' (legacy/topics). 
+                // Cubrimos ambos casos.
+                string paymentId = json["data"]?["id"]?.ToString() ?? json["id"]?.ToString();
+                string type = json["type"]?.ToString() ?? json["topic"]?.ToString();
+
+                // 3. Solo procesamos si es un pago
+                if ((type == "payment" || type == "payment_intent") && !string.IsNullOrEmpty(paymentId))
                 {
-                    // 4. Preguntamos a Mercado Pago: "¿Este pago es real y está aprobado?"
-                    // (Esto es seguridad: no confiamos en el aviso, verificamos con la API oficial)
+                    Console.WriteLine($"🔎 Verificando pago #{paymentId} en API de Mercado Pago...");
+
+                    // 4. CONSULTA DE VERDAD (Esto confirma que no es un hackeo)
+                    // Usamos las credenciales configuradas en el servicio (que serán las TEST)
                     var pago = await _mpService.ObtenerPagoAsync(long.Parse(paymentId));
 
+                    // 5. Verificamos estado
                     if (pago != null && pago.Status == "approved")
                     {
-                        // 5. Buscamos a qué orden pertenece
+                        Console.WriteLine($"✅ Pago #{paymentId} APROBADO por {pago.TransactionAmount} ARS.");
+
+                        // 6. Impactar en la Base de Datos
                         if (int.TryParse(pago.ExternalReference, out int ordenId))
                         {
-                            string nota = $"Pago Aprobado (MP #{pago.Id}). Total: {pago.TransactionAmount}";
+                            string nota = $"Pago Online Aprobado (MP ID: {pago.Id}). Monto: ${pago.TransactionAmount}";
+
+                            // Aquí llamas a tu lógica para pasar la orden a "Finalizado - Pagado"
                             await _ordenService.ActualizarEstadoPorPagoAsync(ordenId, nota);
-                            Console.WriteLine($"✅ ORDEN #{ordenId} PAGADA EXITOSAMENTE.");
+
+                            Console.WriteLine($"🚀 Orden #{ordenId} actualizada correctamente.");
                         }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠️ El pago #{paymentId} existe pero su estado es: {pago?.Status}");
                     }
                 }
 
-                // SIEMPRE responder 200 OK, sino Mercado Pago reintenta por horas
+                // SIEMPRE responder 200 OK. Si respondes 400/500, MP te sigue mandando la notificación por horas.
                 return Ok();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error Webhook: {ex.Message}");
-                return Ok(); // Respondemos OK igual para no trabar la cola de MP
+                Console.WriteLine($"❌ Error en Webhook: {ex.Message}");
+                return Ok(); // Respondemos OK aunque falle para no bloquear la cola de MP
             }
         }
     }

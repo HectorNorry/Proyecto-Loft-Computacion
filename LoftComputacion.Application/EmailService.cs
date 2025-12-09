@@ -28,24 +28,27 @@ namespace LoftComputacion.Application
             }
 
             var client = new SendGridClient(apiKey);
-
-            // (Asumimos que el remitente verificado está bien)
             var from = new EmailAddress("piscudelag@gmail.com", "LOFT Computación");
             var to = new EmailAddress(emailCliente, nombreCliente);
 
-            // --- ASUNTO MODIFICADO (para usar el N° de Orden) ---
             var subject = $"¡Tu equipo está listo para retirar! (Orden N° {ordenId})";
 
-            // --- ¡CONTENIDO MODIFICADO! (Sin precio, con dirección) ---
-            var plainTextContent = $"Hola {nombreCliente},\n\n{resumenIA}\n\n" +
-                                   $"Saludos,\nEl equipo de LOFT COMPUTACIÓN\n\n" +
+            // --- CORRECCIÓN ---
+            // 1. Quitamos el "Hola {nombreCliente}" manual porque la IA ya suele saludar.
+            // 2. Quitamos el "Saludos, El equipo..." manual porque la IA ya se despide.
+            // 3. Dejamos solo el cuerpo de la IA y le pegamos la dirección al final.
+
+            var plainTextContent = $"{resumenIA}\n\n" +
+                                   $"--------------------------------\n" +
                                    $"{_direccionLocal}";
 
-            var htmlContent = $"<p>Hola {nombreCliente},</p>" +
-                              $"<p>{resumenIA.Replace("\n", "<br>")}</p><br/>" +
-                              $"<p>Saludos,<br>El equipo de LOFT COMPUTACIÓN</p>" +
-                              $"<hr><p><strong>{_direccionLocal}</strong></p>";
-            // --- FIN DE LA MODIFICACIÓN DE CONTENIDO ---
+            var htmlContent = $"<div style='font-family: Arial, sans-serif;'>" +
+                              // Renderizamos lo que dijo la IA
+                              $"<p>{resumenIA.Replace("\n", "<br>")}</p>" +
+                              // Agregamos una línea separadora y la dirección (que la IA no sabe)
+                              $"<hr style='margin-top: 20px; margin-bottom: 20px; border: 0; border-top: 1px solid #eee;' />" +
+                              $"<p style='color: #777; font-size: 14px;'><strong>📍 {_direccionLocal}</strong></p>" +
+                              $"</div>";
 
             var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
             await client.SendEmailAsync(msg);

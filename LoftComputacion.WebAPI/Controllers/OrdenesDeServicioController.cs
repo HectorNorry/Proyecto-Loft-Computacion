@@ -101,6 +101,7 @@ namespace LoftComputacion.WebAPI.Controllers
                 PrecioPresupuestado = dto.PrecioPresupuestado,
                 PrecioFinal = dto.PrecioFinal,
                 ResumenTecnico = dto.ResumenTecnico
+
             };
 
             // CAMBIO AQUÍ: Pasamos también dto.UsuarioAutorizador

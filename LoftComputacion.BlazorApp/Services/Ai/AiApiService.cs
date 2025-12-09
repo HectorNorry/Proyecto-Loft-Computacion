@@ -1,24 +1,31 @@
-﻿using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
+﻿using System.Net.Http.Json;
 
-// IMPORTANTE: Este namespace debe coincidir con lo que espera el Program.cs
 namespace LoftComputacion.BlazorApp.Services.Ai
 {
     public class AiApiService
     {
-        private readonly HttpClient _http;
+        private readonly HttpClient _httpClient;
 
-        public AiApiService(HttpClient http)
+        // El Program.cs inyecta aquí el cliente YA CONFIGURADO con el Token
+        public AiApiService(HttpClient httpClient)
         {
-            _http = http;
+            _httpClient = httpClient;
         }
 
-        public async Task<HttpResponseMessage> ConsultarExperto(string promptUsuario)
+        public async Task<string> ConsultarIa(string prompt)
         {
-            // Llama al controlador que creamos en la API
-            // Enviamos un objeto anónimo con la propiedad "prompt"
-            return await _http.PostAsJsonAsync("api/ia/consultar", new { prompt = promptUsuario });
+            // Hacemos la petición
+            var response = await _httpClient.PostAsJsonAsync("api/ia/consultar", new { prompt = prompt });
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                // Si falla (ej. 401 o 500), devolvemos null o lanzamos error para manejarlo en la vista
+                throw new Exception($"Error del servidor: {response.StatusCode}");
+            }
         }
     }
 }

@@ -15,6 +15,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+
 // =================================================================
 // 1. CONFIGURACIÓN DE CULTURA
 // =================================================================
@@ -65,6 +66,8 @@ builder.Services.AddHttpClient<UsuariosApiService>(client =>
 builder.Services.AddHttpClient<AiApiService>(client =>
     client.BaseAddress = new Uri(backendUrl))
     .AddHttpMessageHandler<JwtAuthMessageHandler>();
+
+
 
 // =================================================================
 // 4. AUTENTICACIÓN Y UI

@@ -20,8 +20,14 @@ namespace LoftComputacion.Application
         private readonly EmailService _emailService;
         private readonly BlobService _blobService;
 
+        // ================== CONSTANTES DE ESTADO ==================
         private const int ID_ESTADO_FINALIZADO_ESPERA_PAGO = 4;
         private const int ID_ESTADO_FINALIZADO_ENTREGADO = 5;
+        private const int ID_ESTADO_PAGADO = 7;
+
+        // ⚠ IMPORTANTE: este ID debe existir en la tabla Usuarios de tu DB de Azure.
+        // Podés usar un usuario "Admin" o "Sistema Loft".
+        private const int UsuarioSistemaId = 14;
 
         public OrdenDeServicioService(
             ApplicationDbContext context,
@@ -171,9 +177,16 @@ namespace LoftComputacion.Application
                 string nombreEstadoNuevo = estadoNuevoObj?.Nombre ?? "Desconocido";
 
                 // ============================================================
-                // B. LÓGICA DE AUDITORÍA (Tu código existente)
+                // B. LÓGICA DE AUDITORÍA
                 // ============================================================
                 int idUsuarioResponsable = usuarioId;
+
+                // 👇 Si vino 0 (o negativo), usamos el usuario sistema para evitar romper el FK
+                if (idUsuarioResponsable <= 0)
+                {
+                    idUsuarioResponsable = UsuarioSistemaId;
+                }
+
                 string detalleAutorizacion = "";
 
                 if (!string.IsNullOrEmpty(usuarioAutorizador))
@@ -204,10 +217,10 @@ namespace LoftComputacion.Application
                 _context.HistorialOrdenes.Add(historial);
 
                 // ============================================================
-                // D. LÓGICA DE EMAIL + IA (NUEVO)
+                // D. LÓGICA DE EMAIL + IA
                 // ============================================================
                 // Solo si pasa a "Finalizado, a espera de pago" (ID 4)
-                if (ordenActualizada.EstadoId == 4)
+                if (ordenActualizada.EstadoId == ID_ESTADO_FINALIZADO_ESPERA_PAGO)
                 {
                     try
                     {
@@ -389,12 +402,12 @@ namespace LoftComputacion.Application
                 ResumenTecnico = orden.ResumenTecnico,
 
                 Fotos = orden.Fotos
-    .Select(f => new FotoDto
-    {
-        Id = f.Id,
-        Url = f.RutaArchivo
-    })
-    .ToList(),
+                    .Select(f => new FotoDto
+                    {
+                        Id = f.Id,
+                        Url = f.RutaArchivo
+                    })
+                    .ToList(),
 
                 Historial = orden.Historial
                     .OrderByDescending(h => h.FechaHora)
@@ -442,24 +455,24 @@ namespace LoftComputacion.Application
         /// </summary>
         public async Task ActualizarEstadoPorPagoAsync(int ordenId, string notaHistorial)
         {
-            // Asumo que el ID para "Pagado" es 7 (según tus estados anteriores)
-            const int ESTADO_PAGADO_ID = 7;
-
-            var orden = await _context.OrdenesDeServicio.Include(o => o.Estado).FirstOrDefaultAsync(o => o.Id == ordenId);
+            var orden = await _context.OrdenesDeServicio
+                .Include(o => o.Estado)
+                .FirstOrDefaultAsync(o => o.Id == ordenId);
 
             if (orden == null) return; // No hacer nada si la orden no existe
 
             // 1. Cambiar el estado a "Pagado"
             string estadoAnterior = orden.Estado.Nombre;
-            orden.EstadoId = ESTADO_PAGADO_ID;
+            orden.EstadoId = ID_ESTADO_PAGADO;
+            orden.FechaPago = DateTime.UtcNow;
 
             // 2. Crear registro de historial
             var historial = new HistorialOrden
             {
                 OrdenDeServicioId = orden.Id,
                 FechaHora = DateTime.UtcNow,
-                UsuarioId = 1, // <--- AJUSTE: Usamos ID del sistema (Usuario 1: Admin) o un ID genérico.
-                DescripcionDelCambio = $"Pago de Mercado Pago confirmado. {notaHistorial}",
+                UsuarioId = UsuarioSistemaId, // Usamos el usuario "sistema" para los webhooks
+                DescripcionDelCambio = $"Estado cambiado de '{estadoAnterior}' a 'Pagado' por Mercado Pago. {notaHistorial}"
             };
 
             _context.HistorialOrdenes.Add(historial);
@@ -492,7 +505,10 @@ namespace LoftComputacion.Application
             // CORRECCIÓN: Solo contamos Entregado (5) y Pagado (7) como ÉXITO.
             // Cancelado (6) es REBOTE.
             var ordenesCerradas = await _context.OrdenesDeServicio
-                .Where(o => o.FechaIngreso >= fechaInicio && (o.EstadoId == 5 || o.EstadoId == 7 || o.EstadoId == 6))
+                .Where(o => o.FechaIngreso >= fechaInicio &&
+                            (o.EstadoId == ID_ESTADO_FINALIZADO_ENTREGADO ||
+                             o.EstadoId == ID_ESTADO_PAGADO ||
+                             o.EstadoId == 6))
                 .ToListAsync();
 
             metricas.CantidadFinalizadas = ordenesCerradas.Count(o => o.EstadoId != 6); // Solo 5 y 7
@@ -501,16 +517,18 @@ namespace LoftComputacion.Application
 
             if ((metricas.CantidadFinalizadas + metricas.CantidadCanceladas) > 0)
             {
-                metricas.TasaRebote = Math.Round((double)metricas.CantidadCanceladas / (metricas.CantidadFinalizadas + metricas.CantidadCanceladas) * 100, 1);
+                metricas.TasaRebote = Math.Round(
+                    (double)metricas.CantidadCanceladas /
+                    (metricas.CantidadFinalizadas + metricas.CantidadCanceladas) * 100, 1);
             }
 
             // 3. RENDIMIENTO TÉCNICO
-            // CORRECCIÓN: Solo buscamos eventos de Entregado o Pagado en el historial
+            // Buscamos eventos de Entregado o Pagado en el historial
             var historialEventos = await _context.HistorialOrdenes
                 .Include(h => h.Usuario)
                 .Where(h => h.FechaHora >= fechaInicio &&
                            (h.DescripcionDelCambio.Contains("Entregado") ||
-                            h.DescripcionDelCambio.Contains("Pagado"))) // Sacamos "Finalizado"
+                            h.DescripcionDelCambio.Contains("Pagado")))
                 .ToListAsync();
 
             var rendimiento = historialEventos
