@@ -1,0 +1,63 @@
+﻿@layout LoginLayout
+@page "/solicitar-recuperacion"
+@using LoftComputacion.Shared.DTOs
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+    <MudPaper Class="pa-8 mx-auto" Elevation="3">
+        <div class="d-flex justify-center mb-4">
+            <MudText Typo="Typo.h5">Recuperar Contraseña</MudText>
+        </div>
+
+        <MudText Typo="Typo.body2" Class="mb-4 text-center">
+            Ingresá tu correo electrónico y te enviaremos un enlace para restablecer tu clave.
+        </MudText>
+
+        <MudTextField @bind-Value="Email" Label="Correo Electrónico" Variant="Variant.Outlined" Class="mb-4" />
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="EnviarSolicitud" Disabled="@Enviando">
+            @if (Enviando)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+            }
+            else
+            {
+
+                <span>Enviar Enlace</span>
+            }
+        </MudButton>
+
+        <MudButton Variant="Variant.Text" Color="Color.Secondary" FullWidth="true" Class="mt-2" Href="/login">
+            Volver al Login
+        </MudButton>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string Email;
+    private bool Enviando = false;
+
+    private async Task EnviarSolicitud()
+    {
+        if (string.IsNullOrWhiteSpace(Email)) { Snackbar.Add("Ingresá un correo.", Severity.Warning); return; }
+
+        Enviando = true;
+        try
+        {
+            var dto = new RecuperarPasswordDto { Email = Email };
+            var response = await Http.PostAsJsonAsync("api/Auth/solicitar-recuperacion", dto);
+
+            // Siempre mostramos éxito por seguridad, aunque el mail falle o no exista
+            Snackbar.Add("Si el correo existe, recibirás instrucciones en breve.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error de conexión.", Severity.Error);
+        }
+        finally
+        {
+            Enviando = false;
+        }
+    }
+}

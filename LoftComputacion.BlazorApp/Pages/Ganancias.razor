@@ -1,7 +1,16 @@
 ﻿@page "/ganancias"
 @using MudBlazor
 @using LoftComputacion.BlazorApp.Services.Ordenes
+@using Blazored.LocalStorage
+@using System.Net.Http.Headers
 @inject OrdenesApiService OrdenesService
+@inject NavigationManager Nav  // <--- IMPORTANTE: Necesario para descargar
+@inject IJSRuntime JS
+@inject HttpClient Http
+@inject ILocalStorageService LocalStorage
+@inject ISnackbar Snackbar
+@inject CustomAuthStateProvider AuthState
+
 
 <MudPaper Class="pa-4">
     <MudText Typo="Typo.h5" Class="mb-4">Reporte de Ganancias Reales</MudText>
@@ -9,7 +18,17 @@
     <div class="d-flex gap-4 mb-4 align-center flex-wrap">
         <MudDatePicker Label="Desde" @bind-Date="_desde" MaxDate="_hasta" Variant="Variant.Outlined" />
         <MudDatePicker Label="Hasta" @bind-Date="_hasta" MinDate="_desde" Variant="Variant.Outlined" />
+
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Filtrar">Aplicar filtros</MudButton>
+
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                   OnClick="DescargarPdf">
+            Exportar PDF
+        </MudButton>
     </div>
 
     <MudPaper Class="pa-4 mb-4" Elevation="2" Style="background-color: #e8f5e9;">
@@ -38,21 +57,21 @@
             <MudTd>
                 @if (EsGanancia(context.Estado))
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success">@context.Estado</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success">@context.Estado</MudChip>
                 }
                 else
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">@context.Estado</MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">@context.Estado</MudChip>
                 }
             </MudTd>
             <MudTd>
                 @if (EsGanancia(context.Estado))
                 {
-                    <b style="color:green">@context.Total.ToString("C")</b>
+                        <b style="color:green">@context.Total.ToString("C")</b>
                 }
                 else
                 {
-                    <span style="color:gray; text-decoration: line-through;">@context.Total.ToString("C")</span>
+                        <span style="color:gray; text-decoration: line-through;">@context.Total.ToString("C")</span>
                 }
             </MudTd>
         </RowTemplate>
@@ -81,8 +100,6 @@
     private decimal _totalFacturado = 0m;
     private int _cantidadCobradas = 0;
 
-    // DEFINIMOS QUÉ ESTADOS SON DINERO REAL
-    // Solo sumamos si dice "Pagado" o "Entregado"
     private readonly string[] _estadosQueSuman = new[] { "Pagado", "Entregado" };
 
     protected override async Task OnInitializedAsync()
@@ -108,23 +125,16 @@
 
     private void Filtrar()
     {
-        // 1. Filtramos por FECHA y por ESTADO (Solo lo que es ganancia)
         var query = _ordenes.Where(o =>
         {
-            // Filtro de fecha
             bool okDesde = !_desde.HasValue || o.FechaIngreso.Date >= _desde.Value.Date;
             bool okHasta = !_hasta.HasValue || o.FechaIngreso.Date <= _hasta.Value.Date;
-
-            // Filtro de Estado (NUEVO: Solo mostramos si es dinero real)
             bool esDineroReal = EsGanancia(o.Estado);
 
             return okDesde && okHasta && esDineroReal;
         });
 
-        // Generamos la lista visual
         _ordenesFiltradas = query.OrderByDescending(o => o.FechaIngreso).ToList();
-
-        // Calculamos totales (ahora es simplemente la suma de la lista filtrada)
         _totalFacturado = _ordenesFiltradas.Sum(o => o.Total);
         _cantidadCobradas = _ordenesFiltradas.Count;
     }
@@ -133,4 +143,48 @@
     {
         return _estadosQueSuman.Contains(estado);
     }
+
+    private async Task DescargarPdf()
+{
+    if (!_desde.HasValue || !_hasta.HasValue) return;
+
+    try
+    {
+        var token = await LocalStorage.GetItemAsync<string>("authToken");
+
+        if (string.IsNullOrEmpty(token))
+        {
+            Snackbar.Add("No se encontró sesión activa.", Severity.Error);
+            return;
+        }
+
+        token = token.Trim('"');
+
+        string url = $"api/Ganancias/exportar-pdf?fechaDesde={_desde.Value:yyyy-MM-dd}&fechaHasta={_hasta.Value:yyyy-MM-dd}";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await Http.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var fileBytes = await response.Content.ReadAsByteArrayAsync();
+            var base64 = Convert.ToBase64String(fileBytes);
+            var fileName = $"Ganancias_{_desde.Value:dd-MM}_{_hasta.Value:dd-MM}.pdf";
+
+            await JS.InvokeVoidAsync("descargarArchivo", fileName, base64);
+            Snackbar.Add("PDF generado con éxito.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Error de autorización al generar PDF.", Severity.Error);
+        }
+    }
+    catch (Exception ex)
+    {
+        Snackbar.Add("Error al procesar el archivo.", Severity.Error);
+        Console.WriteLine($"Error: {ex.Message}");
+    }
+}
 }

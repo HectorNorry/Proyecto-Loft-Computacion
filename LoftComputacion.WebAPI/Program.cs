@@ -42,6 +42,7 @@ builder.Services.AddScoped<ISecurityService, SecurityService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<AIService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<GananciasService>();
 
 // ===============================================
 // 4) JWT Authentication

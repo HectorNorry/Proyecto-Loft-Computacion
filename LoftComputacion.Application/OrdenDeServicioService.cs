@@ -187,7 +187,7 @@ namespace LoftComputacion.Application
                     idUsuarioResponsable = UsuarioSistemaId;
                 }
 
-                string detalleAutorizacion = "";
+                string detalleAutorizacion = string.Empty;
 
                 if (!string.IsNullOrEmpty(usuarioAutorizador))
                 {
@@ -197,10 +197,17 @@ namespace LoftComputacion.Application
                     if (usuarioAuthDb != null)
                     {
                         idUsuarioResponsable = usuarioAuthDb.Id;
-                        detalleAutorizacion = " (Mediante autorización con credenciales)";
+
+                        // Usamos el nombre completo si está; si no, el email
+                        var nombreAutorizador = !string.IsNullOrWhiteSpace(usuarioAuthDb.NombreCompleto)
+                            ? usuarioAuthDb.NombreCompleto
+                            : (usuarioAuthDb.Email ?? "Usuario desconocido");
+
+                        detalleAutorizacion = $" (Autorizado por: {nombreAutorizador})";
                     }
                     else
                     {
+                        // No encontramos el usuario en BD, pero vino algo en usuarioAutorizador
                         detalleAutorizacion = $" (Autorizado por externo: {usuarioAutorizador})";
                     }
                 }
@@ -254,6 +261,7 @@ namespace LoftComputacion.Application
             await _context.SaveChangesAsync();
             return true;
         }
+
 
         public async Task<bool> DeleteOrdenAsync(int id)
         {

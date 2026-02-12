@@ -5,6 +5,10 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<StaticWebAssetsEnabled>true</StaticWebAssetsEnabled>
+
+		<RuntimeIdentifier>win-x86</RuntimeIdentifier>
+		<PlatformTarget>x86</PlatformTarget>
+		<SelfContained>false</SelfContained>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -20,13 +24,17 @@
 		</PackageReference>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+
+		<PackageReference Include="SkiaSharp" Version="2.88.8" />
+
+		<PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="2.88.8" />
+		<PackageReference Include="HarfBuzzSharp.NativeAssets.Win32" Version="7.3.0" />
+		<PackageReference Include="Microsoft.Windows.Compatibility" Version="8.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\LoftComputacion.Application\LoftComputacion.Application.csproj" />
-
 		<ProjectReference Include="..\LoftComputacion.BlazorApp\LoftComputacion.BlazorApp.csproj" />
-
 		<ProjectReference Include="..\LoftComputacion.Domain\LoftComputacion.Domain.csproj" />
 		<ProjectReference Include="..\LoftComputacion.Infrastructure\LoftComputacion.Infrastructure.csproj" />
 		<ProjectReference Include="..\LoftComputacion.Shared\LoftComputacion.Shared.csproj" />

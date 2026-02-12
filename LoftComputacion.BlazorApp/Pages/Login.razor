@@ -36,6 +36,12 @@
                OnClick="SubmitLogin">
         INGRESAR
     </MudButton>
+
+    <div class="d-flex justify-center mt-4">
+        <MudLink Href="/solicitar-recuperacion" Typo="Typo.body2" Color="Color.Primary">
+            ¿Olvidaste tu contraseña?
+        </MudLink>
+    </div>
 </MudPaper>
 
 @code {
@@ -58,9 +64,6 @@
             // Notificamos a la app que estamos logueados
             await AuthState.MarkUserAsAuthenticated(token);
 
-            // --- CORRECCIÓN AQUÍ ---
-            // Quitamos el ", true". Ahora la navegación es interna y suave.
-            // Esto mantiene el estado de autenticación en memoria.
             Nav.NavigateTo("/");
         }
         catch (Exception ex)

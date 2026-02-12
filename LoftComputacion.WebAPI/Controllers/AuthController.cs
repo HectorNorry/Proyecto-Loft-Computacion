@@ -1,4 +1,5 @@
 ﻿using BCrypt.Net;
+using LoftComputacion.Application; // Necesario para EmailService
 using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
 using LoftComputacion.Shared.DTOs;
@@ -19,17 +20,17 @@ namespace LoftComputacion.WebAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly EmailService _emailService; // <--- NUEVO
 
-        public AuthController(ApplicationDbContext context, IConfiguration configuration)
+        public AuthController(ApplicationDbContext context, IConfiguration configuration, EmailService emailService)
         {
             _context = context;
             _configuration = configuration;
+            _emailService = emailService; // <--- INYECCIÓN
         }
 
         [HttpPost("login")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u =>
@@ -42,27 +43,6 @@ namespace LoftComputacion.WebAPI.Controllers
                 return Unauthorized("Usuario o contraseña incorrectos.");
             }
 
-            // -------------------------
-            // LOGGING TEMPORAL DE DEBUG
-            // -------------------------
-            try
-            {
-                var dbHash = usuario.PasswordHash ?? "<NULL>";
-                var dbHashLen = dbHash == "<NULL>" ? 0 : dbHash.Length;
-                var dbHashBytes = System.Text.Encoding.ASCII.GetBytes(dbHash);
-                var dbHashHex = BitConverter.ToString(dbHashBytes).Replace("-", "");
-
-                Console.WriteLine($"[DEBUG-VERIFY] Email: {usuario.Email}");
-                Console.WriteLine($"[DEBUG-VERIFY] Hash desde DB: [{dbHash}]");
-                Console.WriteLine($"[DEBUG-VERIFY] Hash LEN: {dbHashLen}");
-                Console.WriteLine($"[DEBUG-VERIFY] Hash HEX: {dbHashHex}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[DEBUG-VERIFY] Error al preparar logging del hash: {ex.Message}");
-            }
-            // -------------------------
-
             bool esPasswordValida = false;
             try
             {
@@ -70,27 +50,15 @@ namespace LoftComputacion.WebAPI.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DEBUG-VERIFY] BCrypt.Verify lanzó excepción: {ex.Message}");
+                Console.WriteLine($"[ERROR] Error verificando password: {ex.Message}");
             }
-
-            Console.WriteLine($"[DEBUG-VERIFY] Resultado Verify: {esPasswordValida}");
 
             if (!esPasswordValida)
             {
                 return Unauthorized("Usuario o contraseña incorrectos.");
             }
 
-            // 4. Generación y retorno del token
-            string token;
-            try
-            {
-                token = GenerarJwtToken(usuario);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR-JWT] Error generando token: {ex.Message}");
-                throw;
-            }
+            var token = GenerarJwtToken(usuario);
 
             return Ok(new
             {
@@ -101,9 +69,64 @@ namespace LoftComputacion.WebAPI.Controllers
             });
         }
 
+        // --- NUEVO: SOLICITAR RECUPERACIÓN ---
+        [HttpPost("solicitar-recuperacion")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SolicitarRecuperacion([FromBody] RecuperarPasswordDto dto)
+        {
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == dto.Email);
+
+            if (usuario == null)
+                return Ok(new { mensaje = "Si el correo existe, se enviaron las instrucciones." });
+
+            var token = Guid.NewGuid().ToString();
+            usuario.TokenRecuperacion = token;
+            usuario.TokenRecuperacionExpiracion = DateTime.Now.AddHours(1);
+
+            await _context.SaveChangesAsync();
+
+            // Detectar URL base (Local o Azure) para el link
+            var baseUrl = Request.Headers["Origin"].ToString();
+            if (string.IsNullOrEmpty(baseUrl)) baseUrl = _configuration["UrlBase"] ?? "https://localhost:7123";
+
+            var link = $"{baseUrl}/restablecer-password/{token}";
+
+            var mensaje = $@"
+                <h3>Recuperación de Contraseña</h3>
+                <p>Hola {usuario.NombreCompleto},</p>
+                <p>Solicitaste restablecer tu contraseña. Hacé clic en el siguiente enlace:</p>
+                <p><a href='{link}'>RESTABLECER CONTRASEÑA</a></p>
+                <p>Este enlace vence en 1 hora.</p>";
+
+            await _emailService.EnviarEmailAsync(usuario.Email, "Restablecer Contraseña - Loft", mensaje);
+
+            return Ok(new { mensaje = "Si el correo existe, se enviaron las instrucciones." });
+        }
+
+        // --- NUEVO: RESTABLECER PASSWORD ---
+        [HttpPost("restablecer-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RestablecerPassword([FromBody] RestablecerPasswordDto dto)
+        {
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.TokenRecuperacion == dto.Token);
+
+            if (usuario == null || usuario.TokenRecuperacionExpiracion < DateTime.Now)
+            {
+                return BadRequest("El enlace es inválido o ha expirado.");
+            }
+
+            usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NuevaPassword);
+
+            usuario.TokenRecuperacion = null;
+            usuario.TokenRecuperacionExpiracion = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { mensaje = "Contraseña actualizada correctamente." });
+        }
+
         private string GenerarJwtToken(Usuario usuario)
         {
-            // Comprobación robusta de configuración: soporta Jwt:Key y Jwt__Key
             var jwtKey = _configuration["Jwt:Key"];
             var jwtKeyAlt = _configuration["Jwt__Key"];
             var chosenKey = !string.IsNullOrEmpty(jwtKeyAlt) ? jwtKeyAlt : jwtKey;
@@ -111,15 +134,7 @@ namespace LoftComputacion.WebAPI.Controllers
             var jwtIssuer = _configuration["Jwt:Issuer"] ?? _configuration["Jwt__Issuer"];
             var jwtAudience = _configuration["Jwt:Audience"] ?? _configuration["Jwt__Audience"];
 
-            // Logging temporal (no imprimir el valor completo de la clave, sólo existencia/longitud)
-            Console.WriteLine($"[DEBUG-CFG] Jwt:Key pres: {(!string.IsNullOrEmpty(jwtKey) ? "1" : "0")} | Jwt__Key pres: {(!string.IsNullOrEmpty(jwtKeyAlt) ? "1" : "0")}");
-            Console.WriteLine($"[DEBUG-CFG] ChosenKey length: {(string.IsNullOrEmpty(chosenKey) ? 0 : chosenKey.Length)}");
-            Console.WriteLine($"[DEBUG-CFG] JwtIssuer present: {(!string.IsNullOrEmpty(jwtIssuer) ? "1" : "0")} | JwtAudience present: {(!string.IsNullOrEmpty(jwtAudience) ? "1" : "0")}");
-
-            if (string.IsNullOrEmpty(chosenKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
-            {
-                throw new InvalidOperationException("Configuración de JWT incompleta en appsettings.json o App Settings");
-            }
+            if (string.IsNullOrEmpty(chosenKey)) throw new Exception("Falta Jwt:Key en configuración");
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(chosenKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

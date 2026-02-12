@@ -1,26 +1,42 @@
 ﻿@using MudBlazor
 
 <MudDialog>
-    <MudDialogContent>
-        <img src="@Url"
-             style="width:100%; max-height:85vh; object-fit:contain; border-radius:8px;" />
-    </MudDialogContent>
+    <DialogContent>
+        <div class="d-flex justify-center align-center" style="min-height: 200px;">
+            @if (!string.IsNullOrWhiteSpace(Url))
+            {
+                <MudImage Src="@Url"
+                          Alt="Foto del equipo"
+                          Style="max-width:100%; max-height:85vh; object-fit:contain; border-radius:8px;" />
+            }
+            else
+            {
+                <MudText Color="Color.Error">
+                    No se pudo cargar la imagen.
+                </MudText>
+            }
+        </div>
+    </DialogContent>
 
-    <MudDialogActions>
-        <MudButton Color="Color.Primary" OnClick="Cerrar">Cerrar</MudButton>
-    </MudDialogActions>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Cerrar">
+            Cerrar
+        </MudButton>
+    </DialogActions>
 </MudDialog>
 
 @code {
-
     [CascadingParameter]
-    public IDialogReference DialogReference { get; set; } = default!;
+    IMudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter]
-    public string Url { get; set; } = "";
+    public string Url { get; set; } = string.Empty;
 
     void Cerrar()
     {
-        DialogReference.Close();
+        if (MudDialog != null)
+        {
+            MudDialog.Cancel();
+        }
     }
 }

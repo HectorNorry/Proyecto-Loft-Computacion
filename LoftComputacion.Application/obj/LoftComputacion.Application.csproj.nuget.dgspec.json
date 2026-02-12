@@ -84,6 +84,10 @@
               "target": "Package",
               "version": "[8.0.1, )"
             },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2025.12.4, )"
+            },
             "SendGrid": {
               "target": "Package",
               "version": "[9.29.3, )"

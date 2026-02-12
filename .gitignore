@@ -42,3 +42,4 @@ appsettings.Development.json
 # Archivos de compilacion de .NET
 [Oo]bj/
 [Bb]in/
+.env
