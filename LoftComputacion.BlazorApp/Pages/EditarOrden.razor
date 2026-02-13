@@ -211,19 +211,36 @@
     private async Task GuardarCambios()
     {
         Guardando = true;
-        string? usuarioAutorizador = null;
+        string? usuarioAutorizador = null; // Inicializamos vacío
+
         try
         {
+            // 1. DETECTAR SI CAMBIÓ EL ESTADO
+            // Si el estado nuevo es distinto al original, disparamos la auditoría
             if (EstadoId != _estadoIdOriginal)
             {
                 var options = new DialogOptions { BackdropClick = false, CloseOnEscapeKey = false };
+
+                // Abrimos el diálogo que pide usuario y contraseña
                 var dialog = DialogService.Show<DialogoConfirmarCredenciales>("Confirmar Cambio de Estado", options);
                 var result = await dialog.Result;
-                if (result.Canceled) { Guardando = false; return; }
+
+                // Si cancelan el diálogo, cancelamos todo el guardado
+                if (result.Canceled)
+                {
+                    Guardando = false;
+                    return;
+                }
+
+                // Si aceptaron, guardamos el dato de quién autorizó
                 usuarioAutorizador = result.Data.ToString();
             }
 
+            // 2. OBTENER EL ID DEL USUARIO LOGUEADO (El que está operando)
             var usuarioIdLogueado = await AuthProvider.GetUserIdAsync();
+
+            // 3. ARMAR EL PAQUETE DE DATOS (DTO)
+            // Acá metemos todo, incluyendo al "usuarioAutorizador" si existió
             var dto = new UpdateOrdenDto
             {
                 EstadoId = EstadoId,
@@ -234,21 +251,20 @@
                 UsuarioAutorizador = usuarioAutorizador
             };
 
-            var response = await Http.PutAsJsonAsync($"api/OrdenesDeServicio/{id}", dto);
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                Snackbar.Add($"Error al guardar cambios: {body}", Severity.Error);
-                return;
-            }
+            // 4. ENVIAR AL BACKEND (LA CORRECCIÓN DEL 401)
+            // Usamos el servicio blindado que envía el Token manualmente
+            await OrdenesService.UpdateOrdenAsync(id, dto);
 
+            // 5. ÉXITO
             Snackbar.Add("Cambios guardados correctamente.", Severity.Success);
-            _estadoIdOriginal = EstadoId;
+            _estadoIdOriginal = EstadoId; // Actualizamos el original para que no pida de nuevo si no cambia
+
+            // Volver al listado
             Nav.NavigateTo("/ordenes");
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error crítico: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
         }
         finally
         {

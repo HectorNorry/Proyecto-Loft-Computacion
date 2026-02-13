@@ -92,6 +92,35 @@ namespace LoftComputacion.BlazorApp.Services.Ordenes
             if (!response.IsSuccessStatusCode) throw new Exception(await response.Content.ReadAsStringAsync());
         }
 
+        // Reemplazá el método UpdateOrdenAsync por este:
+        public async Task UpdateOrdenAsync(int id, UpdateOrdenDto dto)
+        {
+            // 1. Preparamos la petición PUT
+            var request = new HttpRequestMessage(HttpMethod.Put, $"api/OrdenesDeServicio/{id}");
+
+            // 2. Serializamos el DTO a JSON
+            request.Content = JsonContent.Create(dto);
+
+            // 3. --- INYECCIÓN MANUAL DE TOKEN ---
+            var token = await _localStorage.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                token = token.Trim('"');
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+            // ------------------------------------
+
+            // 4. Enviamos la petición
+            var response = await _http.SendAsync(request);
+
+            // 5. Verificamos errores
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Error actualizando: {error}");
+            }
+        }
+
         public async Task<List<OrdenSimpleDto>> GetUltimasOrdenesAsync(string? filtro)
         {
             string url = string.IsNullOrWhiteSpace(filtro) ? "api/OrdenesDeServicio/lista" : $"api/OrdenesDeServicio/lista?filtro={Uri.EscapeDataString(filtro)}";
