@@ -64,7 +64,9 @@
         </RowTemplate>
 
         <PagerContent>
-            <MudTablePager />
+            <MudTablePager RowsPerPageString="Filas por página:"
+                           InfoFormat="{first_item}-{last_item} de {all_items}"
+                           PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
         </PagerContent>
 
         <NoRecordsContent>

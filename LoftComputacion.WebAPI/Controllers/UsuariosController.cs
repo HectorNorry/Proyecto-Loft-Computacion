@@ -1,4 +1,4 @@
-﻿using LoftComputacion.Application;    // Aquí vive UsuarioService
+﻿using LoftComputacion.Application;
 using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
 using LoftComputacion.Shared.DTOs;
@@ -13,11 +13,9 @@ namespace LoftComputacion.WebAPI.Controllers
     [ApiController]
     public class UsuariosController : ControllerBase
     {
-        // CORRECCIÓN: Usamos UsuarioService (Singular)
         private readonly UsuarioService _usuarioService;
         private readonly ApplicationDbContext _context;
 
-        // Constructor corregido
         public UsuariosController(UsuarioService usuarioService, ApplicationDbContext context)
         {
             _usuarioService = usuarioService;
@@ -36,7 +34,7 @@ namespace LoftComputacion.WebAPI.Controllers
                 nombreCompleto = u.NombreCompleto,
                 email = u.Email,
                 rol = u.Rol,
-                estaActivo = true // Hardcodeado en true porque ya borramos la columna y todos son activos por defecto
+                activo = u.Activo // <--- AHORA LEE EL ESTADO REAL DE LA DB
             });
 
             return Ok(resultado);
@@ -45,7 +43,7 @@ namespace LoftComputacion.WebAPI.Controllers
         [HttpPost("crear")]
         public async Task<IActionResult> Crear(CreateUsuarioDto dto)
         {
-            var result = await _usuarioService.CreateUsuarioAsync(dto); // Tu método se llama CreateUsuarioAsync
+            var result = await _usuarioService.CreateUsuarioAsync(dto);
             if (!result.Succeeded) return BadRequest(result.Errors);
             return Ok();
         }
@@ -53,7 +51,7 @@ namespace LoftComputacion.WebAPI.Controllers
         [HttpPut("editar/{id}")]
         public async Task<IActionResult> Editar(int id, UpdateUsuarioDto dto)
         {
-            var result = await _usuarioService.UpdateUsuarioAsync(id, dto); // Tu método se llama UpdateUsuarioAsync
+            var result = await _usuarioService.UpdateUsuarioAsync(id, dto);
             if (!result) return NotFound();
             return Ok();
         }
@@ -66,11 +64,15 @@ namespace LoftComputacion.WebAPI.Controllers
             if (usuario == null)
                 return NotFound("El usuario no existe.");
 
+            // Protección vital: No dejar a la app sin el admin principal
             if (usuario.Email == "admin@admin.com")
-                return BadRequest("No se puede eliminar al Super Admin.");
+                return BadRequest("No se puede dar de baja al Super Admin.");
 
-            _context.Usuarios.Remove(usuario);
-            await _context.SaveChangesAsync();
+            // <--- LA MAGIA DEL SOFT DELETE --->
+            var exito = await _usuarioService.ToggleUsuarioStatusAsync(id);
+
+            if (!exito)
+                return BadRequest("Hubo un error al cambiar el estado del usuario.");
 
             return Ok();
         }

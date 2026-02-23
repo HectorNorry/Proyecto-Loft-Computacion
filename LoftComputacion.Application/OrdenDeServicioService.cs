@@ -177,48 +177,31 @@ namespace LoftComputacion.Application
                 string nombreEstadoNuevo = estadoNuevoObj?.Nombre ?? "Desconocido";
 
                 // ============================================================
-                // B. LÓGICA DE AUDITORÍA
+                // B. LÓGICA DE AUDITORÍA (AUTOMÁTICA)
                 // ============================================================
-                int idUsuarioResponsable = usuarioId;
+                // Usamos el ID del usuario que está logueado haciendo la petición
+                int idUsuarioResponsable = usuarioId > 0 ? usuarioId : UsuarioSistemaId;
+                string nombreResponsable = "Usuario del sistema";
 
-                // 👇 Si vino 0 (o negativo), usamos el usuario sistema para evitar romper el FK
-                if (idUsuarioResponsable <= 0)
+                // Buscamos el nombre del técnico en la base de datos para la firma
+                if (idUsuarioResponsable > 0)
                 {
-                    idUsuarioResponsable = UsuarioSistemaId;
-                }
-
-                string detalleAutorizacion = string.Empty;
-
-                if (!string.IsNullOrEmpty(usuarioAutorizador))
-                {
-                    var usuarioAuthDb = await _context.Usuarios
-                        .FirstOrDefaultAsync(u => u.Email == usuarioAutorizador || u.NombreCompleto == usuarioAutorizador);
-
-                    if (usuarioAuthDb != null)
+                    var usuarioDb = await _context.Usuarios.FindAsync(idUsuarioResponsable);
+                    if (usuarioDb != null)
                     {
-                        idUsuarioResponsable = usuarioAuthDb.Id;
-
-                        // Usamos el nombre completo si está; si no, el email
-                        var nombreAutorizador = !string.IsNullOrWhiteSpace(usuarioAuthDb.NombreCompleto)
-                            ? usuarioAuthDb.NombreCompleto
-                            : (usuarioAuthDb.Email ?? "Usuario desconocido");
-
-                        detalleAutorizacion = $" (Autorizado por: {nombreAutorizador})";
-                    }
-                    else
-                    {
-                        // No encontramos el usuario en BD, pero vino algo en usuarioAutorizador
-                        detalleAutorizacion = $" (Autorizado por externo: {usuarioAutorizador})";
+                        nombreResponsable = !string.IsNullOrWhiteSpace(usuarioDb.NombreCompleto)
+                                            ? usuarioDb.NombreCompleto
+                                            : (usuarioDb.Email ?? "Usuario desconocido");
                     }
                 }
 
-                // C. Creamos el registro en el historial
+                // C. Creamos el registro en el historial con la firma automática
                 var historial = new HistorialOrden
                 {
                     OrdenDeServicioId = ordenDb.Id,
                     FechaHora = DateTime.UtcNow,
                     UsuarioId = idUsuarioResponsable,
-                    DescripcionDelCambio = $"Estado cambiado de '{nombreEstadoAnterior}' a '{nombreEstadoNuevo}'{detalleAutorizacion}"
+                    DescripcionDelCambio = $"Estado cambiado de '{nombreEstadoAnterior}' a '{nombreEstadoNuevo}' (Responsable: {nombreResponsable})"
                 };
 
                 _context.HistorialOrdenes.Add(historial);

@@ -550,7 +550,7 @@
             "Microsoft.EntityFrameworkCore.Design": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.20, )"
+              "version": "[8.0.*, )"
             },
             "Microsoft.Windows.Compatibility": {
               "target": "Package",

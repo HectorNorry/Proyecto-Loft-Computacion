@@ -102,8 +102,16 @@ public class UsuarioService // Sin interfaz, implementamos la clase concreta
         return true;
     }
 
-    // -----------------------------------------------------
-    // D - Desactivar/Activar (Eliminación Lógica)
-    // -----------------------------------------------------
-    
+    public async Task<bool> ToggleUsuarioStatusAsync(int id)
+    {
+        var usuario = await _context.Usuarios.FindAsync(id);
+        if (usuario == null) return false;
+
+        // Invertimos el estado: si estaba true pasa a false, y viceversa
+        usuario.Activo = !usuario.Activo;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
 }

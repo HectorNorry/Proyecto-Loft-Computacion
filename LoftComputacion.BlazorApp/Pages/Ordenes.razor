@@ -32,7 +32,6 @@
 
     <MudGrid>
 
-        <!-- LISTADO -->
         <MudItem xs="12" md="8">
 
             <MudTextField @bind-Value="Filtro"
@@ -93,10 +92,15 @@
                     <MudText>No se encontraron órdenes.</MudText>
                 </NoRecordsContent>
 
+                <PagerContent>
+                    <MudTablePager RowsPerPageString="Filas por página:"
+                                   InfoFormat="{first_item}-{last_item} de {all_items}"
+                                   PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                </PagerContent>
+
             </MudTable>
         </MudItem>
 
-        <!-- PANEL DETALLE -->
         <MudItem xs="12" md="4">
 
             <MudPaper Class="pa-4" Elevation="1">
@@ -175,7 +179,6 @@
     private bool _isLoadingDetalle;
     private OrdenSimpleDto? _ordenSeleccionada;
 
-
     protected override async Task OnInitializedAsync()
     {
         await CargarOrdenes();
@@ -246,5 +249,4 @@
 
         await CargarDetalleOrdenAsync(item.Id);
     }
-
 }

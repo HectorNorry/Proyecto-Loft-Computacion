@@ -1,5 +1,5 @@
 ﻿using BCrypt.Net;
-using LoftComputacion.Application; // Necesario para EmailService
+using LoftComputacion.Application;
 using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
 using LoftComputacion.Shared.DTOs;
@@ -20,13 +20,13 @@ namespace LoftComputacion.WebAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
-        private readonly EmailService _emailService; // <--- NUEVO
+        private readonly EmailService _emailService;
 
         public AuthController(ApplicationDbContext context, IConfiguration configuration, EmailService emailService)
         {
             _context = context;
             _configuration = configuration;
-            _emailService = emailService; // <--- INYECCIÓN
+            _emailService = emailService;
         }
 
         [HttpPost("login")]
@@ -41,6 +41,14 @@ namespace LoftComputacion.WebAPI.Controllers
             if (usuario == null)
             {
                 return Unauthorized("Usuario o contraseña incorrectos.");
+            }
+
+            // ==========================================
+            // NUEVO: FILTRO DE USUARIOS DADOS DE BAJA
+            // ==========================================
+            if (!usuario.Activo)
+            {
+                return Unauthorized("Tu cuenta ha sido desactivada. Por favor, contacta al administrador.");
             }
 
             bool esPasswordValida = false;
@@ -69,15 +77,16 @@ namespace LoftComputacion.WebAPI.Controllers
             });
         }
 
-        // --- NUEVO: SOLICITAR RECUPERACIÓN ---
+        // --- SOLICITAR RECUPERACIÓN ---
         [HttpPost("solicitar-recuperacion")]
         [AllowAnonymous]
         public async Task<IActionResult> SolicitarRecuperacion([FromBody] RecuperarPasswordDto dto)
         {
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == dto.Email);
 
-            if (usuario == null)
-                return Ok(new { mensaje = "Si el correo existe, se enviaron las instrucciones." });
+            // Evitamos que los inactivos recuperen password
+            if (usuario == null || !usuario.Activo)
+                return Ok(new { mensaje = "Si el correo existe y la cuenta está activa, se enviaron las instrucciones." });
 
             var token = Guid.NewGuid().ToString();
             usuario.TokenRecuperacion = token;
@@ -85,7 +94,6 @@ namespace LoftComputacion.WebAPI.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Detectar URL base (Local o Azure) para el link
             var baseUrl = Request.Headers["Origin"].ToString();
             if (string.IsNullOrEmpty(baseUrl)) baseUrl = _configuration["UrlBase"] ?? "https://localhost:7123";
 
@@ -100,10 +108,10 @@ namespace LoftComputacion.WebAPI.Controllers
 
             await _emailService.EnviarEmailAsync(usuario.Email, "Restablecer Contraseña - Loft", mensaje);
 
-            return Ok(new { mensaje = "Si el correo existe, se enviaron las instrucciones." });
+            return Ok(new { mensaje = "Si el correo existe y la cuenta está activa, se enviaron las instrucciones." });
         }
 
-        // --- NUEVO: RESTABLECER PASSWORD ---
+        // --- RESTABLECER PASSWORD ---
         [HttpPost("restablecer-password")]
         [AllowAnonymous]
         public async Task<IActionResult> RestablecerPassword([FromBody] RestablecerPasswordDto dto)
