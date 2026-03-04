@@ -12,9 +12,59 @@
 
 @attribute [Authorize]
 
+<style>
+    
+    @@media (max-width: 599px) {
+        .mobile-card-table .mud-table-body .mud-table-row
+
+    {
+        display: block;
+        margin-bottom: 16px;
+        background-color: var(--mud-palette-surface);
+        border-radius: 12px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--mud-palette-lines-default);
+        overflow: hidden;
+    }
+
+    .mobile-card-table .mud-table-cell {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px dashed var(--mud-palette-lines-default) !important;
+        padding: 12px 16px !important;
+    }
+
+        /* Destacamos el nombre del cliente */
+        .mobile-card-table .mud-table-cell:first-child {
+            background-color: rgba(89, 74, 226, 0.04); 
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        /* Centramos los botones en la última celda */
+        .mobile-card-table .mud-table-cell:last-child {
+            border-bottom: none !important;
+            justify-content: center;
+            padding: 16px !important;
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        /* Hacemos que los títulos (DataLabel) se vean más lindos */
+        .mobile-card-table .mud-table-cell::before {
+            font-weight: 600;
+            color: var(--mud-palette-text-secondary);
+            text-transform: uppercase;
+            font-size: 0.8em;
+            letter-spacing: 0.5px;
+        }
+
+    }
+</style>
+
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
 
-    <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4 flex-wrap gap-4">
         <MudText Typo="Typo.h4" Class="fw-bold">Clientes</MudText>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="AbrirDialogNuevoCliente">
             Nuevo Cliente
@@ -26,7 +76,10 @@
               Hover="true"
               Dense="true"
               Sortable="true"
+              Elevation="2"
+              Class="mobile-card-table"
               Filter="new Func<ClienteDto,bool>(FilterFunc1)">
+
         <ToolBarContent>
             <MudSpacer />
             <MudTextField @bind-Value="Filtro"
@@ -43,7 +96,7 @@
             <MudTh SortLabel="Telefono">Teléfono</MudTh>
             <MudTh SortLabel="Email">Email</MudTh>
             <MudTh SortLabel="DNI">DNI</MudTh>
-            <MudTh>Acciones</MudTh>
+            <MudTh Style="text-align: right;">Acciones</MudTh>
         </HeaderContent>
 
         <RowTemplate>
@@ -51,8 +104,8 @@
             <MudTd DataLabel="Teléfono">@context.Telefono</MudTd>
             <MudTd DataLabel="Email">@context.Email</MudTd>
             <MudTd DataLabel="DNI">@context.DNI</MudTd>
-            <MudTd>
-                <MudStack Row="true" Spacing="1">
+            <MudTd DataLabel="Acciones">
+                <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="@(() => AbrirDialogEditarCliente(context))">
                         Editar
                     </MudButton>
@@ -70,7 +123,7 @@
         </PagerContent>
 
         <NoRecordsContent>
-            <MudText Color="Color.Secondary">No se encontraron clientes.</MudText>
+            <MudAlert Severity="Severity.Info" Class="mt-4">No se encontraron clientes.</MudAlert>
         </NoRecordsContent>
 
     </MudTable>
@@ -100,8 +153,6 @@
         }
     }
 
-    // --- FUNCIÓN DE FILTRADO ---
-    // Esta función revisa cada cliente y decide si mostrarlo o no según lo que escribas
     private bool FilterFunc1(ClienteDto element) => FilterFunc(element, Filtro);
 
     private bool FilterFunc(ClienteDto element, string searchString)
@@ -109,14 +160,12 @@
         if (string.IsNullOrWhiteSpace(searchString))
             return true;
 
-        // Buscamos en Nombre, Email, DNI y Teléfono (ignorando mayúsculas/minúsculas)
         if ($"{element.NombreCompleto} {element.Email} {element.DNI} {element.Telefono}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
 
         return false;
     }
 
-    /* ------------------- NUEVO CLIENTE ------------------- */
     private async Task AbrirDialogNuevoCliente()
     {
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
@@ -131,7 +180,6 @@
         await CargarClientes();
     }
 
-    /* ------------------- EDITAR CLIENTE ------------------- */
     private async Task AbrirDialogEditarCliente(ClienteDto cliente)
     {
         _clienteIdEditando = cliente.Id;
@@ -158,7 +206,6 @@
         await CargarClientes();
     }
 
-    /* ------------------- ELIMINAR CLIENTE ------------------- */
     private async Task EliminarClienteAsync(ClienteDto cliente)
     {
         bool? confirm = await DialogService.ShowMessageBox("Eliminar cliente", $"¿Seguro que deseas eliminar a {cliente.NombreCompleto}?", yesText: "Eliminar", cancelText: "Cancelar");

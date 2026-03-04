@@ -42,11 +42,12 @@
                     <MudText Typo="Typo.subtitle2"><b>Fecha ingreso:</b> @Orden.FechaIngreso.ToString("dd/MM/yyyy HH:mm")</MudText>
                     <MudDivider Class="my-2" />
                     <MudText Typo="Typo.subtitle2"><b>Estado actual:</b> @Orden.Estado</MudText>
-                    <MudText Typo="Typo.subtitle2"><b>Equipo:</b> @Orden.EquipoTipo @Orden.EquipoModelo</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Tipo de equipo:</b> @Orden.EquipoTipo</MudText>
+                    <MudText Typo="Typo.subtitle2"><b>Modelo:</b> @Orden.EquipoModelo</MudText>
 
                     @if (!string.IsNullOrWhiteSpace(Orden.EquipoDescripcion))
                     {
-                        <MudText Typo="Typo.subtitle2"><b>Descripción equipo:</b> @Orden.EquipoDescripcion</MudText>
+                        <MudText Typo="Typo.subtitle2"><b>Descripción extra:</b> @Orden.EquipoDescripcion</MudText>
                     }
                     <MudDivider Class="my-2" />
                     <MudText Typo="Typo.subtitle2"><b>Falla declarada:</b> @Orden.FallaDeclarada</MudText>

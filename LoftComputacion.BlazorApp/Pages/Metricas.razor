@@ -4,7 +4,6 @@
 @using LoftComputacion.BlazorApp.Services.Ordenes
 @inject OrdenesApiService OrdenesService
 
-<!-- Estilos específicos de la página de métricas -->
 <style>
     .metricas-card {
         width: 100%;
@@ -18,8 +17,9 @@
     }
 
     @@media (max-width: 600px) {
+        /* Limitamos un poco la altura en móviles para que entren los dos Donuts sin scrollear tanto */
         .chart-responsive {
-            max-height: 260px;
+            max-height: 280px;
         }
 
         .metricas-card {
@@ -64,74 +64,34 @@
         </MudGrid>
 
         <MudGrid>
-            <!-- Donut -->
             <MudItem xs="12" md="6">
                 <MudPaper Class="pa-4 d-flex flex-column align-center metricas-card" Elevation="2" Style="height: 100%;">
                     <MudText Typo="Typo.h6" Class="mb-4 align-self-start">Tipos de Equipos</MudText>
-
                     @if (_dataHardware.Length > 0)
                     {
                         <MudChart ChartType="ChartType.Donut"
                                   Class="chart-responsive"
                                   InputData="@_dataHardware"
                                   InputLabels="@_labelsHardware"
-                                  LegendPosition="Position.Bottom">
+                                  LegendPosition="Position.Bottom"
+                                  ChartOptions="@(new ChartOptions { ChartPalette = new[] { "#2196F3", "#00C853", "#FFC107" } })">
                         </MudChart>
-                    }
-                    else
-                    {
-                        <MudAlert Severity="Severity.Info">No hay suficientes datos aún.</MudAlert>
                     }
                 </MudPaper>
             </MudItem>
 
-            <!-- Barras -->
             <MudItem xs="12" md="6">
-                <MudPaper Class="pa-4 metricas-card" Elevation="2">
-                    <MudText Typo="Typo.h6" Class="mb-4">Órdenes Finalizadas por Técnico</MudText>
-
-                    @if (_seriesTecnicos.Count > 0)
+                <MudPaper Class="pa-4 d-flex flex-column align-center metricas-card" Elevation="2" Style="height: 100%;">
+                    <MudText Typo="Typo.h6" Class="mb-4 align-self-start">Reparaciones por Técnico</MudText>
+                    @if (_dataTecnicos.Length > 0)
                     {
-                        <MudChart ChartType="ChartType.Bar"
+                        <MudChart ChartType="ChartType.Donut"
                                   Class="chart-responsive"
-                                  ChartSeries="@_seriesTecnicos"
-                                  XAxisLabels="@_labelsTecnicos"
-                                  Width="100%"
-                                  Height="350px"
-                                  ChartOptions="@(new ChartOptions {
-                                      YAxisLines = true,
-                                      ChartPalette = new[] { "#594AE2", "#00C853", "#FFC107" }
-                                  })">
-
-                            <CustomGraphics>
-                                <style>
-                                    /* Ejes más legibles */
-                                    .mud-charts-xaxis text {
-                                        font-size: 14px !important;
-                                        font-weight: bold;
-                                    }
-                                    .mud-charts-yaxis text {
-                                        font-size: 12px !important;
-                                    }
-
-                                    /* Grosor de barras */
-                                    .mud-chart-bar {
-                                        stroke-width: 32px !important;
-                                    }
-
-                                    @@media (max-width: 600px) {
-                                        .mud-chart-bar {
-                                            stroke-width: 20px !important;
-                                        }
-                                    }
-                                </style>
-                            </CustomGraphics>
-
+                                  InputData="@_dataTecnicos"
+                                  InputLabels="@_labelsTecnicosDonut"
+                                  LegendPosition="Position.Bottom"
+                                  ChartOptions="@(new ChartOptions { ChartPalette = new[] { "#594AE2", "#EC407A", "#00B8D4" } })">
                         </MudChart>
-                    }
-                    else
-                    {
-                        <MudAlert Severity="Severity.Info">No hay reparaciones finalizadas este mes.</MudAlert>
                     }
                 </MudPaper>
             </MudItem>
@@ -142,12 +102,13 @@
 @code {
     private MetricasDto? _metricas;
 
-    // Datos para gráficos
+    // Arrays para Equipos
     private double[] _dataHardware = Array.Empty<double>();
     private string[] _labelsHardware = Array.Empty<string>();
 
-    private List<ChartSeries> _seriesTecnicos = new();
-    private string[] _labelsTecnicos = Array.Empty<string>();
+    // Arrays para Técnicos (Donut usa arrays, no List<ChartSeries>)
+    private double[] _dataTecnicos = Array.Empty<double>();
+    private string[] _labelsTecnicosDonut = Array.Empty<string>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -155,31 +116,25 @@
 
         if (_metricas != null)
         {
-            // 1. Hardware
+            // 1. PROCESAR EQUIPOS
             _dataHardware = _metricas.OrdenesPorTipo.Select(x => x.Valor).ToArray();
-            double totalEquipos = _dataHardware.Sum();
-
-            if (totalEquipos > 0)
+            double totalH = _dataHardware.Sum();
+            _labelsHardware = _metricas.OrdenesPorTipo.Select(x =>
             {
-                _labelsHardware = _metricas.OrdenesPorTipo.Select(x =>
-                {
-                    double porcentaje = (x.Valor / totalEquipos) * 100;
-                    return $"{x.Etiqueta}: {x.Valor} ({porcentaje.ToString("0.0")}%)";
-                }).ToArray();
-            }
+                double pct = totalH > 0 ? (x.Valor / totalH * 100) : 0;
+                return $"{x.Etiqueta.Replace("_", " ")} ({pct:0.0}%)";
+            }).ToArray();
 
-            // 2. Técnicos
-            var valoresTecnicos = _metricas.RendimientoTecnicos.Select(x => x.Valor).ToArray();
-            _labelsTecnicos = _metricas.RendimientoTecnicos.Select(x => x.Etiqueta).ToArray();
-
-            if (valoresTecnicos.Length > 0)
+            // 2. PROCESAR TÉCNICOS (Para el nuevo Donut)
+            _dataTecnicos = _metricas.RendimientoTecnicos.Select(x => x.Valor).ToArray();
+            double totalT = _dataTecnicos.Sum();
+            _labelsTecnicosDonut = _metricas.RendimientoTecnicos.Select(x =>
             {
-                _seriesTecnicos.Add(new ChartSeries
-                {
-                    Name = "Reparaciones",
-                    Data = valoresTecnicos
-                });
-            }
+                // Solo el primer nombre para que no sea un texto gigante
+                string primerNombre = x.Etiqueta.Split(' ')[0];
+                double pct = totalT > 0 ? (x.Valor / totalT * 100) : 0;
+                return $"{primerNombre} ({pct:0.0}%)";
+            }).ToArray();
         }
     }
 }

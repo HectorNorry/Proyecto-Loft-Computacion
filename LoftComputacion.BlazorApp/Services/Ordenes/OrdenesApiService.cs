@@ -2,7 +2,6 @@
 using LoftComputacion.BlazorApp.Services.Auth;
 using LoftComputacion.Shared.DTOs;
 using Microsoft.AspNetCore.Components.Forms;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -20,71 +19,51 @@ namespace LoftComputacion.BlazorApp.Services.Ordenes
             _localStorage = localStorage;
         }
 
-        // ============================
-        // SUBIR FOTO (CORREGIDO Y RETORNA DATO)
-        // ============================
         public async Task<FotoDto> SubirFotoAsync(int idOrden, IBrowserFile archivo)
         {
             using var content = new MultipartFormDataContent();
-
-            // Límite 15MB
             var fileContent = new StreamContent(archivo.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024));
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(archivo.ContentType);
 
             content.Add(fileContent, "archivo", archivo.Name);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, $"api/OrdenesDeServicio/{idOrden}/fotos");
-            request.Content = content;
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/OrdenesDeServicio/{idOrden}/fotos")
+            {
+                Content = content
+            };
 
-            // --- INYECCIÓN MANUAL DE TOKEN ---
             var token = await _localStorage.GetItemAsync<string>("authToken");
             if (!string.IsNullOrEmpty(token))
             {
-                token = token.Trim('"');
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Trim('"'));
             }
-            // ---------------------------------
 
             var response = await _http.SendAsync(request);
-
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                throw new Exception(error);
+                throw new Exception(await response.Content.ReadAsStringAsync());
             }
 
-            // Leemos la respuesta para devolver la URL y el ID y actualizar la vista
-            // Asumimos que la API devuelve un objeto con { url: "...", fotoId: 123 }
             return await response.Content.ReadFromJsonAsync<FotoDto>()
                    ?? throw new Exception("La API no devolvió los datos de la foto.");
         }
 
-        // ============================
-        // BORRAR FOTO (NUEVO)
-        // ============================
         public async Task BorrarFotoAsync(int idFoto)
         {
-            // Usamos la ruta que tenías en tu Razor: api/OrdenesDeServicio/fotos/{id}
             var request = new HttpRequestMessage(HttpMethod.Delete, $"api/OrdenesDeServicio/fotos/{idFoto}");
 
-            // --- INYECCIÓN MANUAL DE TOKEN ---
             var token = await _localStorage.GetItemAsync<string>("authToken");
             if (!string.IsNullOrEmpty(token))
             {
-                token = token.Trim('"');
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Trim('"'));
             }
-            // ---------------------------------
 
             var response = await _http.SendAsync(request);
-
             if (!response.IsSuccessStatusCode)
             {
                 throw new Exception(await response.Content.ReadAsStringAsync());
             }
         }
-
-        // ... EL RESTO DE MÉTODOS IGUAL QUE ANTES ...
 
         public async Task CrearOrdenAsync(CreateOrdenDto dto)
         {
@@ -92,40 +71,55 @@ namespace LoftComputacion.BlazorApp.Services.Ordenes
             if (!response.IsSuccessStatusCode) throw new Exception(await response.Content.ReadAsStringAsync());
         }
 
-        // Reemplazá el método UpdateOrdenAsync por este:
         public async Task UpdateOrdenAsync(int id, UpdateOrdenDto dto)
         {
-            // 1. Preparamos la petición PUT
-            var request = new HttpRequestMessage(HttpMethod.Put, $"api/OrdenesDeServicio/{id}");
+            var request = new HttpRequestMessage(HttpMethod.Put, $"api/OrdenesDeServicio/{id}")
+            {
+                Content = JsonContent.Create(dto)
+            };
 
-            // 2. Serializamos el DTO a JSON
-            request.Content = JsonContent.Create(dto);
-
-            // 3. --- INYECCIÓN MANUAL DE TOKEN ---
             var token = await _localStorage.GetItemAsync<string>("authToken");
             if (!string.IsNullOrEmpty(token))
             {
-                token = token.Trim('"');
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Trim('"'));
             }
-            // ------------------------------------
 
-            // 4. Enviamos la petición
             var response = await _http.SendAsync(request);
-
-            // 5. Verificamos errores
             if (!response.IsSuccessStatusCode)
             {
-                var error = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Error actualizando: {error}");
+                throw new Exception($"Error actualizando: {await response.Content.ReadAsStringAsync()}");
             }
         }
 
-        public async Task<List<OrdenSimpleDto>> GetUltimasOrdenesAsync(string? filtro)
+        // --- ESTE ES EL MÉTODO QUE AHORA SOPORTA TODOS LOS FILTROS ---
+        public async Task<List<OrdenSimpleDto>> GetUltimasOrdenesAsync(string? filtro, DateTime? fechaDesde = null, DateTime? fechaHasta = null, string? estado = null, string? tipo = null)
         {
-            string url = string.IsNullOrWhiteSpace(filtro) ? "api/OrdenesDeServicio/lista" : $"api/OrdenesDeServicio/lista?filtro={Uri.EscapeDataString(filtro)}";
+            var queryParams = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(filtro))
+                queryParams.Add($"filtro={Uri.EscapeDataString(filtro)}");
+
+            if (fechaDesde.HasValue)
+                queryParams.Add($"fechaDesde={fechaDesde.Value:yyyy-MM-dd}");
+
+            if (fechaHasta.HasValue)
+                queryParams.Add($"fechaHasta={fechaHasta.Value:yyyy-MM-dd}");
+
+            if (!string.IsNullOrWhiteSpace(estado))
+                queryParams.Add($"estado={Uri.EscapeDataString(estado)}");
+
+            if (!string.IsNullOrWhiteSpace(tipo)) // AGREGAMOS ESTO
+                queryParams.Add($"tipo={Uri.EscapeDataString(tipo)}");
+
+            string url = "api/OrdenesDeServicio/lista";
+            if (queryParams.Any())
+            {
+                url += "?" + string.Join("&", queryParams);
+            }
+
             var response = await _http.GetAsync(url);
             if (!response.IsSuccessStatusCode) throw new Exception(await response.Content.ReadAsStringAsync());
+
             return await response.Content.ReadFromJsonAsync<List<OrdenSimpleDto>>() ?? new();
         }
 

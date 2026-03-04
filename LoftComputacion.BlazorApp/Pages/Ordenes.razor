@@ -9,44 +9,136 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject IJSRuntime JS
 
 @attribute [Authorize]
 
+<style>
+    /* MODO TARJETAS PARA CELULARES */
+    @@media (max-width: 599px) {
+        .mobile-card-table .mud-table-body .mud-table-row {
+            display: block;
+            margin-bottom: 16px;
+            background-color: var(--mud-palette-surface);
+            border-radius: 12px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--mud-palette-lines-default);
+            overflow: hidden;
+        }
+
+        .mobile-card-table .mud-table-cell {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed var(--mud-palette-lines-default) !important;
+            padding: 12px 16px !important;
+        }
+
+            .mobile-card-table .mud-table-cell:nth-child(2) {
+                background-color: rgba(89, 74, 226, 0.04);
+                font-weight: bold;
+                font-size: 1.1em;
+            }
+
+            .mobile-card-table .mud-table-cell:last-child {
+                border-bottom: none !important;
+                justify-content: center;
+                padding: 16px !important;
+                background-color: rgba(0, 0, 0, 0.02);
+            }
+
+            .mobile-card-table .mud-table-cell::before {
+                font-weight: 600;
+                color: var(--mud-palette-text-secondary);
+                text-transform: uppercase;
+                font-size: 0.8em;
+                letter-spacing: 0.5px;
+            }
+    }
+</style>
+
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
 
-    <MudStack Direction="Row"
-              Justify="Justify.SpaceBetween"
-              AlignItems="AlignItems.Center"
-              Class="mb-4">
-
-        <MudText Typo="Typo.h4">Órdenes</MudText>
-
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="@(() => Navigation.NavigateTo("/ordenes/nueva"))">
-            Nueva Orden
-        </MudButton>
-
-    </MudStack>
+    <MudGrid Class="mb-4 align-center">
+        <MudItem xs="8">
+            <MudText Typo="Typo.h4" Class="fw-bold">Órdenes</MudText>
+        </MudItem>
+        <MudItem xs="4" Class="d-flex justify-end">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Navigation.NavigateTo("/ordenes/nueva"))">
+                Nueva Orden
+            </MudButton>
+        </MudItem>
+    </MudGrid>
 
     <MudGrid>
-
         <MudItem xs="12" md="8">
+            <MudGrid Spacing="2" Class="mb-4 align-end">
+                <MudItem xs="12" sm="9">
+                    @* AHORA SOLO BUSCA POR CLIENTE *@
+                    <MudTextField @bind-Value="Filtro"
+                                  Placeholder="Buscar por nombre del cliente..."
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Immediate="true"
+                                  OnKeyUp="Buscar"
+                                  FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.FilterList"
+                               OnClick="ToggleFiltros"
+                               FullWidth="true">
+                        Filtros
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
 
-            <MudTextField @bind-Value="Filtro"
-                          Placeholder="Buscar..."
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search"
-                          Class="mb-4"
-                          Immediate="true"
-                          OnKeyUp="Buscar" />
+            <MudCollapse Expanded="_mostrarFiltros">
+                <MudPaper Class="pa-4 mb-4" Elevation="1" Style="background-color: var(--mud-palette-background-grey);">
+                    <MudGrid>
+                        <MudItem xs="12" sm="3">
+                            <MudDatePicker Label="Desde" @bind-Date="_fechaDesde" Clearable="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudDatePicker Label="Hasta" @bind-Date="_fechaHasta" Clearable="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudSelect T="string" Label="Estado" @bind-Value="_estadoSeleccionado" Clearable="true">
+                                <MudSelectItem Value="@("Recibido")">Recibido</MudSelectItem>
+                                <MudSelectItem Value="@("En Proceso")">En Proceso</MudSelectItem>
+                                <MudSelectItem Value="@("Esperando Aprobación")">Esperando Aprobación</MudSelectItem>
+                                <MudSelectItem Value="@("Finalizado, a espera de pago")">Finalizado</MudSelectItem>
+                                <MudSelectItem Value="@("Entregado")">Entregado</MudSelectItem>
+                                <MudSelectItem Value="@("Cancelado")">Cancelado</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="3">
+                            @* FILTRO DEDICADO POR TIPO *@
+                            <MudSelect T="string" Label="Tipo de Equipo" @bind-Value="_tipoEquipoSeleccionado" Clearable="true">
+                                <MudSelectItem Value="@("Notebook")">Notebook</MudSelectItem>
+                                <MudSelectItem Value="@("PC_Escritorio")">PC Escritorio</MudSelectItem>
+                                <MudSelectItem Value="@("Impresora")">Impresora</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" Class="d-flex justify-end gap-2">
+                            <MudButton Variant="Variant.Text" OnClick="LimpiarFiltros">Limpiar</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Buscar">Aplicar</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudCollapse>
 
             <MudTable T="OrdenSimpleDto"
                       Items="@ListaOrdenes"
                       Hover="true"
                       Dense="true"
                       Clickable="true"
+                      Elevation="2"
+                      Class="mobile-card-table"
                       SelectedItem="_ordenSeleccionada"
                       SelectedItemChanged="OnSelectedItemChanged"
                       RowStyleFunc="EstiloFila">
@@ -56,197 +148,136 @@
                     <MudTh>Cliente</MudTh>
                     <MudTh>Estado</MudTh>
                     <MudTh>Total</MudTh>
-                    <MudTh>Acción</MudTh>
+                    <MudTh Style="text-align: right;">Acción</MudTh>
                 </HeaderContent>
 
                 <RowTemplate>
-                    <MudTd>@context.Fecha.ToString("dd/MM/yyyy")</MudTd>
-                    <MudTd>@context.ClienteNombre</MudTd>
-
-                    <MudTd>
-                        <MudChip T="string"
-                                 Color="@GetChipColor(context.Estado)"
-                                 Variant="Variant.Filled"
-                                 Size="Size.Small">
+                    <MudTd DataLabel="Fecha">@context.Fecha.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd DataLabel="Cliente">@context.ClienteNombre</MudTd>
+                    <MudTd DataLabel="Estado">
+                        <MudChip T="string" Color="@GetChipColor(context.Estado)" Variant="Variant.Filled" Size="Size.Small">
                             @context.Estado
                         </MudChip>
                     </MudTd>
+                    <MudTd DataLabel="Total">@(context.Total.HasValue? context.Total.Value.ToString("C") : "-")</MudTd>
 
+                    @* BOTÓN EDITAR SIN LABEL "ACCIÓN" PARA MÓVIL *@
                     <MudTd>
-                        @(context.Total.HasValue? context.Total.Value.ToString("C") : "-")
-                    </MudTd>
-
-                    <MudTd>
-                        <div @onclick:stopPropagation="true">
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Primary"
-                                       Size="Size.Small"
-                                       OnClick="@(() => EditarOrden(context.Id))">
+                        <div @onclick:stopPropagation="true" class="d-flex justify-end">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditarOrden(context.Id))">
                                 Editar
                             </MudButton>
                         </div>
                     </MudTd>
                 </RowTemplate>
 
-                <NoRecordsContent>
-                    <MudText>No se encontraron órdenes.</MudText>
-                </NoRecordsContent>
-
                 <PagerContent>
-                    <MudTablePager RowsPerPageString="Filas por página:"
-                                   InfoFormat="{first_item}-{last_item} de {all_items}"
-                                   PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                    <MudTablePager RowsPerPageString="Filas:" PageSizeOptions="new int[] { 10, 25, 50 }" />
                 </PagerContent>
-
             </MudTable>
         </MudItem>
 
-        <MudItem xs="12" md="4">
-
-            <MudPaper Class="pa-4" Elevation="1">
-
+        <MudItem xs="12" md="4" Class="d-none d-md-block">
+            <MudPaper Class="pa-4" Elevation="2" Style="position: sticky; top: 20px;">
                 @if (OrdenSeleccionadaDetalle is null)
                 {
                     <MudText Typo="Typo.h6" Class="fw-bold mb-2">Detalle</MudText>
                     <MudDivider Class="mb-3" />
-                    <MudText Class="text-secondary">Selecciona una orden para ver el detalle.</MudText>
+                    <MudText Class="text-secondary">Seleccioná una orden para ver el detalle.</MudText>
                 }
                 else
                 {
-                    <MudText Typo="Typo.h6" Class="fw-bold mb-2">Detalle</MudText>
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-2">Orden #@OrdenSeleccionadaDetalle.Id</MudText>
                     <MudDivider Class="mb-3" />
 
-                    <MudText Typo="Typo.body2" Class="text-secondary">Cliente</MudText>
-                    <MudText Class="mb-2">@OrdenSeleccionadaDetalle.ClienteNombre</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Cliente</MudText>
+                    <MudText Class="mb-2 fw-bold">@OrdenSeleccionadaDetalle.ClienteNombre</MudText>
 
-                    <MudText Typo="Typo.body2" Class="text-secondary">Equipo</MudText>
-                    <MudText Class="mb-2">@OrdenSeleccionadaDetalle.EquipoDescripcion</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Tipo</MudText>
+                    <MudText Class="mb-2">@OrdenSeleccionadaDetalle.EquipoTipo</MudText>
 
-                    <MudText Typo="Typo.body2" Class="text-secondary">Falla declarada</MudText>
-                    <MudText Class="mb-3">@OrdenSeleccionadaDetalle.FallaDeclarada</MudText>
-
-                    <MudText Typo="Typo.body2" Class="text-secondary">Resumen técnico</MudText>
-                    <MudText Class="mb-3">
-                        @(string.IsNullOrWhiteSpace(OrdenSeleccionadaDetalle.ResumenTecnico)
-                                            ? "Sin resumen por el momento."
-                                            : OrdenSeleccionadaDetalle.ResumenTecnico)
-                </MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Modelo</MudText>
+                    <MudText Class="mb-2">@OrdenSeleccionadaDetalle.EquipoModelo</MudText>
 
                     <MudDivider Class="my-3" />
 
-                    <MudExpansionPanels>
+                    <MudExpansionPanels Elevation="0">
                         <MudExpansionPanel Text="Historial" Expanded="true">
-
-                        @if (OrdenSeleccionadaDetalle.Historial?.Any() == true)
+                            @if (OrdenSeleccionadaDetalle.Historial?.Any() == true)
                             {
-                                <MudList T="HistorialLineaDto" Dense="false">
-                                    @foreach (var h in OrdenSeleccionadaDetalle.Historial)
-                                    {
-                                        <MudListItem>
-                                            <MudPaper Class="pa-2 mb-2" Elevation="0">
-                                                <MudText Typo="Typo.subtitle2" Class="fw-bold">
-                                                    @h.FechaHora.ToString("dd/MM/yyyy HH:mm")
-                                                </MudText>
-                                                <MudText Typo="Typo.body2">@h.Descripcion (@h.Usuario)</MudText>
-                                            </MudPaper>
-                                        </MudListItem>
-                                    }
-                                </MudList>
+                                @foreach (var h in OrdenSeleccionadaDetalle.Historial)
+                                {
+                                    <MudPaper Class="pa-2 mb-2" Elevation="0" Style="background-color: var(--mud-palette-background-grey);">
+                                        <MudText Typo="Typo.caption" Class="fw-bold">@h.FechaHora.ToString("dd/MM/yyyy HH:mm")</MudText>
+                                        <MudText Typo="Typo.body2">@h.Descripcion</MudText>
+                                    </MudPaper>
+                                }
                             }
-                            else
-                            {
-                                <MudText>No hay historial.</MudText>
-                            }
-
                         </MudExpansionPanel>
                     </MudExpansionPanels>
                 }
-
             </MudPaper>
-
         </MudItem>
-
     </MudGrid>
-
 </MudContainer>
 
 @code {
-
     private List<OrdenSimpleDto> ListaOrdenes = new();
     private string Filtro = "";
-
+    private DateTime? _fechaDesde;
+    private DateTime? _fechaHasta;
+    private string? _estadoSeleccionado;
+    private string? _tipoEquipoSeleccionado;
+    private bool _mostrarFiltros = false;
     private OrdenDetalleDto? OrdenSeleccionadaDetalle;
-    private bool _isLoadingDetalle;
     private OrdenSimpleDto? _ordenSeleccionada;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await CargarOrdenes();
+
+    private void ToggleFiltros() => _mostrarFiltros = !_mostrarFiltros;
+
+    private async Task LimpiarFiltros()
     {
+        Filtro = ""; _fechaDesde = null; _fechaHasta = null; _estadoSeleccionado = null; _tipoEquipoSeleccionado = null;
         await CargarOrdenes();
     }
 
-    private async Task CargarOrdenes()
-    {
-        ListaOrdenes = await OrdenesService.GetUltimasOrdenesAsync(Filtro);
-    }
+    private async Task CargarOrdenes() => ListaOrdenes = await OrdenesService.GetUltimasOrdenesAsync(Filtro, _fechaDesde, _fechaHasta, _estadoSeleccionado, _tipoEquipoSeleccionado);
 
-    private async Task Buscar()
-    {
-        await CargarOrdenes();
-    }
+    private async Task Buscar() => await CargarOrdenes();
 
-    private async Task OnRowClick(OrdenSimpleDto item)
-    {
-        await CargarDetalleOrdenAsync(item.Id);
-    }
+    void EditarOrden(int id) => Nav.NavigateTo($"/ordenes/editar/{id}");
 
-    private async Task CargarDetalleOrdenAsync(int id)
-    {
-        try
-        {
-            _isLoadingDetalle = true;
-            OrdenSeleccionadaDetalle = await OrdenesService.GetDetalleAsync(id);
-        }
-        catch
-        {
-            Snackbar.Add("Error cargando detalle");
-        }
-        finally
-        {
-            _isLoadingDetalle = false;
-        }
-    }
+    private string EstiloFila(OrdenSimpleDto orden, int index) => "cursor: pointer;";
 
-    void EditarOrden(int id)
+    private Color GetChipColor(string estado) => estado switch
     {
-        Nav.NavigateTo($"/ordenes/editar/{id}");
-    }
-
-    private string EstiloFila(OrdenSimpleDto orden, int index)
-    {
-        return "cursor: pointer;";
-    }
-
-    private Color GetChipColor(string estado)
-    {
-        return estado switch
-        {
-            "Recibido" => Color.Info,
-            "En Proceso" => Color.Warning,
-            "Finalizado, a espera de pago" => Color.Success,
-            "Cancelado" => Color.Error,
-            "Esperando Aprobación" => Color.Secondary,
-            "Entregado" => Color.Tertiary,
-            _ => Color.Primary
-        };
-    }
+        "Recibido" => Color.Info,
+        "En Proceso" => Color.Warning,
+        "Finalizado, a espera de pago" => Color.Success,
+        "Cancelado" => Color.Error,
+        "Esperando Aprobación" => Color.Secondary,
+        "Entregado" => Color.Tertiary,
+        _ => Color.Primary
+    };
 
     private async Task OnSelectedItemChanged(OrdenSimpleDto? item)
     {
         _ordenSeleccionada = item;
+        if (item != null)
+        {
+            OrdenSeleccionadaDetalle = await OrdenesService.GetDetalleAsync(item.Id);
 
-        if (item is null)
-            return;
+            // Le preguntamos al navegador el ancho de la pantalla usando JavaScript
+            var windowWidth = await JS.InvokeAsync<int>("eval", "window.innerWidth");
 
-        await CargarDetalleOrdenAsync(item.Id);
+            // Si la pantalla es menor a 960px (Celulares), abrimos el modal
+            if (windowWidth < 960)
+            {
+                var parameters = new DialogParameters { ["Orden"] = OrdenSeleccionadaDetalle };
+                var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+                await DialogService.ShowAsync<DialogoDetalleOrden>("Información de la Orden", parameters, options);
+            }
+        }
     }
 }

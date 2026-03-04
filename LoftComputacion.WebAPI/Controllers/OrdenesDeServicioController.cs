@@ -1,10 +1,10 @@
 ﻿using LoftComputacion.Shared.DTOs;
-using LoftComputacion.Domain;       // Asegúrate que aquí esté tu clase 'Foto'
+using LoftComputacion.Domain;
 using LoftComputacion.Infrastructure;
 using LoftComputacion.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore; // Necesario para FindAsync
+using Microsoft.EntityFrameworkCore;
 
 namespace LoftComputacion.WebAPI.Controllers
 {
@@ -13,33 +13,34 @@ namespace LoftComputacion.WebAPI.Controllers
     [ApiController]
     public class OrdenesDeServicioController : ControllerBase
     {
-        // 1. Declaración de variables (SOLO UNA VEZ)
         private readonly ApplicationDbContext _context;
         private readonly OrdenDeServicioService _ordenService;
         private readonly MercadoPagoService _mp;
         private readonly BlobService _blobService;
 
-        // 2. Constructor (Inyección de dependencias)
         public OrdenesDeServicioController(
             OrdenDeServicioService ordenService,
-            ApplicationDbContext context, // <--- Aquí recibimos la DB
+            ApplicationDbContext context,
             MercadoPagoService mp,
             BlobService blobService)
         {
             _ordenService = ordenService;
-            _context = context; // <--- Aquí la guardamos. Si esto falta, explota.
+            _context = context;
             _mp = mp;
             _blobService = blobService;
         }
 
-        /* ===================================================
-           MÉTODOS GET
-           =================================================== */
-
         [HttpGet("lista")]
-        public async Task<ActionResult<IEnumerable<OrdenSimpleDto>>> GetLista([FromQuery] string? filtro)
+        public async Task<ActionResult<IEnumerable<OrdenSimpleDto>>> GetLista(
+            [FromQuery] string? filtro,
+            [FromQuery] DateTime? fechaDesde,
+            [FromQuery] DateTime? fechaHasta,
+            [FromQuery] string? estado,
+            [FromQuery] string? tipo)
         {
-            var lista = await _ordenService.GetAllOrdenesAsync(filtro);
+            // Nota: Aquí le pasaremos los nuevos parámetros al servicio cuando lo actualicemos
+            var lista = await _ordenService.GetAllOrdenesAsync(filtro, fechaDesde, fechaHasta, estado, tipo);
+
             return Ok(lista.Select(o => new OrdenSimpleDto
             {
                 Id = o.Id,
@@ -67,7 +68,7 @@ namespace LoftComputacion.WebAPI.Controllers
         [HttpGet("todas-simples")]
         public async Task<IActionResult> GetTodasSimples()
         {
-            var ordenes = await _ordenService.GetAllOrdenesAsync(null);
+            var ordenes = await _ordenService.GetAllOrdenesAsync(null, null, null, null);
             if (ordenes == null) return Ok(new List<object>());
 
             var lista = ordenes.Select(o => new
@@ -80,10 +81,6 @@ namespace LoftComputacion.WebAPI.Controllers
             });
             return Ok(lista);
         }
-
-        /* ===================================================
-           MÉTODOS POST / PUT
-           =================================================== */
 
         [HttpPost]
         public async Task<IActionResult> CrearOrden([FromBody] CreateOrdenDto dto)
@@ -101,12 +98,9 @@ namespace LoftComputacion.WebAPI.Controllers
                 PrecioPresupuestado = dto.PrecioPresupuestado,
                 PrecioFinal = dto.PrecioFinal,
                 ResumenTecnico = dto.ResumenTecnico
-
             };
 
-            // CAMBIO AQUÍ: Pasamos también dto.UsuarioAutorizador
             var ok = await _ordenService.UpdateOrdenAsync(id, orden, dto.UsuarioId, dto.UsuarioAutorizador);
-
             if (!ok) return NotFound("La orden no existe.");
 
             return Ok();
@@ -124,10 +118,6 @@ namespace LoftComputacion.WebAPI.Controllers
             return Ok(new { urlDePago = url });
         }
 
-        /* ===================================================
-           MÉTODOS FOTOS (SUBIR Y ELIMINAR)
-           =================================================== */
-
         [HttpPost("{id}/fotos")]
         public async Task<IActionResult> SubirFoto(int id, IFormFile archivo)
         {
@@ -137,21 +127,11 @@ namespace LoftComputacion.WebAPI.Controllers
             return Ok(new { id = foto.Id, url = foto.RutaArchivo });
         }
 
-        // --- ELIMINAR FOTO ---
         [HttpDelete("fotos/{fotoId}")]
         public async Task<IActionResult> EliminarFoto(int fotoId)
         {
-            // IMPORTANTE: Verifica que <Foto> sea el nombre exacto de tu clase en Domain
-            // Si tu clase se llama 'FotoOrden', cambia <Foto> por <FotoOrden>
             var foto = await _context.Set<Foto>().FindAsync(fotoId);
-
-            if (foto == null)
-            {
-                return NotFound("La foto no existe o ya fue eliminada.");
-            }
-
-            // Opcional: Borrar archivo físico
-            // await _blobService.BorrarArchivo(foto.RutaArchivo);
+            if (foto == null) return NotFound("La foto no existe o ya fue eliminada.");
 
             _context.Remove(foto);
             await _context.SaveChangesAsync();
@@ -159,7 +139,6 @@ namespace LoftComputacion.WebAPI.Controllers
             return Ok();
         }
 
-        //METRICAS 
         [HttpGet("metricas-operativas")]
         public async Task<ActionResult<MetricasDto>> GetMetricas()
         {
